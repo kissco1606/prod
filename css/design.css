@@ -1,0 +1,217 @@
+.material-icons {
+	font-family: 'Material Icons';
+	font-weight: normal;
+	font-style: normal;
+	font-size: 24px;
+	display: inline-block;
+	line-height: 1;
+	text-transform: none;
+	letter-spacing: normal;
+	word-wrap: normal;
+	white-space: nowrap;
+	direction: ltr;
+	/* Support for all WebKit browsers. */
+	-webkit-font-smoothing: antialiased;
+	/* Support for Safari and Chrome. */
+	text-rendering: optimizeLegibility;
+	/* Support for Firefox. */
+	-moz-osx-font-smoothing: grayscale;
+	/* Support for IE. */
+	font-feature-settings: 'liga';
+}
+
+.show { display: block !important; }
+.hide { display: none !important; }
+.hidden  { visibility: hidden !important; }
+
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+.cursor-default { cursor: default; }
+.cursor-pointer { cursor: pointer; }
+.cursor-wait { cursor: wait; }
+
+.width10 {width: 10px !important; }
+.width20 { width: 20px !important; }
+.width30 { width: 30px !important; }
+.width40 { width: 40px !important; }
+.width50 { width: 50px !important; }
+.width60 { width: 60px !important; }
+.width70 { width: 70px !important; }
+.width80 { width: 80px !important; }
+.width90 { width: 90px !important; }
+.width100 { width: 100px !important; }
+.width150 { width: 150px !important; }
+.width250 { width: 250px !important; }
+.min-width-initial { min-width: initial !important; }
+.full-width { width: 100% !important; }
+.most-top { z-index: 999999 !important; }
+.margin-right10 { margin-right: 10px !important; }
+.margin-right20 { margin-right: 20px !important; }
+.padding-top10 { padding-top: 10px !important; }
+.padding-bottom30 { padding-bottom: 30px !important; }
+.padding-top-bottom10 { padding: 10px 0 !important; }
+.padding-top-bottom20 { padding: 20px 0 !important; }
+
+.max-width980 { max-width: 980px !important; }
+.overflow-x-auto { overflow-x: auto !important; }
+.overflow-y-auto { overflow-y: auto !important; }
+
+.error-color { color: #D32F2F !important; }
+.complete-color { color: #4CAF50 !important; }
+.warning-color { color: #FFD600 !important; }
+.red-color { color: #F44336 !important; }
+.blue-color { color: #2196F3 !important }
+
+.mdl-button--color-green { background-color: #47b293; }
+.mdl-button--color-green:hover, .mdl-button--color-green:focus {
+    background-color: #47b293;
+    opacity: .8;
+}
+.mdl-button--colored:hover, .mdl-button--colored:focus { opacity: .8; }
+.mdl-button--accent:hover, .mdl-button--accent:focus { opacity: .8; }
+
+.mdl-button--color-positive { background-color: #387ef5; }
+.mdl-button--color-positive:hover, .mdl-button--color-positive:focus {
+    background-color: #387ef5;
+    opacity: .8;
+}
+.mdl-button--color-calm { background-color: #11c1f3; }
+.mdl-button--color-calm:hover, .mdl-button--color-calm:focus {
+    background-color: #11c1f3;
+    opacity: .8;
+}
+.mdl-button--color-balanced { background-color: #47b293; }
+.mdl-button--color-balanced:hover, .mdl-button--color-balanced:focus {
+    background-color: #47b293;
+    opacity: .8;
+}
+.mdl-button--color-energized { background-color: #ffc900; }
+.mdl-button--color-energized:hover, .mdl-button--color-energized:focus {
+    background-color: #ffc900;
+    opacity: .8;
+}
+.mdl-button--color-assertive { background-color: #ef473a; }
+.mdl-button--color-assertive:hover, .mdl-button--color-assertive:focus {
+    background-color: #ef473a;
+    opacity: .8;
+}
+.mdl-button--color-royal { background-color: #886aea; }
+.mdl-button--color-royal:hover, .mdl-button--color-royal:focus {
+    background-color: #886aea;
+    opacity: .8;
+}
+.mdl-button--color-dark { background-color: #444; }
+.mdl-button--color-dark:hover, .mdl-button--color-dark:focus {
+    background-color: #444;
+    opacity: .8;
+}
+
+.cell-ellipsis {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dialog-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+.dialog-backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+.dialog {
+    border: none;
+    box-shadow: 0 9px 46px 8px rgba(0, 0, 0, 0.14), 0 11px 15px -7px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.2);
+    background-color: #fff;
+    border-radius: 0.3em;
+    /* position: fixed; */
+}
+#dialog {
+    position: relative;
+    /* top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); */
+}
+#notification{
+    position: fixed;
+    width: 280px;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.dialog-title {
+    padding: 20px 24px 20px;
+    margin: 0;
+    font-size: 1.5rem;
+}
+.dialog-content {
+    padding: 10px 24px 24px 24px;
+    color: rgba(0,0,0, 0.54);
+    overflow-y: auto;
+}
+.dialog-default-content {
+    min-width: 300px;
+    max-height: 300px;
+}
+.dialog-actions {
+    padding: 8px 8px 8px 24px;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: row-reverse;
+    -ms-flex-direction: row-reverse;
+    flex-direction: row-reverse;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+}
+.dialog-actions > * {
+    margin-right: 8px;
+    height: 36px;
+}
+.dialog-actions > *:first-child {
+    margin-right: 0;
+}
+.dialog-actions--full-width {
+    padding: 0 0 8px 0;
+}
+.dialog-actions-full-width > * {
+    height: 48px;
+    -webkit-flex: 0 0 100%;
+    -ms-flex: 0 0 100%;
+    flex: 0 0 100%;
+    padding-right: 16px;
+    margin-right: 0;
+    text-align: right;
+}
+
+.flex-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.custom-textfield {
+	border: none;
+	outline: 0;
+	padding: 5px;
+	height: 20px;
+	font-size: 16px;
+	background: rgba(31, 20, 11, 0.7);
+	border-radius: 0.2em;
+	color: #fff;
+}
+.custom-textfield::placeholder { color: #CECECE; }
+.custom-textfield::-webkit-input-placeholder { color: #CECECE; }
+.custom-textfield::-moz-placeholder { color: #CECECE; opacity: 1; }
+.custom-textfield::-moz-placeholder { color: #CECECE; opacity: 1; }
+.custom-textfield:-ms-input-placeholder { color: #CECECE; }
+.custom-textfield::-ms-input-placeholder { color: #CECECE; }
