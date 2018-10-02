@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Work Manager</title>
+		<link rel="stylesheet" type="text/css" href="css/design.css" />
+		<link rel="stylesheet" type="text/css" href="css/style.css" />
+		<link rel="stylesheet" href="lib/handsontable/handsontable.full.min.css"/>
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+		<link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+		<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue-pink.min.css" />
+		<link href="http://cdn-na.infragistics.com/igniteui/2016.1/latest/css/themes/infragistics/infragistics.theme.css" rel="stylesheet" />
+		<link href="http://cdn-na.infragistics.com/igniteui/2016.1/latest/css/structure/infragistics.css" rel="stylesheet" />
+		<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+		<script type="text/javascript" src="lib/jquery-3.2.1.min.js"></script>
+		<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		<script type="text/javascript" src="https://cdn.rawgit.com/osamutake/japanese-holidays-js/v1.0.6/lib/japanese-holidays.min.js"></script>
+		<script type="text/javascript" src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.2/immutable.js"></script>
+		<script type="text/javascript" src="lib/jszip/jszip.min.js"></script>
+		<script type="text/javascript" src="lib/block-ui/jquery.blockUI.min.js"></script>
+		<script type="text/javascript" src="lib/CryptoJS/aes.js"></script>
+		<script type="text/javascript" src="lib/CryptoJS/pbkdf2.js"></script>
+		<script type="text/javascript" src="js/define.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
+		<script type="text/javascript" src="js/services.js"></script>
+		<script type="text/javascript" src="js/fileController.js"></script>
+		<script type="text/javascript" src="js/dialog.js"></script>
+		<script type="text/javascript" src="js/init.js"></script>
+		
+	</head>
+	<body>
+		<div id="screen-container">
+			<input type="file" id="file-listenner" class="hide" />
+			<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+				<header class="mdl-layout__header" id="list-header">
+					<div class="mdl-layout-icon header-icon" id="header-icon-container"></div>
+					<div class="mdl-layout__header-row">
+						<span class="mdl-layout-title" id="header-title"></span>
+						<div class="mdl-layout-spacer"></div>
+						<div id="header-actions">
+							<div class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect header-button" id="import">
+								<i class="material-icons">cloud_upload</i>
+							</div>
+							<div class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect header-button" id="export">
+								<i class="material-icons">get_app</i>
+							</div>
+							<div class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect header-button" id="save">
+								<i class="material-icons">save_alt</i>
+							</div>
+							<div class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect header-button" id="print">
+								<i class="material-icons">dvr</i>
+							</div>
+							<div class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect header-button" id="settings">
+								<i class="material-icons">settings</i>
+							</div>
+							<div class="mdl-tooltip" for="import">import</div>
+							<div class="mdl-tooltip" for="export">export</div>
+							<div class="mdl-tooltip" for="save">save</div>
+							<div class="mdl-tooltip" for="print">view sheet</div>
+							<div class="mdl-tooltip" for="settings">settings</div>
+						</div>
+					</div>
+					<div id="tabs-container" class="mdl-layout__tab-bar">
+						<a href="#list" id="listTab" class="mdl-layout__tab is-active">List</a>
+						<a href="#editor" id="editorTab" class="mdl-layout__tab">Editor</a>
+					</div>
+				</header>
+				<main class="mdl-layout__content">
+					<section class="mdl-layout__tab-panel is-active" id="list">
+						<div id="list-container" class="container flex-box">
+							<div id="table-container">
+								<table id="file-list-table" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp full-width">
+									<thead>
+										<tr>
+											<th class="mdl-data-table__cell--non-numeric">Schedule</th>
+											<th class="text-center width100 min-width-initial">Action</th>
+										</tr>
+									</thead>
+									<tbody id="calendar-list">
+										<tr id="list-nothing">
+											<td colspan="2" class="text-center">Nothing</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div id="fab-container">
+							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored quill-button" id="quill">
+								<div class="quill-icon"></div>
+							</button>
+						</div>
+					</section>
+					<section class="mdl-layout__tab-panel" id="editor">
+						<div id="editor-container" class="container flex-box">
+							<div class="grid-container" id="grid-container">
+                                <div id="grid"></div>
+                            </div>
+						</div>
+					</section>
+				</main>
+			</div>
+			<div id="dialog-container" class="dialog-container flex-box"></div>
+			<div id="notification-container" class="dialog-container"></div>
+			<div id="viewer-container" class="hide">
+				<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
+					<header class="mdl-layout__header viewer-header">
+						<div class="mdl-layout-icon header-icon">
+							<i class="material-icons">insert_chart</i>
+						</div>
+						<div class="mdl-layout__header-row">
+							<span class="mdl-layout-title">Work Chart</span>
+							<div class="mdl-layout-spacer"></div>
+							<div class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect copy-icon" id="copy">
+								<i class="material-icons">file_copy</i>
+							</div>
+							<div class="viewer-close-container">
+								<i class="material-icons" id="viewer-close">close</i>
+							</div>
+							<div class="mdl-tooltip" for="copy">copy</div>
+						</div>
+						<div id="viewer-tabs-container" class="mdl-layout__tab-bar mdl-js-ripple-effect">
+							<a href="#typeA-section" id="typeA-tab" class="mdl-layout__tab is-active">TypeA</a>
+							<a href="#typeB-section" id="typeB-tab" class="mdl-layout__tab">TypeB</a>
+						</div>
+					</header>
+					<main class="mdl-layout__content">
+						<section class="mdl-layout__tab-panel is-active" id="typeA-section">
+							<div class="container flex-box">
+								<div id="typeA-viewer" class="viewer-sheet-container"></div>
+							</div>
+						</section>
+						<section class="mdl-layout__tab-panel" id="typeB-section">
+							<div class="container flex-box">
+								<div id="typeB-viewer" class="viewer-sheet-container"></div>
+							</div>
+						</section>
+					</main>
+				</div>
+			</div>
+		</div>
+		<script src="lib/handsontable/handsontable.full.min.js"></script>
+		<script type="text/javascript" src="js/script.js"></script>
+	</body>
+</html>
