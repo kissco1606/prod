@@ -2,16 +2,38 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>Database Management</title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>SQL Management</title>
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="css/design.css" />
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
 		<script type="text/javascript" src="lib/jquery-3.2.1.min.js"></script>
+		<script type="text/javascript" src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
 		<script type="text/javascript" src="js/define.js"></script>
 		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/services.js"></script>
 		<script type="text/javascript" src="js/init.js"></script>
 	</head>
 	<body>
-		<script type="text/javascript" src="js/script.js"></script>
+		<header id="header">
+			<div id="header-title">
+				<span class="title-icon"><i class="fas fa-database"></i></span>
+				<span class="title-text"></span>
+			</div>
+			<div id="header-tools">
+				<span class="tools-icon"><i class="fas fa-cog"></i></span>
+			</div>
+		</header>
+		<div id="contents">
+			<div id="access-page" class="screen">
+				<div>
+					<img src="assets/cloudgs_dbaas.png" id="access-logo" alt="access_logo" />
+				</div>
+				<div id="access-command"></div>
+			</div>
+			<!-- <div id="tab1" class="screen"></div> -->
+		</div>
+		<script type="text/javascript" src="js/main.js"></script>
 	</body>
 </html>

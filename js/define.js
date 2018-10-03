@@ -2,6 +2,8 @@ const SC = ";";
 const BS = "(";
 const BE = ")";
 const NL = "\n";
+const WHITE_SPACE = ' ';
+
 const ADODB = {
     connection: "ADODB.Connection",
     recordset: "ADODB.Recordset",
@@ -28,12 +30,15 @@ const CONNECT_TYPE = {
     odbc: "ODBC",
     direct: "DIRECT"
 };
-const DEFAULT = {
-    uid: "XXX",
-    pwd: "XXX",
+const DEFAULT_SET = {
+    uid: "USERPSSE_X2",
+    pwd: "USERPSSE_X2",
     protocol: "TCP",
-    host: "196.168.30.66",
+    host: "192.168.40.206",
     port: "1521",
-    sid: "orcl",
+    sid: "xora",
     server: "DEDICATED"
+};
+const state = {
+	db: null
 };
