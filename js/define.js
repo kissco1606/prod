@@ -2,7 +2,7 @@ const SC = ";";
 const BS = "(";
 const BE = ")";
 const NL = "\n";
-const WHITE_SPACE = ' ';
+const WHITE_SPACE = " ";
 
 const ADODB = {
     connection: "ADODB.Connection",

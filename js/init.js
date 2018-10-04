@@ -1,15 +1,77 @@
 function init() {
+	new Module().menu();
+	
     // const db = new DB().setConObj();
     // state.db = db;
     // db.setConObj().setConnection(ct.direct).open().setCommand();
     createAccessCommand();
 };
 
-function headerEnableScroll() {
-	$(window).on("scroll", function() {
-		jqById("header").css("left", -$(window).scrollLeft());
-	});
+const Module = function() {
+	this.container = jqById("container");
 };
+Module.prototype = {
+	clear: function() {
+		this.container.empty();
+		return this;
+	},
+	menu: function() {
+		this.clear();
+		initMenuModule(this.container);
+		return this;
+	},
+	sql: function() {
+		this.clear();
+		return this;
+	},
+	batch: function() {
+		this.clear();
+		return this;
+	}
+};
+
+function initMenuModule(container) {
+	const contents = jqNode("div", { id: "menu-contents" });
+	const plate = jqNode("div", { id: "plate" });
+	const modules = [
+		{
+			id: "sql-pannel",
+			name: "SQL Management",
+			callback: function() {
+				new Module().sql();
+			}
+		},
+		{
+			id: "batch-pannel",
+			name: "Batch Management",
+			callback: function() {
+				new Module().batch();
+			}
+		}
+	];
+	modules.forEach(function(item) {
+		plate.append(createPannel(item.id, item.name, item.callback));
+	});
+	contents.append(plate);
+	container.append(contents);
+};
+
+function createPannel(id, name, callback) {
+	const pannel = jqNode("div", { id: id, class: "pannel" });
+	pannel.text(name);
+	pannel.click(function() {
+		callback();
+	});
+	return pannel;
+};
+
+
+
+// function headerEnableScroll() {
+// 	$(window).on("scroll", function() {
+// 		jqById("header").css("left", -$(window).scrollLeft());
+// 	});
+// };
 
 function createAccessCommand() {
 	const accessCommand = jqById("access-command");
