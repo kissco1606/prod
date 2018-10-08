@@ -6,36 +6,29 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Work Manager</title>
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+		<link rel="stylesheet" type="text/css" href="lib/mdl/material-1.3.0.min.css" />
 		<link rel="stylesheet" type="text/css" href="css/design.css" />
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
-		<script type="text/javascript" src="lib/jquery-3.2.1.min.js"></script>
+		<script type="text/javascript" src="lib/jquery/jquery-3.2.1.min.js"></script>
+		<script type="text/javascript" src="lib/polyfills/promise-7.0.4.min.js"></script>
 		<script type="text/javascript" src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
+		<script type="text/javascript" src="lib/mdl/material-1.3.0.min.js"></script>
 		<script type="text/javascript" src="js/define.js"></script>
 		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/services.js"></script>
 		<script type="text/javascript" src="js/init.js"></script>
+		<!-- Import Module : Start -->
+		<link rel="stylesheet" type="text/css" href="module/sql/sql.css" />
+		<script type="text/javascript" src="module/sql/sql.js"></script>
+		<link rel="stylesheet" type="text/css" href="module/batch/batch.css" />
+		<script type="text/javascript" src="module/batch/batch.js"></script>
+		<!-- Import Module : End -->
 	</head>
 	<body>
-		<div id="container">
-			<!-- <header id="header">
-				<div id="header-title">
-					<span class="title-icon"><i class="fas fa-database"></i></span>
-					<span class="title-text"></span>
-				</div>
-				<div id="header-tools">
-					<span class="tools-icon"><i class="fas fa-cog"></i></span>
-				</div>
-			</header>
-			<div id="contents">
-				<div id="access-page" class="screen">
-					<div>
-						<img src="assets/cloudgs_dbaas.png" id="access-logo" alt="access_logo" />
-					</div>
-					<div id="access-command"></div>
-				</div>
-				<div id="tab1" class="screen"></div>
-			</div> -->
-		</div>
+		<div id="container"></div>
+		<div id="dialog-container" class="dialog-container flex-box"></div>
+		<div id="notification-container" class="dialog-container"></div>
+		<div id="loading-container"></div>
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>
 </html>

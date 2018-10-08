@@ -1,2 +1,5 @@
-const def = DEFAULT_SET;
-const ct = CONNECT_TYPE;
+const eId = ELEMENTS.id;
+const eClass = ELEMENTS.class;
+const eIcon = ELEMENTS.icon;
+const eStyle = ELEMENTS.style;
+const MI = MODULE_ID;

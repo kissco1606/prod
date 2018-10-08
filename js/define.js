@@ -1,44 +1,122 @@
-const SC = ";";
-const BS = "(";
-const BE = ")";
-const NL = "\n";
-const WHITE_SPACE = " ";
+const SIGN = {
+    sc: ";",
+    bs: "(",
+    be: ")",
+    nl: "\n",
+    ws: " ",
+    es: ""
+};
 
-const ADODB = {
-    connection: "ADODB.Connection",
-    recordset: "ADODB.Recordset",
-    command: "ADODB.Command"
+const ELEMENTS = {
+    id: {
+        container: "container",
+        header: "header",
+        headerTitle: "header-title",
+        titleIcon: "title-icon",
+        titleText: "title-text",
+        headerTools: "header-tools",
+        contents: "contents",
+        menuContents: "menu-contents",
+        plate: "plate",
+        dialogContainer: "dialog-container",
+        dialog: "dialog",
+        dialogTitle: "dialog-title",
+        dialogContent: "dialog-content",
+        dialogOk: "dialog-ok",
+        dialogClose: "dialog-close",
+        notificationContainer: "notification-container",
+        notification: "notification",
+        notificationTitle: "notification-title",
+        notificationContent: "notification-content",
+        notificationOk: "notification-ok",
+        loadingContainer: "loading-container"
+    },
+    class: {
+        screen: "screen",
+        toolsIcon: "tools-icon",
+        iconButton: "icon-button",
+        pannel: "pannel",
+        mostTop: "most-top",
+        dialog: "dialog",
+        dialogContainer: "dialog-container",
+        dialogTitle: "dialog-title",
+        dialogContents: "dialog-contents",
+        dialogDefaultContents: "dialog-default-contents",
+        dialogActions: "dialog-actions",
+        dialogButton: "dialog-button",
+        dialogIconTitleContainer: "dialog-icon-title-container",
+        dialogTitleIcon: "dialog-title-icon",
+        dialogTitleText: "dialog-title-text",
+        dialogBackdrop: "dialog-backdrop",
+        completeColor: "complete-color",
+        errorColor: "error-color",
+        warningColor: "warning-color",
+        hide: "hide",
+        menuContainer: "menu-container",
+        menu: "menu",
+        menuItem: "menu-item",
+        menuBottomRight: "menu-bottom-right",
+        isVisible: "is-visible",
+        menuItemIcon: "menu-item-icon",
+        menuItemText: "menu-item-text",
+        menuItemDevider: "menu-item-devider",
+        menuItemInfo: "menu-item-info",
+        loader: "loader",
+        cardContainer: "card-container",
+        card: "card",
+        cardContentsContainer: "card-contents-container",
+        cardTitle: "card-title",
+        cardContents: "card-contents",
+        cardActions: "card-actions"
+    },
+    icon: {
+        database: "fas fa-database",
+        cog: "fas fa-cog",
+        home: "fas fa-home",
+        checkCircle: "fas fa-check-circle",
+        timesCircle: "fas fa-times-circle",
+        exclamationTriangle: "fas fa-exclamation-triangle",
+        signOut: "fas fa-sign-out-alt",
+        signIn: "fas fa-sign-in-alt",
+        ellipsisV: "fas fa-ellipsis-v",
+        chevronCircleDown: "fas fa-chevron-circle-down"
+    },
+    style: {
+        transitionDuration: 300
+    }
 };
-const ODBC = {
-    driver: "Driver={Microsoft ODBC for Oracle};",
-    connect_string: "CONNECTSTRING=ORCL;",
-    uid: "UID=",
-    pwd: "PWD="
+
+const TYPES = {
+    variable: {
+        null: "Null",
+        undefined: "Undefined",
+        string: "String",
+        number: "Number",
+        array: "Array",
+        object: "Object",
+        function: "Function",
+        date: "Date"
+    },
+    dialog: {
+        complete: "complete",
+        error: "error",
+        warning: "warning"
+    }
 };
-const DIRECT = {
-    provider: "Provider=OraOLEDB.Oracle;",
-    cid: "CID=GTU_APP",
-    protocol: "PROTOCOL=",
-    host: "HOST=",
-    port: "PORT=",
-    sid: "SID=",
-    server: "SERVER=",
-    id: "User Id=",
-    pw: "Password="
+
+const CAPTIONS = {
+    ok: "ok",
+    cancel: "cancel",
+    error: "error",
+    warning: "warning",
+    complete: "complete",
+    home: "home",
+    disconnect: "disconnect"
 };
-const CONNECT_TYPE = {
-    odbc: "ODBC",
-    direct: "DIRECT"
+
+const MODULE_ID = {
+    sql: "sql",
+    batch: "batch"
 };
-const DEFAULT_SET = {
-    uid: "USERPSSE_X2",
-    pwd: "USERPSSE_X2",
-    protocol: "TCP",
-    host: "192.168.40.206",
-    port: "1521",
-    sid: "xora",
-    server: "DEDICATED"
-};
-const state = {
-	db: null
-};
+
+const state = new Object();

@@ -1,38 +1,46 @@
 function init() {
-	new Module().menu();
-	
+	transitonMenu();
     // const db = new DB().setConObj();
     // state.db = db;
     // db.setConObj().setConnection(ct.direct).open().setCommand();
-    createAccessCommand();
+	// createAccessCommand();
 };
 
 const Module = function() {
-	this.container = jqById("container");
+	this.container = jqById(eId.container);
 };
 Module.prototype = {
-	clear: function() {
-		this.container.empty();
-		return this;
-	},
 	menu: function() {
-		this.clear();
-		initMenuModule(this.container);
+		state.module = { id: null };
+		const _this = this;
+		fadeOut(_this.container).then(function() {
+			clearContainer();
+			initMenuModule(_this.container);
+		});
 		return this;
 	},
 	sql: function() {
-		this.clear();
+		state.module = { id: MI.sql };
+		fadeOut(this.container).then(function() {
+			clearContainer();
+			new SqlModule().initSqlModule();
+		});
 		return this;
 	},
 	batch: function() {
-		this.clear();
+		state.module = { id: MI.batch };
+		fadeOut(this.container).then(function() {
+			clearContainer();
+			initBatchModule();
+		});
 		return this;
 	}
 };
 
-function initMenuModule(container) {
-	const contents = jqNode("div", { id: "menu-contents" });
-	const plate = jqNode("div", { id: "plate" });
+function initMenuModule($container) {
+	$container.css({ "margin-top": 0, "background-color": "transparent" });
+	const contents = jqNode("div", { id: eId.menuContents });
+	const plate = jqNode("div", { id: eId.plate });
 	const modules = [
 		{
 			id: "sql-pannel",
@@ -53,11 +61,12 @@ function initMenuModule(container) {
 		plate.append(createPannel(item.id, item.name, item.callback));
 	});
 	contents.append(plate);
-	container.append(contents);
+	$container.append(contents);
+	fadeIn($container);
 };
 
 function createPannel(id, name, callback) {
-	const pannel = jqNode("div", { id: id, class: "pannel" });
+	const pannel = jqNode("div", { id: id, class: eClass.pannel });
 	pannel.text(name);
 	pannel.click(function() {
 		callback();
@@ -65,40 +74,16 @@ function createPannel(id, name, callback) {
 	return pannel;
 };
 
+function clearContainer() {
+	jqById(eId.container).empty();
+};
 
+function transitonMenu() {
+	new Module().menu();
+};
 
 // function headerEnableScroll() {
 // 	$(window).on("scroll", function() {
 // 		jqById("header").css("left", -$(window).scrollLeft());
 // 	});
 // };
-
-function createAccessCommand() {
-	const accessCommand = jqById("access-command");
-	const getInput = function(id, ph) {
-		const input = jqNode("input", { type: "text", id: id, placeholder: ph });
-		input.keypress(function(e) {
-			const keyCode = e.which || e.keyCode;
-			if(keyCode === 13) {
-				onAccess();
-			}
-		});
-		return input;
-	};
-	const getButton = function() {
-		const button = jqNode("button", {}).text("ACCESS");
-		button.click(function() {
-			onAccess();
-		});
-		return button;
-	};
-	const sid = jqNode("div", { id: "command-line" }).append(getInput("sid", "SID"));
-	const uid = jqNode("div", { id: "command-line" }).append(getInput("uid", "USER ID"));
-	const pwd = jqNode("div", { id: "command-line" }).append(getInput("pwd", "PASSWORD"));
-	const confirm = jqNode("div", { id: "command-line" }).append(getButton());
-	[sid, uid, pwd, confirm].forEach(function(item) { accessCommand.append(item); });
-};
-
-function onAccess() {
-	console.log("access");
-};
