@@ -55,8 +55,9 @@
     cursor: pointer;
 }
 #sql-header > #header-tools > .icon-button {
-    background-color: rgba(255, 255, 255, 0);
-	padding: 2px 12px;
+	display: block;
+	padding: 2px 0;
+	width: 28px;
 	text-align: center;
     border-radius: 100%;
 	cursor: pointer;
@@ -78,7 +79,6 @@
 	position: relative;
 	height: 100%;
 	transition: opacity 0.2s ease-in-out;
-	/* background-color: #333; */
 }
 
 #sql-contents > #access-page {

@@ -77,6 +77,14 @@ const SqlModule = function() {
             connect: {
                 odbc: "odbc",
                 direct: "direct"
+            },
+            command: {
+                adCmdUnspecified: -1,
+                adCmdText: 1,
+                adCmdTable: 2,
+                adCmdStoredProc: 4,
+                adCmdFile: 256,
+                adCmdTableDirect: 512
             }
         }
     };
@@ -84,7 +92,9 @@ const SqlModule = function() {
         page: this.Define.TYPES.page.access,
         isConnect: false,
         info: new Object(),
-        db: null
+        db: null,
+        command: null,
+        recordSet: null
     };
 };
 SqlModule.prototype = {
@@ -179,7 +189,10 @@ SqlModule.prototype = {
                 const $cardContainer = jqNode("div", { class: eClass.cardContainer });
                 const buildCard = function(cardInfo) {
                     const $card = jqNode("div", { id: cardInfo.id, class: eClass.card });
-                    const $cardTitle = jqNode("div", { class: eClass.cardTitle }).text(cardInfo.title);
+                    const $cardTitle = jqNode("div", { class: eClass.cardTitle });
+                    const $titleIcon = jqNode("span", { class: eClass.cardTitleIcon }).append(jqNode("i", { class: eIcon.wrench }));
+                    const $titleText = jqNode("span", { class: eClass.cardTitleText }).text(cardInfo.title);
+                    $cardTitle.append($titleIcon).append($titleText);
                     const $cardContentsContainer = jqNode("div", { class: eClass.cardContentsContainer });
                     const $cardContents = jqNode("div", { class: eClass.cardContents }).text(cardInfo.contents);
                     const $cardActions = jqNode("div", { class: eClass.cardActions });
@@ -395,6 +408,43 @@ SqlModule.prototype = {
             db.Close();
         }
         return null;
+    },
+    dbCommand: function() {
+        const _this = this;
+        const commandType = _this.Define.TYPES.command;
+        const command = _this.state.command;
+        command = new ActiveXObject(_this.Define.ADODB.command);
+        command.ActiveConnection = _this.state.db;
+        command.CommandType = commandType.adCmdText;
+        command.Prepared = true;
+        return this;
+    },
+    select: function() {
+        return this;
+    },
+    insert: function() {
+        return this;
+    },
+    update: function() {
+        return this;
+    },
+    delete: function() {
+        return this;
+    },
+    setParameter: function() {
+        return this;
+    },
+    execute: function() {
+        return this;
+    },
+    commit: function() {
+        return this;
+    },
+    rollback: function() {
+        return this;
+    },
+    recordSetClose: function() {
+        return this;
     }
 };
 

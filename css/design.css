@@ -282,6 +282,9 @@
     -moz-float-edge: margin-box;
     display: block;
     margin: 0;
+    border: none;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.2);
 }
 .menu-item.menu-item-info {
     line-height: 38px;
@@ -396,21 +399,31 @@
     background-color: #fff;
     max-width: 980px;
     width: 100%;
-    margin: 20px 0;
+    margin: 10px 0;
     border-radius: 0.3em;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+.card:first-child {
+    margin-top: 0;
+}
+.card:last-child {
+    margin-bottom: 0;
 }
 .card > * {
     word-break: keep-all;
     word-wrap: normal;
 }
 .card > .card-title {
-    background-color: #fb8c00;
+    background-color: #e91e63;
     color: #fff;
-    border-radius: 0.3em 0.3em 0 0;
-    font-size: 18px;
-    padding: 10px;
+    border-radius: 0.28em 0.28em 0 0;
+    font-size: 15px;
+    font-weight: 500;
     line-height: 1.5;
+    padding: 10px;
+}
+.card > .card-title > .card-title-icon {
+    padding-right: 5px;
 }
 .card > .card-contents-container {
     height: auto;
@@ -419,10 +432,10 @@
     overflow:hidden;
 }
 .card > .card-contents-container > .card-contents {
-    padding: 20px 10px;
+    padding: 10px;
 }
 .card > .card-actions {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: center;
     flex-direction: row;

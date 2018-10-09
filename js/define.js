@@ -66,6 +66,8 @@ const ELEMENTS = {
         card: "card",
         cardContentsContainer: "card-contents-container",
         cardTitle: "card-title",
+        cardTitleIcon: "card-title-icon",
+        cardTitleText: "card-title-text",
         cardContents: "card-contents",
         cardActions: "card-actions"
     },
@@ -79,7 +81,8 @@ const ELEMENTS = {
         signOut: "fas fa-sign-out-alt",
         signIn: "fas fa-sign-in-alt",
         ellipsisV: "fas fa-ellipsis-v",
-        chevronCircleDown: "fas fa-chevron-circle-down"
+        chevronCircleDown: "fas fa-chevron-circle-down",
+        wrench: "fas fa-wrench"
     },
     style: {
         transitionDuration: 300
