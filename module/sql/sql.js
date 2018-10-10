@@ -44,10 +44,18 @@ const SqlModule = function() {
                 headerToolsConfigIcon: "header-tools-config-icon",
                 applicationPage: "application-page",
                 createUserCard: "create-user-card",
-                dataCopyCard: "data-copy-card"
+                dataCopyCard: "data-copy-card",
+                policyNumberFrom: "policy-number__from",
+                policyNumberTo: "policy-number-to",
+                subSid: "sub-sid",
+                subUid: "sub-uid",
+                subPwd: "sub-pwd"
             },
             class: {
-                commandLine: "command-line"
+                commandLine: "command-line",
+                contentsContainer: "contents-container",
+                commandArea: "command-area",
+                actionArea: "action-area"
             },
             src: {
                 cloudgs_dbaas: "assets/cloudgs_dbaas.png"
@@ -63,8 +71,14 @@ const SqlModule = function() {
             sid: "SID",
             uid: "USER ID",
             pwd: "PASSWORD",
-            createUser: "Create user",
-            dataCopy: "Data copy"
+            createUser: "Create User",
+            dataCopy: "Data Copy",
+            exec: "exec",
+            subSid: "SID(From)",
+            subUid: "UID(From)",
+            subPwd: "PWD(From)",
+            policyNumberFrom: "Policy Number(From)",
+            policyNumberTo: "Policy Number(To)"
         },
         TYPES: {
             message: {
@@ -94,7 +108,8 @@ const SqlModule = function() {
         info: new Object(),
         db: null,
         command: null,
-        recordSet: null
+        recordSet: null,
+        noneQuery: false
     };
 };
 SqlModule.prototype = {
@@ -146,7 +161,7 @@ SqlModule.prototype = {
         const getInput = function(id, ph) {
             const $input = jqNode("input", { type: "text", id: id, placeholder: ph });
             $input.keypress(function(e) {
-                var keyCode = e.which || e.keyCode;
+                const keyCode = e.which || e.keyCode;
                 if(keyCode === 13) {
                     _this.onAccess();
                 }
@@ -194,7 +209,7 @@ SqlModule.prototype = {
                     const $titleText = jqNode("span", { class: eClass.cardTitleText }).text(cardInfo.title);
                     $cardTitle.append($titleIcon).append($titleText);
                     const $cardContentsContainer = jqNode("div", { class: eClass.cardContentsContainer });
-                    const $cardContents = jqNode("div", { class: eClass.cardContents }).text(cardInfo.contents);
+                    const $cardContents = jqNode("div", { class: eClass.cardContents }).html(cardInfo.contents);
                     const $cardActions = jqNode("div", { class: eClass.cardActions });
                     const $openIcon = jqNode("i", { class: eIcon.chevronCircleDown });
                     $openIcon.click(function() {
@@ -220,7 +235,7 @@ SqlModule.prototype = {
                     {
                         id: seId.dataCopyCard,
                         title: captions.dataCopy,
-                        contents: "data copy tool"
+                        contents: _this.buildDataCopyContents()
                     }
                 ];
                 cardList.forEach(function(item) {
@@ -233,6 +248,78 @@ SqlModule.prototype = {
         }
         _this.state.page = pageType;
         return null;
+    },
+    buildDataCopyContents: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $execButton = jqNode("button").text(upperCase(captions.exec));
+        $actionArea.append($execButton);
+        $container.append($actionArea);
+        const itemList = [
+            {
+                label: captions.subSid,
+                inputType: "input",
+                inputId: seId.subSid
+            },
+            {
+                label: captions.subUid,
+                inputType: "input",
+                inputId: seId.subUid
+            },
+            {
+                label: captions.subPwd,
+                inputType: "input",
+                inputId: seId.subPwd
+            },
+            {
+                label: captions.policyNumberFrom,
+                inputType: "input",
+                inputId: seId.policyNumberFrom
+            },
+            {
+                label: captions.policyNumberTo,
+                inputType: "textarea",
+                inputId: seId.policyNumberTo
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: seClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+        });
+        $execButton.click(function() {
+            _this.execDataCopy();
+        });
+        return $container;
+    },
+    execDataCopy: function() {
+        const _this = this;
+        const loading = new Loading();
+        loading.on().then(function() {
+            const seId = _this.Define.ELEMENTS.id;
+            const captions = _this.Define.CAPTIONS;
+            const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
+            const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
+            const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
+            const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
+            const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
+            const result = _this.validation(subSid, subUid, subPwd, policyNumberFrom, policyNumberTo);
+            if(result.error) {
+                new Notification().error().open(result.message);
+                loading.off();
+                return false;
+            }
+        }).catch(function(e) {
+            console.log(e);
+            new Notification().error().open(e.message);
+            loading.off();
+        });
     },
     transition: function(type) {
         const _this = this;
@@ -266,19 +353,20 @@ SqlModule.prototype = {
     },
     onAccess: function() {
         const _this = this;
-        const pageType = _this.Define.TYPES.page;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
-        const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
-        const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
-        const result = _this.validation(sid, uid, pwd);
-        if(result.error) {
-            new Notification().error().open(result.message);
-            return false;
-        }
-        new Loading().on();
-        try {
+        const loading = new Loading();
+        loading.on().then(function() {
+            const pageType = _this.Define.TYPES.page;
+            const seId = _this.Define.ELEMENTS.id;
+            const captions = _this.Define.CAPTIONS;
+            const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
+            const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
+            const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
+            const result = _this.validation(sid, uid, pwd);
+            if(result.error) {
+                new Notification().error().open(result.message);
+                loading.off();
+                return false;
+            }
             const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
             // _this.setConnectObject().open(connectString);
             _this.state.isConnect = true;
@@ -287,14 +375,12 @@ SqlModule.prototype = {
                 uid: uid.name + " : " + uid.value
             };
             _this.transition(pageType.application);
-        }
-        catch(e) {
+            loading.off();
+        }).catch(function(e) {
             console.log(e);
             new Notification().error().open(e.message);
-        }
-        finally {
-            new Loading().off();
-        }
+            loading.off();
+        });
         // new Notification().complete().open("Successfully connected");
     },
     onDisconnect: function() {
@@ -409,33 +495,93 @@ SqlModule.prototype = {
         }
         return null;
     },
-    dbCommand: function() {
+    dbCommand: function(connection) {
         const _this = this;
         const commandType = _this.Define.TYPES.command;
-        const command = _this.state.command;
-        command = new ActiveXObject(_this.Define.ADODB.command);
-        command.ActiveConnection = _this.state.db;
-        command.CommandType = commandType.adCmdText;
-        command.Prepared = true;
+        _this.state.command = new ActiveXObject(_this.Define.ADODB.command);
+        _this.state.command.ActiveConnection = connection;
+        _this.state.command.CommandType = commandType.adCmdText;
+        _this.state.command.Prepared = true;
         return this;
     },
-    select: function() {
+    select: function(query) {
+        const _this = this;
+        if(_this.state.command) {
+            _this.state.command.CommandText = query;
+            _this.state.noneQuery = false;
+        }
         return this;
     },
-    insert: function() {
+    insert: function(query) {
+        const _this = this;
+        if(_this.state.command) {
+            _this.state.command.CommandText = query;
+            _this.state.noneQuery = true;
+        }
         return this;
     },
     update: function() {
+        const _this = this;
+        if(_this.state.command) {
+            _this.state.command.CommandText = query;
+            _this.state.noneQuery = true;
+        }
         return this;
     },
     delete: function() {
+        const _this = this;
+        if(_this.state.command) {
+            _this.state.command.CommandText = query;
+            _this.state.noneQuery = true;
+        }
         return this;
     },
     setParameter: function() {
+        const _this = this;
         return this;
     },
     execute: function() {
+        const _this = this;
+        const noneQuery = _this.state.noneQuery;
+        if(_this.state.command) {
+            _this.state.recordSet = _this.state.command.Execute();
+        }
         return this;
+    },
+    getData: function() {
+        const _this = this;
+        const rs = _this.state.recordSet;
+        const dataSet = {
+            error: true,
+            count: 0,
+            name: new Array(),
+            data: new Array(),
+            type: new Array()
+        };
+        if(rs) {
+            try {
+                for(let i = 0; i < rs.Fields.Count; i++) {
+                    dataSet.name.push(rs.Fields.Item(i).Name);
+                }
+                while(!rs.EOF) {
+                    const valueStack = new Array();
+                    const typeStack = new Array();
+                    for(let i = 0; i < dataSet.name.length; i++) {
+                        const item = rs.Fields.Item(i);
+                        valueStack.push(item.Value);
+                        typeStack.push(item.Type);
+                    }
+                    dataSet.data.push(valueStack);
+                    dataSet.type.push(typeStack);
+                    dataSet.count += 1;
+                    rs.MoveNext();
+                }
+                rs.Close();
+                dataSet.error = false;
+            }
+            catch(e) {}
+        }
+        return dataSet;
     },
     commit: function() {
         return this;
@@ -444,93 +590,6 @@ SqlModule.prototype = {
         return this;
     },
     recordSetClose: function() {
-        return this;
-    }
-};
-
-const DatabaseService = function (constructor) {
-    this.Define = constructor.Define;
-
-    this.conObj = null;
-    this.connection = null;
-    this.recordSet = null;
-    this.command = null;
-    this.params = {
-    	sid: def.sid,
-    	uid: def.uid,
-    	pwd: def.pwd
-    };
-};
-DatabaseService.prototype = {
-    setConObj: function() {
-        this.conObj = new ActiveXObject(ADODB.connection);
-        return this;
-    },
-    setParameter: function(sid, uid, pwd) {
-    	if(sid) this.params.sid = sid ? sid : null;
-    	if(uid) this.params.uid = uid ? uid : null;
-    	if(pwd) this.params.pwd = pwd ? pwd : null;
-    },
-    setConnection: function(type) {
-        const ccs = new CreateConnectString();
-        const params = this.params;
-        switch(type) {
-            case ct.odbc: {
-                this.connection = ccs.getOdbc(params.uid, params.pwd);
-                break;
-            }
-            case ct.direct: {
-                this.connection = ccs.getDirect(params.sid, params.uid, params.pwd);
-                break;
-            }
-        }
-        return this;
-    },
-    open: function() {
-    	const conObj = this.conObj;
-    	const connection = this.connection;
-    	return new Promise(function(resolve, reject) {
-    		if(conObj && connection) {
-            	try {
-            		conObj.Open(connection);
-            		return resolve();
-            	}
-            	catch(e) {
-                	return reject(e);
-            	}
-        	}
-    	});
-    },
-    setCommand: function() {
-    	try {
-    		this.command = new ActiveXObject(ADODB.command);
-    		this.command.ActiveConnection = this.conObj;
-    		this.command.CommandType = 1; // text
-    		this.command.Prepared = true;
-    		this.command.CommandText = "SELECT * FROM ST_SyoriCTL WHERE S_SYONO = '10000009080'";
-    		// this.command.Parameters(0).Value = '';
-    		this.recordSet = this.command.Execute();
-    		console.log(this.recordSet.Fields.Count);
-    		console.log(this.recordSet.Fields(0).Value);
-    	}
-    	catch(e) {
-    	}
-    },
-    execute: function(query) {
-        if(this.conObj && query) {
-            try {
-                this.conObj.Execute(query);
-            }
-            catch(e) {
-                console.log("Cannot executes query");
-            }
-        }
-        return this;
-    },
-    close: function() {
-        if(this.conObj) {
-            this.conObj.Close();
-        }
         return this;
     }
 };

@@ -134,6 +134,7 @@ const Notification = function () {
     this.dialogContainer = jqById(eId.notificationContainer);
     this.dialog = null;
     this.type = null;
+    this.okButton = null;
 };
 Notification.prototype = {
     setContent: function(title, content) {
@@ -153,6 +154,7 @@ Notification.prototype = {
             $dialog.append(item);
         });
         this.dialog = $dialog;
+        this.okButton = $okButton;
         return this;
     },
     complete: function() {
@@ -164,18 +166,22 @@ Notification.prototype = {
         return this;
     },
     open: function (message) {
-        this.setContent(getDialogTitle(this.type), message);
-        if (!this.dialog) return null;
-        this.dialogContainer.addClass(eClass.mostTop);
-        this.dialogContainer.removeClass(eClass.hide);
-        this.dialogContainer.append(this.dialog);
+        const _this = this;
+        _this.setContent(getDialogTitle(_this.type), message);
+        if (!_this.dialog) return null;
+        _this.dialogContainer.addClass(eClass.mostTop);
+        _this.dialogContainer.removeClass(eClass.hide);
+        _this.dialogContainer.append(_this.dialog);
+        state.notification = _this;
+        _this.okButton.focus();
         return false;
     },
     close: function () {
-        if (this.dialogContainer) {
-            this.dialogContainer.removeClass(eClass.mostTop);
-            this.dialogContainer.addClass(eClass.hide);
-            this.dialogContainer.empty();
+        const _this = this;
+        if (_this.dialogContainer) {
+            _this.dialogContainer.removeClass(eClass.mostTop);
+            _this.dialogContainer.addClass(eClass.hide);
+            _this.dialogContainer.empty();
         }
         return false;
     },
@@ -246,9 +252,15 @@ const Loading = function() {
 };
 Loading.prototype = {
     on: function() {
-        this.container.empty();
-        this.container.append(jqNode("div", { class: eClass.loader }));
-        this.container.addClass(eClass.isVisible);
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+            _this.container.empty();
+            _this.container.append(jqNode("div", { class: eClass.loader }));
+            _this.container.addClass(eClass.isVisible);
+            setTimeout(function() {
+                return resolve();
+            });
+        });
     },
     off: function() {
         this.container.removeClass(eClass.isVisible);

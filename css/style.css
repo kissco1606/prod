@@ -8,42 +8,45 @@ html, body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 	display: flex;
     flex-direction: column;
-    min-height: 100vh;
-	height: 100vh;
+	min-height: 100vh;
 }
 
 #container {
-	flex: 1;
+	/* margin-top: 50px; */
+	/* flex: 1; */
+	display: flex;
 	flex-grow: 1;
 	box-sizing: border-box;
-	/* margin-top: 50px; */
-	opacity: 1;
-	transition: opacity 0.3s ease-in-out;
-	z-index: 2;
+	min-height: calc(100% - 50px);
+	flex-direction: column;
 	background-color: transparent;
+	opacity: 1;
+	z-index: 2;
+	transition: opacity 0.3s ease-in-out;
+}
+
+.screen {
+	padding: 20px;
+	min-height: calc(100% - 40px);
+	height: calc(100% - 40px);
 }
 
 #menu-contents {
-	height: auto;
+	flex-grow: 1;
 	min-height: 100%;
-	/* background-color: #333; */
 	background: url('../assets/wall.jpg') center/cover no-repeat;
 }
 
 #menu-contents > #plate {
-	height: 100%;
 	display: flex;
 	/* align-items: center; */
 	justify-content: center;
 	flex-flow: row wrap;
-	padding-top: 20px;
-	padding-bottom: 60px;
+	padding: 30px 20px;
 }
 
 #menu-contents > #plate > .pannel {
-	margin-top: 40px;
-	margin-left: 20px;
-	margin-right: 20px;
+	margin: 20px;
 	padding: 30px;
 	max-width: 150px;
 	width: 100%;
@@ -65,9 +68,4 @@ html, body {
 #menu-contents > #plate > .pannel:hover {
 	padding: 40px;
 	/* transform: scale(1.07); */
-}
-
-.screen {
-	padding: 20px;
-	height: calc(100% - 40px);
 }

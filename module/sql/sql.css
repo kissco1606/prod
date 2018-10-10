@@ -130,3 +130,52 @@
 #sql-contents > #access-page > #access-command > .command-line > button:hover {
 	background-color: #ec407a;
 }
+
+#data-copy-card .contents-container > .command-area {
+	display: flex;
+	flex-direction: row;
+	padding: 10px 0;
+}
+
+#data-copy-card .contents-container > .command-area > label {
+	width: 200px;
+	text-align: left;
+	line-height: 1.5;
+}
+
+#data-copy-card .contents-container > .command-area > input {
+	padding: 5px;
+	border: none;
+	border: 1px solid rgba(0, 0, 0, 0.4);
+	border-radius: 0.3em;
+	width: 100%;
+}
+
+#data-copy-card .contents-container > .command-area > textarea {
+	padding: 5px;
+	border: none;
+	border: 1px solid rgba(0, 0, 0, 0.4);
+	border-radius: 0.3em;
+	width: 100%;
+	height: 100px;
+	box-sizing: border-box;
+	overflow: auto;
+}
+
+#data-copy-card .contents-container > .action-area {
+	padding: 10px 0;
+	text-align: right;
+}
+
+#data-copy-card .contents-container > .action-area > button {
+	margin-left: 10px;
+	padding: 10px;
+	color: #fff;
+	border: none;
+	border-radius: 0.2em;
+	background-color: #009688;
+	cursor: pointer;
+}
+#data-copy-card .contents-container > .action-area > button:hover {
+	background-color: #26a69a;
+}

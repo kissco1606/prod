@@ -400,7 +400,7 @@
     max-width: 980px;
     width: 100%;
     margin: 10px 0;
-    border-radius: 0.3em;
+    border-radius: 0.25em;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 }
 .card:first-child {
@@ -416,7 +416,7 @@
 .card > .card-title {
     background-color: #e91e63;
     color: #fff;
-    border-radius: 0.28em 0.28em 0 0;
+    border-radius: 0.25em 0.25em 0 0;
     font-size: 15px;
     font-weight: 500;
     line-height: 1.5;
