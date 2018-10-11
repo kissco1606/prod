@@ -1,9 +1,5 @@
 function init() {
 	transitonMenu();
-    // const db = new DB().setConObj();
-    // state.db = db;
-    // db.setConObj().setConnection(ct.direct).open().setCommand();
-	// createAccessCommand();
 };
 
 const Module = function() {

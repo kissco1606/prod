@@ -1,4 +1,26 @@
 const SqlModule = function() {
+    this.export = {
+        dataCopy: {
+            tableList: [
+                "KT_KokKykKanren",
+                "KT_NayoseKihon",
+                "WFT_KOUTEIKANRI",
+                "CM_SyonoKanri"
+            ],
+            rules: {
+                KT_KokKykKanren: {
+                    S_KOKNO: "identifyCustomerNumber",
+                    N_SKEIKIKEIYAKUKBN: ""
+                },
+                KT_NayoseKihon: {
+                    S_KOKNO: "getIdentifierCustomerNumber"
+                },
+                WFT_KOUTEIKANRI: {
+
+                }
+            }
+        }    
+    };
     this.Define = {
         ADODB: {
             connection: "ADODB.Connection",
@@ -23,12 +45,9 @@ const SqlModule = function() {
             pwd: "Password="
         },
         DEFAULT_SET: {
-            uid: "USERPSSE_X2",
-            pwd: "USERPSSE_X2",
             protocol: "TCP",
             host: "192.168.40.206",
             port: "1521",
-            sid: "xora",
             server: "DEDICATED"
         },
         ELEMENTS: {
@@ -107,6 +126,8 @@ const SqlModule = function() {
         isConnect: false,
         info: new Object(),
         db: null,
+        subDb: null,
+        isSubConnection: false,
         command: null,
         recordSet: null,
         noneQuery: false
@@ -315,6 +336,46 @@ SqlModule.prototype = {
                 loading.off();
                 return false;
             }
+            const actionStatus = {
+                extractError: false,
+                insertError: false,
+                message: null
+            };
+            const pnf = policyNumberFrom.value;
+            const pnt = policyNumberTo.value;
+            const connectString = _this.createConnectString(subSid.value, subUid.value, subPwd.value);
+            _this.subConnect().setConnectObject().open(connectString);
+            const extractedData = new Object();
+            extractedData[pnf] = new Object();
+            const getSelectQuery = function(table) {
+                return "SELECT * FROM " + table + " WHERE S_SYONO = ?;";
+            };
+            const dataCopyExport = _this.export.dataCopy;
+            dataCopyExport.tableList.some(function(table) {
+                const query = getSelectQuery(table);
+                const dataSet = _this.dbCommand(_this.state.subDb).setQuery(query).setParameter(pnf).execute().getData();
+                extractedData[pnf][table] = dataSet;
+                if(dataSet.error) {
+                    actionStatus.extractError = true;
+                    actionStatus.message = "extract failed";
+                }
+                return dataSet.error;
+            });
+            if(actionStatus.extractError) {
+                new Notification().error().open(actionStatus.message);
+                loading.off();
+            }
+            else {
+                const rules = dataCopyExport.rules;
+                const insertData = $.extend(true, {}, extractedData[pnf]);
+                const pntList = pnt.split(SIGN.nl);
+                pntList.forEach(function(to) {
+                    
+                });
+                Object.keys(extractedData[pnf]).forEach(function() {});
+
+                loading.off();
+            }
         }).catch(function(e) {
             console.log(e);
             new Notification().error().open(e.message);
@@ -350,6 +411,7 @@ SqlModule.prototype = {
         itemList.forEach(function(item) { $menu.append(item); });
         $menuContainer.append($menu);
         setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
+        return null;
     },
     onAccess: function() {
         const _this = this;
@@ -368,7 +430,7 @@ SqlModule.prototype = {
                 return false;
             }
             const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
-            // _this.setConnectObject().open(connectString);
+            _this.mainConnect().setConnectObject().open(connectString);
             _this.state.isConnect = true;
             _this.state.info = {
                 sid: sid.name + " : " + sid.value,
@@ -382,6 +444,7 @@ SqlModule.prototype = {
             loading.off();
         });
         // new Notification().complete().open("Successfully connected");
+        return null;
     },
     onDisconnect: function() {
         const _this = this;
@@ -389,6 +452,7 @@ SqlModule.prototype = {
         _this.state.isConnect = false;
         _this.state.info = new Object();
         _this.transition(pageType.access);
+        return null;
     },
     getCheckObject: function(value, name) {
         return {
@@ -473,84 +537,72 @@ SqlModule.prototype = {
         }
         return str;
     },
+    mainConnect: function() {
+        this.state.isSubConnection = false;
+        return this;
+    },
+    subConnect: function() {
+        this.state.isSubConnection = true;
+        return this;
+    },
     setConnectObject: function() {
-        const _this = this;
-        _this.state.db = new ActiveXObject(_this.Define.ADODB.connection);
+        const isSubConnection = this.state.isSubConnection;
+        if(!isSubConnection) {
+            this.state.db = new ActiveXObject(_this.Define.ADODB.connection);
+        }
+        else {
+            this.state.subDb = new ActiveXObject(_this.Define.ADODB.connection);
+        }
         return this;
     },
     open: function(connectString) {
-        const _this = this;
-        const db = _this.state.db;
-        console.log(db);
+        const isSubConnection = this.state.isSubConnection;
+        const db = !isSubConnection ? this.state.db : this.state.subDb;
         if(db) {
             db.Open(connectString);
         }
         return null;
     },
     close: function() {
-        const _this = this;
-        const db = _this.state.db;
+        const isSubConnection = this.state.isSubConnection;
+        const db = !isSubConnection ? this.state.db : this.state.subDb;
         if(db) {
             db.Close();
         }
         return null;
     },
     dbCommand: function(connection) {
-        const _this = this;
         const commandType = _this.Define.TYPES.command;
-        _this.state.command = new ActiveXObject(_this.Define.ADODB.command);
-        _this.state.command.ActiveConnection = connection;
-        _this.state.command.CommandType = commandType.adCmdText;
-        _this.state.command.Prepared = true;
+        this.state.command = new ActiveXObject(_this.Define.ADODB.command);
+        this.state.command.ActiveConnection = connection;
+        this.state.command.CommandType = commandType.adCmdText;
+        this.state.command.Prepared = true;
         return this;
     },
-    select: function(query) {
-        const _this = this;
-        if(_this.state.command) {
-            _this.state.command.CommandText = query;
-            _this.state.noneQuery = false;
-        }
-        return this;
-    },
-    insert: function(query) {
-        const _this = this;
-        if(_this.state.command) {
-            _this.state.command.CommandText = query;
-            _this.state.noneQuery = true;
-        }
-        return this;
-    },
-    update: function() {
-        const _this = this;
-        if(_this.state.command) {
-            _this.state.command.CommandText = query;
-            _this.state.noneQuery = true;
-        }
-        return this;
-    },
-    delete: function() {
-        const _this = this;
-        if(_this.state.command) {
-            _this.state.command.CommandText = query;
-            _this.state.noneQuery = true;
+    setQuery: function(query, isNoneQuery) {
+        if(this.state.command) {
+            this.state.command.CommandText = query;
+            this.state.noneQuery = isNoneQuery;
         }
         return this;
     },
     setParameter: function() {
         const _this = this;
+        const argumentsList = Array.prototype.slice.call(arguments);
+        argumentsList.forEach(function(item, i) {
+            _this.state.command.Parameters(i).Value = item;
+        });
         return this;
     },
     execute: function() {
-        const _this = this;
-        const noneQuery = _this.state.noneQuery;
-        if(_this.state.command) {
-            _this.state.recordSet = _this.state.command.Execute();
+        const noneQuery = this.state.noneQuery;
+        if(this.state.command) {
+            this.state.recordSet = this.state.command.Execute();
         }
         return this;
     },
     getData: function() {
-        const _this = this;
-        const rs = _this.state.recordSet;
+        const rs = this.state.recordSet;
         const dataSet = {
             error: true,
             count: 0,
@@ -583,6 +635,12 @@ SqlModule.prototype = {
         }
         return dataSet;
     },
+    transaction: function() {
+        if(this.state.db) {
+            this.state.db.BeginTrans();
+        }
+        return this;
+    },
     commit: function() {
         return this;
     },
@@ -591,5 +649,14 @@ SqlModule.prototype = {
     },
     recordSetClose: function() {
         return this;
+    },
+    getPolicyNumberTo: function(data) {
+        return data;
+    },
+    getIdentifierCustomerNumber: function(data) {
+        return data;
+    },
+    identifyCustomerNumber: function() {
+
     }
 };
