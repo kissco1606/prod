@@ -4,6 +4,7 @@ const SIGN = {
     be: ")",
     nl: "\n",
     ws: " ",
+    none: "",
     es: ""
 };
 
@@ -29,7 +30,8 @@ const ELEMENTS = {
         notificationTitle: "notification-title",
         notificationContent: "notification-content",
         notificationOk: "notification-ok",
-        loadingContainer: "loading-container"
+        loadingContainer: "loading-container",
+        fileListener: "file-listener"
     },
     class: {
         screen: "screen",
@@ -37,8 +39,10 @@ const ELEMENTS = {
         iconButton: "icon-button",
         pannel: "pannel",
         mostTop: "most-top",
+        overflowHidden: "overflow-hidden",
         dialog: "dialog",
         dialogContainer: "dialog-container",
+        dialogBackdrop: "dialog-backdrop",
         dialogTitle: "dialog-title",
         dialogContents: "dialog-contents",
         dialogDefaultContents: "dialog-default-contents",
@@ -69,7 +73,15 @@ const ELEMENTS = {
         cardTitleIcon: "card-title-icon",
         cardTitleText: "card-title-text",
         cardContents: "card-contents",
-        cardActions: "card-actions"
+        cardActions: "card-actions",
+        buttonColorPositive: "button--color-positive",
+        buttonColorCalm: "button--color-calm",
+        buttonColorBalanced: "button--color-balanced",
+        buttonColorEnergized: "button--color-energized",
+        buttonColorAssertive: "button--color-assertive",
+        buttonColorRoyal: "button--color-royal",
+        buttonColorDark: "button--color-dark",
+        buttonColorCyan: "button--color-cyan"
     },
     icon: {
         database: "fas fa-database",
@@ -82,7 +94,9 @@ const ELEMENTS = {
         signIn: "fas fa-sign-in-alt",
         ellipsisV: "fas fa-ellipsis-v",
         chevronCircleDown: "fas fa-chevron-circle-down",
-        wrench: "fas fa-wrench"
+        wrench: "fas fa-wrench",
+        plus: "fas fa-plus",
+        trash: "fas fa-trash"
     },
     style: {
         transitionDuration: 300
@@ -104,6 +118,41 @@ const TYPES = {
         complete: "complete",
         error: "error",
         warning: "warning"
+    },
+    syntax: {
+        left: "left",
+        right: "right"
+    },
+    file: {
+        readType: {
+            text: "readAsText",
+            arrayBuffer: "readAsArrayBuffer",
+            binaryString: "readAsBinaryString",
+            dataUrl: "readAsDataURL"
+        },
+        mime: {
+            TEXT_UTF8: "text/plain;charset=utf-8",
+            TEXT: "text/plain",
+            OCTET_STREAM: "application/octet-stream"
+        },
+        extension: {
+            txt: ".txt",
+            zip: ".zip",
+            json: ".json",
+            png: ".png",
+            xls: ".xls",
+            xlsx: ".xlsx"
+        },
+        contentType: {
+            string: "string",
+            uint8array: "uint8array",
+            base64: "base64",
+            binarystring: "binarystring",
+            array: "array",
+            arrayBuffer: "arrayBuffer",
+            blob: "blob",
+            nodebuffer: "nodebuffer"
+        }
     }
 };
 
@@ -115,6 +164,19 @@ const CAPTIONS = {
     complete: "complete",
     home: "home",
     disconnect: "disconnect"
+};
+
+const MESSAGES = {
+    system_error: "System error",
+    invalid_access: "Invalid access",
+    faild_read_file: "Failed to read file",
+    faild_download_file: "Failed to download file",
+    not_allowed_extension: "Can not read this file",
+    incorrect_data: "Incorrect data",
+    invalid_input: "Input value is incorrect",
+    confirm_list_delete: "Are you sure you want to delete this record?",
+    save_complete: "You have successfully save data",
+    success_copy: "Copy to your clipboard"
 };
 
 const MODULE_ID = {

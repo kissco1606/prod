@@ -10,7 +10,9 @@
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
 		<script type="text/javascript" src="lib/jquery/jquery-3.2.1.min.js"></script>
 		<script type="text/javascript" src="lib/polyfills/promise-7.0.4.min.js"></script>
-		<script type="text/javascript" src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
+		<script type="text/javascript" src="lib/FileSaver/FileSaver.min.js"></script>
+		<script type="text/javascript" src="lib/js-xlsx/xlsx.core.min.js"></script>
+		<!-- <script type="text/javascript" src="http://cdn.jsdelivr.net/g/filesaver.js"></script> -->
 		<script type="text/javascript" src="js/define.js"></script>
 		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/services.js"></script>
@@ -27,6 +29,7 @@
 		<div id="dialog-container" class="dialog-container flex-box"></div>
 		<div id="notification-container" class="dialog-container"></div>
 		<div id="loading-container"></div>
+		<input type="file" id="file-listener" class="hide" />
 		<script type="text/javascript" src="js/main.js"></script>
 	</body>
 </html>

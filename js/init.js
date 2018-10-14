@@ -12,6 +12,9 @@ Module.prototype = {
 		fadeOut(_this.container).then(function() {
 			clearContainer();
 			initMenuModule(_this.container);
+
+			// test
+			_this.sql();
 		});
 		return this;
 	},
@@ -19,7 +22,10 @@ Module.prototype = {
 		state.module = { id: MI.sql };
 		fadeOut(this.container).then(function() {
 			clearContainer();
-			new SqlModule().initSqlModule();
+			// new SqlModule().initSqlModule();
+			
+			// test
+			new SqlModule().initSqlModule().testOnAccess();
 		});
 		return this;
 	},
