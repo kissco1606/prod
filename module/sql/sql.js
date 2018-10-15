@@ -15,9 +15,9 @@ const testDataSet = {
     },
     WFT_KOUTEIKANRI: {
         error: false,
-        count: 1,
-        name: ["S_SYONO", "S_DOCUMENTID"],
-        data: [["100012345", "20181013112330001"]],
+        count: 3,
+        name: ["S_SYONO", "S_DOCUMENTID", "S_JIMUTETUZUKICD"],
+        data: [["100012345", "20181013112330001", "skei"], ["100012345", "20181013112330002", "keiyaku"], ["100012345", "20181013112330003", "skei"]],
         type: new Array()
     },
     CM_SyonoKanri: {
@@ -58,7 +58,8 @@ const SqlModule = function() {
                     S_KOKNO: "getIdentifierCustomerNumber"
                 },
                 WFT_KOUTEIKANRI: {
-                    S_DOCUMENTID: "identifyTimeStamp"
+                    S_DOCUMENTID: "identifyTimeStamp",
+                    S_JIMUTETUZUKICD: "deleteExceptSkei"
                 },
                 CM_SyonoKanri: {
                     S_SYONONINE: "slicePolicyNumber"
@@ -403,7 +404,7 @@ SqlModule.prototype = {
         });
         return $container;
     },
-    buildOptionContents: function() {
+    buildOptionContents: function(optionData) {
         const _this = this;
         const dataCopyState = _this.state.dataCopy;
         const seId = _this.Define.ELEMENTS.id;
@@ -445,8 +446,9 @@ SqlModule.prototype = {
             });
             return $commandLine;
         };
-        if(dataCopyState.option) {
-            dataCopyState.option.forEach(function(item) {
+        const data = optionData ? optionData : dataCopyState.option;
+        if(data) {
+            data.forEach(function(item) {
                 $commandArea.append(createCommandLine(item.table, item.script));
             });
         }
@@ -480,7 +482,47 @@ SqlModule.prototype = {
                     const callback = function(dialogClose) {
                         _this.saveOptionDataCopy(dialogClose);
                     };
-                    new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).open(callback);
+                    const $export = jqNode("button").text(upperCase(captions.export));
+                    const $import = jqNode("button").text(upperCase(captions.import));
+                    $export.click(function() {
+                        const fileData = _this.saveOptionDataCopy();
+                        if(fileData) {
+                            if(isVoid(fileData.data)) {
+                                new Notification().error().open(MESSAGES.nothing_data);
+                                return false;
+                            }
+                            saveAsFile(JSON.stringify(fileData.data), TYPES.file.mime.TEXT_UTF8, concatString("OptionData", TYPES.file.extension.txt));
+                        }
+                    });
+                    $import.click(function() {
+                        const onReadFile = function(data) {
+                            try {
+                                const parsedData = JSON.parse(data);
+                                const structureCheck = function() {
+                                    let isCorrect = true;
+                                    parsedData.some(function(item) {
+                                        if(!(!isVoid(item.table) && typeIs(item.table).string) || !(!isVoid(item.script) && typeIs(item.script).string)) {
+                                            isCorrect = false;
+                                            return true;
+                                        }
+                                    });
+                                    return isCorrect;
+                                };
+                                if(parsedData.length >= 1 && structureCheck()) {
+                                    const $container = jqById(seId.optionContainerDataCopy).parent();
+                                    $container.empty().append(_this.buildOptionContents(parsedData));
+                                }
+                                else {
+                                    new Notification().error().open(MESSAGES.incorrect_data);
+                                }
+                            }
+                            catch(e) {
+                                new Notification().error().open(MESSAGES.incorrect_data);
+                            }
+                        };
+                        new FileController().setListener(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
+                    });
+                    new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export]).open(callback);
                 });
                 $exportButton.click(function() {
                     _this.exportToExcelDataCopy();
@@ -490,7 +532,7 @@ SqlModule.prototype = {
                     const key = Object.keys(extractedData)[0];
                     const fileDefine = TYPES.file;
                     const parts = JSON.stringify(extractedData);
-                    const fileName = concatString(key, "_backup_", getSystemDate(), fileDefine.extension.txt);
+                    const fileName = concatString(key, "_Backup_", getSystemDate(), fileDefine.extension.txt);
                     const mime = TYPES.file.mime.TEXT_UTF8;
                     saveAsFile(parts, mime, fileName);
                 });
@@ -740,6 +782,15 @@ SqlModule.prototype = {
                 });
                 break;
             }
+            case "deleteExceptSkei": {
+                let i = applyData.length;
+                while(i--) {
+                    if(applyData[i][state.applyIndex] !== "skei") {
+                        applyData.splice(i, 1);
+                    }
+                }
+                break;
+            }
             case "slicePolicyNumber": {
                 applyData.forEach(function(record, i) {
                     record[state.applyIndex] = state.keys[i].slice(1, state.keys[i].length - 1);
@@ -820,6 +871,9 @@ SqlModule.prototype = {
             const b = [[""], [""], [""], [""]];
             const c = new Array(to.name).concat(to.data);
             const ws_data = a.concat(b).concat(c);
+            if(table === "WFT_KOUTEIKANRI") {
+                console.log(ws_data);
+            }
             const ws = sheet_from_array_of_arrays(ws_data, from.count);
             wb.Sheets[table] = ws;
         });
@@ -848,19 +902,30 @@ SqlModule.prototype = {
                 messageStack.push(result.message);
                 error = true;
             }
-            else {
-                option.forEach(function(item) {
-                    if(item.table === table.value) {
-                        messageStack.push(concatString(messageIndex, "Table duplicated"));
-                        error = true;
-                    }
-                });
+            else if(filter(table.value, option, ["table"]).isExist) {
+                messageStack.push(concatString(messageIndex, "Table duplicated"));
+                error = true;
             }
+            else if(!filter(table.value, _this.export.dataCopy.tableList, null, upperCase).isExist) {
+                messageStack.push(concatString(messageIndex, "Not exists table"));
+                error = true;
+            }
+            // else {
+            //     option.forEach(function(item) {
+            //         if(item.table === table.value) {
+            //             messageStack.push(concatString(messageIndex, "Table duplicated"));
+            //             error = true;
+            //         }
+            //     });
+            // }
             option.push({ table: table.value, script: script.value });
         });
         if(error) {
             new Notification().error().open(messageStack.join("<br />"));
             return false;
+        }
+        if(!dialogClose) {
+            return { data: option };
         }
         dataCopyState.option = option;
         dialogClose();

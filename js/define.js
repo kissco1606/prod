@@ -176,7 +176,8 @@ const MESSAGES = {
     invalid_input: "Input value is incorrect",
     confirm_list_delete: "Are you sure you want to delete this record?",
     save_complete: "You have successfully save data",
-    success_copy: "Copy to your clipboard"
+    success_copy: "Copy to your clipboard",
+    nothing_data: "Nothing data"
 };
 
 const MODULE_ID = {

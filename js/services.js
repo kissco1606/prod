@@ -190,6 +190,31 @@ function isVoid(val) {
     }
 };
 
+function accessObject(obj, keys) {
+    return keys.reduce(function(prev, curr) {
+        return prev[curr];
+    }, obj);
+};
+
+function filter(value, array, keys, matchFunc) {
+    const match = function(a, b) {
+        if(matchFunc&&typeIs(matchFunc).function) {
+            return matchFunc(a) === matchFunc(b);
+        }
+        return a === b;
+    };
+    const data = array.filter(function(item) {
+        if(!isVoid(keys)) {
+            return match(accessObject(item, keys), value);
+        }
+        return match(item, value);
+    });
+    return {
+        isExist: data.length >= 1,
+        data: data
+    };
+};
+
 function createMenuItem(itemList, icon, text, func) {
     const $item = jqNode("li", { class: eClass.menuItem });
     const $icon = jqNode("span", { class: eClass.menuItemIcon }).append(jqNode("i", { class: icon }));
@@ -311,6 +336,7 @@ const Dialog = function () {
     this.dialogContainer = jqById(eId.dialogContainer);
     this.dialog = null;
     this.okButton = null;
+    this.actions = null;
 };
 Dialog.prototype = {
     setContents: function (title, contents, option) {
@@ -340,6 +366,17 @@ Dialog.prototype = {
         }
         this.dialog = $dialog;
         this.okButton = $okButton;
+        this.actions = $actions;
+        return this;
+    },
+    setButton: function(buttonItems) {
+        const _this = this;
+        if(_this.actions) {
+            buttonItems.forEach(function(item) {
+                item.addClass(eClass.dialogButton);
+                _this.actions.append(item);
+            });
+        }
         return this;
     },
     open: function (callback) {
