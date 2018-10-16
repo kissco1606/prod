@@ -196,6 +196,17 @@ function accessObject(obj, keys) {
     }, obj);
 };
 
+function getProperty(obj, key) {
+    let accessKey = null;
+    Object.keys(obj).some(function(k) {
+        if(upperCase(k) === upperCase(key)) {
+            accessKey = k;
+            return true;
+        }
+    });
+    return obj[accessKey];
+};
+
 function filter(value, array, keys, matchFunc) {
     const match = function(a, b) {
         if(matchFunc&&typeIs(matchFunc).function) {
@@ -234,8 +245,9 @@ function createMenuInfo(itemList, info) {
         $devider.append(jqNode("span").append(jqNode("hr")));
         itemList.push($devider);
         Object.keys(info).forEach(function(key) {
+            const obj = info[key];
             const $item = jqNode("li", { class: classes(eClass.menuItem, eClass.menuItemInfo) });
-            const $text = jqNode("span").text(info[key]);
+            const $text = jqNode("span").text(concatString(obj.name, " : ", obj.value));
             $item.append($text);
             itemList.push($item);
         });

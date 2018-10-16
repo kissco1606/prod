@@ -20,6 +20,10 @@
 	font-feature-settings: 'liga';
 }
 
+textarea {
+    font-family: inherit;
+}
+
 .show { display: block !important; }
 .hide { display: none !important; }
 .hidden  { visibility: hidden !important; }

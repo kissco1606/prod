@@ -205,12 +205,14 @@ SqlModule.prototype = {
     testOnAccess: function() {
         const _this = this;
         const pageType = _this.Define.TYPES.page;
-        const sid = { value: "test" };
-        const uid = { value: "test" };
+        const sid = { name: "SID", value: "test" };
+        const uid = { name: "UID", value: "test" };
+        const pwd = { name: "PWD", value: "test" };
         _this.state.isConnect = true;
         _this.state.info = {
-            sid: sid.name + " : " + sid.value,
-            uid: uid.name + " : " + uid.value
+            sid: sid,
+            uid: uid,
+            pwd: pwd
         };
         _this.transition(pageType.application);
         return null;
@@ -655,7 +657,8 @@ SqlModule.prototype = {
                     }
                     return dataSet.error;
                 });
-                _this.close().mainConnect();
+                // _this.redirect();
+                // _this.subConnect().close().mainConnect();
                 if(actionStatus.extractError) {
                     new Notification().error().open(actionStatus.message);
                     loading.off();
@@ -707,14 +710,15 @@ SqlModule.prototype = {
             });
             _this.state.dataCopy.extractedData = extractedData;
             _this.state.dataCopy.insertData = insertData;
+            _this.state.dataCopy.insertDataStatic = cloneJS(insertData);
             console.log(extractedData);
             console.log(insertData);
             const phaseType = _this.Define.TYPES.phase.dataCopy;
-            // _this.buildDataCopyInsertContents();
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
         }).catch(function(e) {
-            _this.subConnect().close().mainConnect();
+            // _this.redirect();
+            // _this.subConnect().close().mainConnect();
             new Notification().error().open(e.message);
             loading.off();
         });
@@ -738,7 +742,7 @@ SqlModule.prototype = {
                 if(dataSet.count >= 1) {
                     numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
                 }
-                let identifier = 10;
+                let identifier = Math.floor(Math.random() * 99999) + 1000000;
                 while(state.customerNumberIdentifier.length < applyData.length && identifier <= 99999999) {
                     if(numberCollection.indexOf(identifier) < 0) {
                         state.customerNumberIdentifier.push(toString(identifier));
@@ -910,14 +914,10 @@ SqlModule.prototype = {
                 messageStack.push(concatString(messageIndex, "Not exists table"));
                 error = true;
             }
-            // else {
-            //     option.forEach(function(item) {
-            //         if(item.table === table.value) {
-            //             messageStack.push(concatString(messageIndex, "Table duplicated"));
-            //             error = true;
-            //         }
-            //     });
-            // }
+            else if(!script.value.match(new RegExp("@", "g"))) {
+                messageStack.push(concatString(messageIndex, "Incorrect script"));
+                error = true;
+            }
             option.push({ table: table.value, script: script.value });
         });
         if(error) {
@@ -926,6 +926,45 @@ SqlModule.prototype = {
         }
         if(!dialogClose) {
             return { data: option };
+        }
+        const actionState = {
+            msg: new Array(),
+            backup: null
+        };
+        if(option.length <= 0) {
+            _this.state.dataCopy.insertData = _this.state.dataCopy.insertDataStatic;
+        }
+        else {
+            actionState.backup = cloneJS(_this.state.dataCopy.insertData);
+            const convertScript = function(script) {
+                const scriptObj = new Object();
+                let sc = script.replace(new RegExp("\n@", "g"), "@").split("@").filter(function(item) { return item; }).map(function(item) { return item.split(SIGN.nl); });
+                sc.forEach(function(item) {
+                    const column = item.slice(0, 1)[0];
+                    const data = item.slice(1);
+                    scriptObj[column] = data;
+                });
+                return scriptObj;
+            };
+            option.forEach(function(line) {
+                const table = line.table;
+                const script = convertScript(line.script);
+                const tableData = getProperty(_this.state.dataCopy.insertData, table);
+                if(tableData) {
+                    Object.keys(script).forEach(function(column) {
+                        const applyIndex = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
+                        script[column].forEach(function(s, i) {
+                            if(tableData.data[i]) tableData.data[i][applyIndex] = s;
+                            else actionState.msg.push(concatString(column, " > ", s, " : Failed set data"));
+                        });
+                    });
+                }
+            });
+        }
+        if(actionState.msg.length >= 1) {
+            _this.state.dataCopy.insertData = actionState.backup;
+            new Notification().error().open(actionState.msg.join(SIGN.nl));
+            return false;
         }
         dataCopyState.option = option;
         dialogClose();
@@ -981,8 +1020,9 @@ SqlModule.prototype = {
             // _this.mainConnect().setConnectObject().open(connectString);
             _this.state.isConnect = true;
             _this.state.info = {
-                sid: sid.name + " : " + sid.value,
-                uid: uid.name + " : " + uid.value
+                sid: sid,
+                uid: uid,
+                pwd: pwd
             };
             _this.transition(pageType.application);
             loading.off();
@@ -1099,6 +1139,16 @@ SqlModule.prototype = {
     },
     subConnect: function() {
         this.state.isSubConnection = true;
+        return this;
+    },
+    redirect: function() {
+        const _this = this;
+        if(_this.state.subDb) {
+            _this.state.subDb.Close();
+            const info = _this.state.info;
+            const connectString = _this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
+            _this.mainConnect().setConnectObject().open(connectString);
+        }
         return this;
     },
     setConnectObject: function() {
