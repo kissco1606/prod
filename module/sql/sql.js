@@ -10,7 +10,7 @@ const testDataSet = {
         error: false,
         count: 2,
         name: ["S_KOKNO", "S_HKSNAME"],
-        data: [["1000", "S214"], ["1001", "S215"]],
+        data: [["1000", "S214"], ["1001", null]],
         type: new Array()
     },
     WFT_KOUTEIKANRI: {
@@ -152,6 +152,7 @@ const SqlModule = function() {
             backup: "backup",
             option: "option",
             reset: "reset",
+            log: "log",
             subSid: "SID(From)",
             subUid: "UID(From)",
             subPwd: "PWD(From)",
@@ -526,6 +527,9 @@ SqlModule.prototype = {
                     });
                     new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export]).open(callback);
                 });
+                $insertButton.click(function() {
+                    _this.insertDataCopy();
+                });
                 $exportButton.click(function() {
                     _this.exportToExcelDataCopy();
                 });
@@ -545,6 +549,17 @@ SqlModule.prototype = {
                 break;
             }
             case phaseType.commit: {
+                const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
+                const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
+                const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+                $actionArea.empty();
+                [$commitButton, $logButton, $resetButton].forEach(function(item) {
+                    $actionArea.append(item);
+                });
+                $resetButton.click(function() {
+                    _this.state.dataCopy = new Object();
+                    $cardContents.html(_this.buildDataCopyContents());
+                });
                 break;
             }
             case phaseType.complete: {
@@ -561,6 +576,10 @@ SqlModule.prototype = {
         const result = _this.validation(policyNumberTo);
         if(result.error) {
             new Notification().error().open(result.message);
+            return false;
+        }
+        else if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
+            new Notification().error().open([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
             return false;
         }
         const onReadFile = function(data) {
@@ -609,9 +628,11 @@ SqlModule.prototype = {
             const seId = _this.Define.ELEMENTS.id;
             const captions = _this.Define.CAPTIONS;
             const dataCopyExport = _this.export.dataCopy;
+            const dataCopyState = _this.state.dataCopy;
+            dataCopyState.dataKey = { from: null, to: new Object() };
             let pnf, pnt;
             let extractedData = new Object();
-            if(!_this.state.dataCopy.extractedData) {
+            if(!dataCopyState.extractedData) {
                     // const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
                 // const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
                 // const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
@@ -623,7 +644,7 @@ SqlModule.prototype = {
                 const subUid = _this.getCheckObject("test", captions.subUid);
                 const subPwd = _this.getCheckObject("test", captions.subPwd);
                 const policyNumberFrom = _this.getCheckObject("100012345", captions.policyNumberFrom);
-                const policyNumberTo = _this.getCheckObject("100012356\n100012367", captions.policyNumberTo);
+                const policyNumberTo = _this.getCheckObject("100012356\n100012367\n", captions.policyNumberTo);
                 // test
 
                 const result = _this.validation(subSid, subUid, subPwd, policyNumberFrom, policyNumberTo);
@@ -631,6 +652,25 @@ SqlModule.prototype = {
                     new Notification().error().open(result.message);
                     loading.off();
                     return false;
+                }
+                else {
+                    const numericCheckResult = {
+                        error: false,
+                        message: new Array()
+                    };
+                    if(!policyNumberFrom.value.match(REG_EXP.numeric)) {
+                        numericCheckResult.error = true;
+                        numericCheckResult.message.push([captions.policyNumberFrom, MESSAGES.allowedOnlyNumeric].join(" : "));
+                    }
+                    if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
+                        numericCheckResult.error = true;
+                        numericCheckResult.message.push([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
+                    }
+                    if(numericCheckResult.error) {
+                        new Notification().error().open(numericCheckResult.message.join(SIGN.br));
+                        loading.off();
+                        return false;
+                    }
                 }
                 const actionStatus = {
                     extractError: false,
@@ -657,6 +697,7 @@ SqlModule.prototype = {
                     }
                     return dataSet.error;
                 });
+                // _this.subClose().redirect();
                 // _this.redirect();
                 // _this.subConnect().close().mainConnect();
                 if(actionStatus.extractError) {
@@ -666,22 +707,25 @@ SqlModule.prototype = {
                 }
             }
             else {
-                extractedData = _this.state.dataCopy.extractedData;
+                extractedData = dataCopyState.extractedData;
                 pnf = Object.keys(extractedData)[0];
                 pnt = jqById(seId.policyNumberTo).val();
             }
             const rules = dataCopyExport.rules;
             const defaultKey = dataCopyExport.keySet.defaultKey;
             const insertData = new Object();
-            const pntList = pnt.split(SIGN.nl);
+            const pntList = pnt.split(SIGN.nl).filter(function(item) { return item });
+            const countStack = new Array();
             Object.keys(extractedData[pnf]).forEach(function(table) {
                 const dataSet = extractedData[pnf][table];
                 const count = dataSet.count;
+                countStack.push(count);
                 if(count >= 1) {
-                    _this.state.dataCopy.keys = new Array();
+                    dataCopyState.keys = new Array();
                     const name = dataSet.name;
                     const data = dataSet.data;
                     const applyData = new Array();
+                    dataCopyState.dataKey.to[table] = new Array();
                     pntList.forEach(function(to) {
                         const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
                         data.forEach(function(record) {
@@ -690,16 +734,16 @@ SqlModule.prototype = {
                                 applyRecord[keyIndex] = to;
                             }
                             applyData.push(applyRecord);
-                            _this.state.dataCopy.keys.push(to);
+                            dataCopyState.keys.push(to);
+                            dataCopyState.dataKey.to[table].push(to);
                         });
                     });
                     if(rules[table]) {
-                        console.log(table);
                         Object.keys(rules[table]).forEach(function(column) {
                             const applyType = rules[table][column];
                             const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
-                            _this.state.dataCopy.applyIndex = applyIndex;
-                            _this.applyRulesDataCopy(applyType, applyData);
+                            dataCopyState.applyIndex = applyIndex;
+                            _this.applyRulesDataCopy(applyType, applyData, table);
                         });
                     }
                     insertData[table] = {
@@ -708,15 +752,22 @@ SqlModule.prototype = {
                     };
                 }
             });
-            _this.state.dataCopy.extractedData = extractedData;
-            _this.state.dataCopy.insertData = insertData;
-            _this.state.dataCopy.insertDataStatic = cloneJS(insertData);
+            if(countStack.reduce(function(a, b) { return a + b; }) <= 0) {
+                new Notification().error().open("Nothing extracted data");
+                loading.off();
+                return false;
+            }
+            dataCopyState.extractedData = extractedData;
+            dataCopyState.insertData = insertData;
+            dataCopyState.insertDataStatic = cloneJS(insertData);
+            dataCopyState.dataKey.from = pnf;
             console.log(extractedData);
             console.log(insertData);
             const phaseType = _this.Define.TYPES.phase.dataCopy;
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
         }).catch(function(e) {
+            // _this.subClose().redirect();
             // _this.redirect();
             // _this.subConnect().close().mainConnect();
             new Notification().error().open(e.message);
@@ -724,7 +775,7 @@ SqlModule.prototype = {
         });
         return null;
     },
-    applyRulesDataCopy: function(applyType, applyData) {
+    applyRulesDataCopy: function(applyType, applyData, table) {
         const _this = this;
         const state = _this.state.dataCopy;
         switch(applyType) {
@@ -791,6 +842,7 @@ SqlModule.prototype = {
                 while(i--) {
                     if(applyData[i][state.applyIndex] !== "skei") {
                         applyData.splice(i, 1);
+                        state.dataKey.to[table].splice(i, 1);
                     }
                 }
                 break;
@@ -817,6 +869,29 @@ SqlModule.prototype = {
                 s: { c: 10000000, r: 10000000 },
                 e: { c: 0, r: 0 }
             };
+            const headerStyle = {
+                fill: {
+                    patternType: "solid",
+                    fgColor:{ rgb: "9E9E9E" }
+                },
+                font: {
+                    bold: false
+                },
+                border: {
+                    top: { style: "thin", tint: 1 },
+                    left: { style: "thin", tint: 1 },
+                    right: { style: "thin", tint: 1 },
+                    bottom: { style: "thin", tint: 1 }
+                }
+            };
+            const bodyStyle = {
+                border: {
+                    top: { style: "thin", tint: 1 },
+                    left: { style: "thin", tint: 1 },
+                    right: { style: "thin", tint: 1 },
+                    bottom: { style: "thin", tint: 1 }
+                }
+            };
             for(let R = 0; R != data.length; ++R) {
                 for(let C = 0; C != data[R].length; ++C) {
                     if(range.s.r > R) range.s.r = R;
@@ -824,7 +899,7 @@ SqlModule.prototype = {
                     if(range.e.r < R) range.e.r = R;
                     if(range.e.c < C) range.e.c = C;
                     const cell = { v: data[R][C] };
-                    if(cell.v == null) continue;
+                    if(cell.v == null) cell.v = SIGN.none;
                     const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
                     if(typeof cell.v === "number") cell.t = "n";
                     else if(typeof cell.v === "boolean") cell.t = "b";
@@ -834,32 +909,11 @@ SqlModule.prototype = {
                         cell.v = datenum(cell.v);
                     }
                     else cell.t = "s";
-                    if(R === 0 || R === count + 5) {
-                        cell.s = {
-                            fill: {
-                                patternType: "solid",
-                                fgColor:{ rgb: "9E9E9E" }
-                            },
-                            font: {
-                                bold: false
-                            },
-                            border: {
-                                top: { style: "thin", tint: 1 },
-                                left: { style: "thin", tint: 1 },
-                                right: { style: "thin", tint: 1 },
-                                bottom: { style: "thin", tint: 1 }
-                            }
-                        }
+                    if(R === 0 || R === count + 5 || (C === 0 && cell.v)) {
+                        cell.s = headerStyle;
                     }
                     else if(R <= count || R >= count + 5) {
-                        cell.s = {
-                            border: {
-                                top: { style: "thin", tint: 1 },
-                                left: { style: "thin", tint: 1 },
-                                right: { style: "thin", tint: 1 },
-                                bottom: { style: "thin", tint: 1 }
-                            }
-                        }
+                        cell.s = bodyStyle;
                     }
                     ws[cell_ref] = cell;
                 }
@@ -867,22 +921,39 @@ SqlModule.prototype = {
             if(range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
             return ws;
         };
+        const getExportData = function(data, type, toKey) {
+            const dataKey = dataCopyState.dataKey;
+            const cd = cloneJS(data);
+            cd.name.unshift("KEY");
+            switch(type) {
+                case "from": {
+                    cd.data.forEach(function(record) {
+                        record.unshift(dataKey.from);
+                    });
+                    break;
+                }
+                case "to": {
+                    cd.data.forEach(function(record, i) {
+                        record.unshift(toKey[i]);
+                    });
+                    break;
+                }
+            }
+            return cd;
+        };
         Object.keys(insertData).forEach(function(table) {
-            const from = extractedData[table];
-            const to = insertData[table];
+            const from = getExportData(getProperty(extractedData, table), "from");
+            const to = getExportData(getProperty(insertData, table), "to", dataCopyState.dataKey.to[table]);
             wb.SheetNames.push(table);
             const a = new Array(from.name).concat(from.data);
-            const b = [[""], [""], [""], [""]];
+            const b = [[SIGN.none], [SIGN.none], [SIGN.none], [SIGN.none]];
             const c = new Array(to.name).concat(to.data);
             const ws_data = a.concat(b).concat(c);
-            if(table === "WFT_KOUTEIKANRI") {
-                console.log(ws_data);
-            }
             const ws = sheet_from_array_of_arrays(ws_data, from.count);
             wb.Sheets[table] = ws;
         });
         const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
-        saveAsFile(s2ab(wbout), fileDefine.mime.OCTET_STREAM, "dataCopyCheck.xlsx");
+        saveAsFile(s2ab(wbout), fileDefine.mime.OCTET_STREAM, "DataCopyCheck.xlsx");
         return null;
     },
     saveOptionDataCopy: function(dialogClose) {
@@ -921,7 +992,7 @@ SqlModule.prototype = {
             option.push({ table: table.value, script: script.value });
         });
         if(error) {
-            new Notification().error().open(messageStack.join("<br />"));
+            new Notification().error().open(messageStack.join(SIGN.br));
             return false;
         }
         if(!dialogClose) {
@@ -932,10 +1003,10 @@ SqlModule.prototype = {
             backup: null
         };
         if(option.length <= 0) {
-            _this.state.dataCopy.insertData = _this.state.dataCopy.insertDataStatic;
+            dataCopyState.insertData = dataCopyState.insertDataStatic;
         }
         else {
-            actionState.backup = cloneJS(_this.state.dataCopy.insertData);
+            actionState.backup = cloneJS(dataCopyState.insertData);
             const convertScript = function(script) {
                 const scriptObj = new Object();
                 let sc = script.replace(new RegExp("\n@", "g"), "@").split("@").filter(function(item) { return item; }).map(function(item) { return item.split(SIGN.nl); });
@@ -949,7 +1020,7 @@ SqlModule.prototype = {
             option.forEach(function(line) {
                 const table = line.table;
                 const script = convertScript(line.script);
-                const tableData = getProperty(_this.state.dataCopy.insertData, table);
+                const tableData = getProperty(dataCopyState.insertData, table);
                 if(tableData) {
                     Object.keys(script).forEach(function(column) {
                         const applyIndex = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
@@ -962,12 +1033,54 @@ SqlModule.prototype = {
             });
         }
         if(actionState.msg.length >= 1) {
-            _this.state.dataCopy.insertData = actionState.backup;
+            dataCopyState.insertData = actionState.backup;
             new Notification().error().open(actionState.msg.join(SIGN.nl));
             return false;
         }
         dataCopyState.option = option;
         dialogClose();
+    },
+    insertDataCopy: function() {
+        const _this = this;
+        const dataCopyState = _this.state.dataCopy;
+        dataCopyState.log = new Array();
+        const loading = new Loading();
+        loading.on().then(function() {
+            const insertData = dataCopyState.insertData;
+            const insertQuery = new Object();
+            const getQuery = function(table, columns, values) {
+                return concatString("INSERT INTO ", table, " (", columns, ") VALUES (", values, ");");
+            };
+            Object.keys(insertData).forEach(function(table) {
+                const name = insertData[table].name;
+                const data = insertData[table].data;
+                insertQuery[table] = new Array();
+                const columns = name.join(SIGN.cw);
+                data.forEach(function(record) {
+                    const values = record.map(function(item) {
+                        const v = item ? item : "";
+                        return concatString(SIGN.sq, v, SIGN.sq);
+                    }).join(SIGN.cw);
+                    insertQuery[table].push(getQuery(table, columns, values));
+                });
+            });
+            _this.transaction().dbCommand(_this.state.db);
+            Object.keys(insertQuery).forEach(function(table) {
+                dataCopyState.log.push(table);
+                insertQuery[table].forEach(function(query) {
+                    _this.setQuery(query).execute();
+                    dataCopyState.log.push(query);
+                });
+            });
+            const phaseType = _this.Define.TYPES.phase.dataCopy;
+            _this.actionControllerDataCopy(phaseType.commit);
+            loading.off();
+        }).catch(function(e) {
+            console.log(e);
+            new Notification().error().open(e.message);
+            _this.rollback().redirect();
+            loading.off();
+        });
     },
     transition: function(type) {
         const _this = this;
@@ -991,9 +1104,10 @@ SqlModule.prototype = {
         const itemList = new Array();
         createMenuItem(itemList, eIcon.home, CAPTIONS.home, transitonMenu);
         if(_this.state.isConnect) {
-            const onDisconnect = function() { _this.onDisconnect(); }
+            const menuInfo = { sid: _this.state.info.sid, uid: _this.state.info.uid };
+            const onDisconnect = function() { _this.onDisconnect(); };
             createMenuItem(itemList, eIcon.signOut, CAPTIONS.disconnect, onDisconnect);
-            createMenuInfo(itemList, _this.state.info);
+            createMenuInfo(itemList, menuInfo);
         }
         itemList.forEach(function(item) { $menu.append(item); });
         $menuContainer.append($menu);
@@ -1070,7 +1184,7 @@ SqlModule.prototype = {
             }
         });
         if(result.error) {
-            result.message = errorMsg.join("<br />");
+            result.message = errorMsg.join(SIGN.br);
         }
         return result;
     },
@@ -1141,16 +1255,6 @@ SqlModule.prototype = {
         this.state.isSubConnection = true;
         return this;
     },
-    redirect: function() {
-        const _this = this;
-        if(_this.state.subDb) {
-            _this.state.subDb.Close();
-            const info = _this.state.info;
-            const connectString = _this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
-            _this.mainConnect().setConnectObject().open(connectString);
-        }
-        return this;
-    },
     setConnectObject: function() {
         const isSubConnection = this.state.isSubConnection;
         if(!isSubConnection) {
@@ -1169,18 +1273,32 @@ SqlModule.prototype = {
         }
         return this;
     },
+    subClose: function() {
+        if(this.state.subDb) {
+            this.state.subDb.Close();
+        }
+        return this;
+    },
     close: function() {
-        const isSubConnection = this.state.isSubConnection;
-        const db = !isSubConnection ? this.state.db : this.state.subDb;
-        if(db) {
-            db.Close();
+        if(this.state.db) {
+            this.state.db.Close();
+        }
+        return this;
+    },
+    redirect: function() {
+        const _this = this;
+        if(_this.state.db) {
+            _this.state.db.Close();
+            const info = _this.state.info;
+            const connectString = _this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
+            _this.mainConnect().setConnectObject().open(connectString);
         }
         return this;
     },
     dbCommand: function(connection) {
         const commandType = this.Define.TYPES.command;
         this.state.command = new ActiveXObject(this.Define.ADODB.command);
-        // this.state.command.ActiveConnection = connection;
+        this.state.command.ActiveConnection = connection;
         this.state.command.CommandType = commandType.adCmdText;
         this.state.command.Prepared = true;
         return this;
@@ -1249,21 +1367,18 @@ SqlModule.prototype = {
         return this;
     },
     commit: function() {
+        if(this.state.db) {
+            this.state.db.CommitTrans();
+        }
         return this;
     },
     rollback: function() {
+        if(this.state.db) {
+            this.state.db.RollbackTrans();
+        }
         return this;
     },
     recordSetClose: function() {
         return this;
-    },
-    getPolicyNumberTo: function(data) {
-        return data;
-    },
-    getIdentifierCustomerNumber: function(data) {
-        return data;
-    },
-    identifyCustomerNumber: function() {
-
     }
 };

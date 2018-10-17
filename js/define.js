@@ -5,7 +5,12 @@ const SIGN = {
     nl: "\n",
     ws: " ",
     none: "",
-    es: ""
+    es: "	",
+    br: "<br />",
+    c: ",",
+    cw: ", ",
+    sq: "'",
+    dq: '"'
 };
 
 const ELEMENTS = {
@@ -177,7 +182,13 @@ const MESSAGES = {
     confirm_list_delete: "Are you sure you want to delete this record?",
     save_complete: "You have successfully save data",
     success_copy: "Copy to your clipboard",
-    nothing_data: "Nothing data"
+    nothing_data: "Nothing data",
+    allowedOnlyNumeric: "Allowed to only numeric"
+};
+
+const REG_EXP = {
+    numeric: new RegExp("^\\d+$", "g"),
+    numeric_nl: new RegExp("^[\n0-9]+$", "g")
 };
 
 const MODULE_ID = {
