@@ -1,5 +1,6 @@
 const SIGN = {
     sc: ";",
+    gc: ":",
     bs: "(",
     be: ")",
     nl: "\n",
@@ -10,7 +11,9 @@ const SIGN = {
     c: ",",
     cw: ", ",
     sq: "'",
-    dq: '"'
+    dq: '"',
+    ssh: "/",
+    crlf: "\r\n"
 };
 
 const ELEMENTS = {

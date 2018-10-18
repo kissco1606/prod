@@ -115,7 +115,9 @@ const SqlModule = function() {
                 subSid: "sub-sid",
                 subUid: "sub-uid",
                 subPwd: "sub-pwd",
-                optionContainerDataCopy: "option-container__data-copy"
+                optionContainerDataCopy: "option-container__data-copy",
+                userCode: "user-code",
+                userName: "user-name"
             },
             class: {
                 commandLine: "command-line",
@@ -149,6 +151,7 @@ const SqlModule = function() {
             export: "export",
             insert: "insert",
             commit: "commit",
+            rollback: "rollback",
             backup: "backup",
             option: "option",
             reset: "reset",
@@ -157,7 +160,10 @@ const SqlModule = function() {
             subUid: "UID(From)",
             subPwd: "PWD(From)",
             policyNumberFrom: "Policy Number(From)",
-            policyNumberTo: "Policy Number(To)"
+            policyNumberTo: "Policy Number(To)",
+            userCode: "User Code",
+            userName: "User Name",
+            create: "create"
         },
         TYPES: {
             message: {
@@ -185,6 +191,10 @@ const SqlModule = function() {
                     insert: "insert",
                     commit: "commit",
                     complete: "complete"
+                },
+                createUser: {
+                    commit: "commit",
+                    complete: "complete"
                 }
             }
         }
@@ -199,6 +209,7 @@ const SqlModule = function() {
         command: null,
         recordSet: null,
         noneQuery: false,
+        lock: false,
         dataCopy: new Object()
     };
 };
@@ -258,34 +269,320 @@ SqlModule.prototype = {
         fadeIn($container);
         return this;
     },
-    buildAccessCommand: function($accessCommand){
+    transition: function(type) {
+        const _this = this;
+        const seStyle = _this.Define.ELEMENTS.style;
+        const $contents = jqById(getContentsId());
+        $contents.css({ opacity: 0 });
+        setTimeout(function() {
+            _this.setPage(type);
+            $contents.css({ opacity: 1 });
+        }, seStyle.transitionDuration);
+        return null;
+    },
+    openMenu: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const getInput = function(id, ph) {
-            const $input = jqNode("input", { type: "text", id: id, placeholder: ph });
-            $input.keypress(function(e) {
-                const keyCode = e.which || e.keyCode;
-                if(keyCode === 13) {
-                    _this.onAccess();
+        const $container = jqById(eId.container);
+        const $menuContainer = jqById(seId.sqlMenuContainer);
+        $container.click(function() { $menuContainer.removeClass(eClass.isVisible); });
+        $menuContainer.empty();
+        const $menu = jqNode("ul", { class: classes(eClass.menu, eClass.menuBottomRight) });
+        const itemList = new Array();
+        createMenuItem(itemList, eIcon.home, CAPTIONS.home, transitonMenu);
+        if(_this.state.isConnect) {
+            const menuInfo = { sid: _this.state.info.sid, uid: _this.state.info.uid };
+            const onDisconnect = function() { _this.onDisconnect(); };
+            createMenuItem(itemList, eIcon.signOut, CAPTIONS.disconnect, onDisconnect);
+            createMenuInfo(itemList, menuInfo);
+        }
+        itemList.forEach(function(item) { $menu.append(item); });
+        $menuContainer.append($menu);
+        setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
+        return null;
+    },
+    onAccess: function() {
+        const _this = this;
+        const loading = new Loading();
+        loading.on().then(function() {
+            const pageType = _this.Define.TYPES.page;
+            const seId = _this.Define.ELEMENTS.id;
+            const captions = _this.Define.CAPTIONS;
+            const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
+            const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
+            const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
+            const result = _this.validation(sid, uid, pwd);
+            if(result.error) {
+                new Notification().error().open(result.message);
+                loading.off();
+                return false;
+            }
+            const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
+            // _this.mainConnect().setConnectObject().open(connectString);
+            _this.state.isConnect = true;
+            _this.state.info = {
+                sid: sid,
+                uid: uid,
+                pwd: pwd
+            };
+            _this.transition(pageType.application);
+            loading.off();
+        }).catch(function(e) {
+            console.log(e);
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+        return null;
+    },
+    onDisconnect: function() {
+        const _this = this;
+        const pageType = _this.Define.TYPES.page;
+        _this.state.isConnect = false;
+        _this.state.info = new Object();
+        _this.transition(pageType.access);
+        return null;
+    },
+    getCheckObject: function(value, name) {
+        return {
+            value: value,
+            name: name
+        };
+    },
+    validation: function() {
+        const _this = this;
+        const msgTypes = _this.Define.TYPES.message;
+        const result = {
+            error: false,
+            message: null
+        };
+        const argumentsList = Array.prototype.slice.call(arguments);
+        const errorMsg = new Array();
+        argumentsList.forEach(function(arg) {
+            const value = arg.value;
+            const name = arg.name;
+            if(!value) {
+                result.error = true;
+                errorMsg.push(_this.getMessage(msgTypes.required, name));
+            }
+            else if(value.match(new RegExp(SIGN.ws, "g"))) {
+                result.error = true;
+                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
+            }
+        });
+        if(result.error) {
+            result.message = errorMsg.join(SIGN.br);
+        }
+        return result;
+    },
+    getMessage: function(type, msg) {
+        const _this = this;
+        const msgTypes = _this.Define.TYPES.message;
+        switch(type) {
+            case msgTypes.required: {
+                msg = msg + " is required";
+                break;
+            }
+            case msgTypes.matchWhitespace: {
+                msg = msg + " : whitespace is not allowed";
+                break;
+            }
+        }
+        return msg;
+    },
+    createConnectString: function(sid, uid, pwd, type) {
+        const _this = this;
+        const ODBC = _this.Define.ODBC;
+        const DIRECT = _this.Define.DIRECT;
+        const DEFAULT_SET = _this.Define.DEFAULT_SET;
+        const paramType = type ? type : _this.Define.TYPES.connect.direct;
+        const connectType = this.Define.TYPES.connect;
+        const getConnectString = function(name, value) {
+            return name + value + SIGN.sc;
+        };
+        const getDataSourceString = function(name, value) {
+            return SIGN.bs + name + value + SIGN.be;
+        };
+        let str = "";
+        switch(paramType) {
+            case connectType.odbc: {
+                str += ODBC.driver;
+                str += ODBC.connect_string;
+                str += getConnectString(ODBC.uid, uid);
+                str += getConnectString(ODBC.pwd, pwd);
+                break;
+            }
+            case connectType.direct: {
+                str += DIRECT.provider;
+                str += "Data Source=(";
+                str +=  "DESCRIPTION=";
+                str +=   "(CID=GTU_APP)";
+                str +=   "(ADDRESS_LIST=(ADDRESS="
+                str +=    getDataSourceString(DIRECT.protocol, DEFAULT_SET.protocol);
+                str +=    getDataSourceString(DIRECT.host, DEFAULT_SET.host);
+                str +=    getDataSourceString(DIRECT.port, DEFAULT_SET.port);
+                str +=   "))"
+                str +=   "(CONNECT_DATA=";
+                str +=    getDataSourceString(DIRECT.sid, sid);
+                str +=    getDataSourceString(DIRECT.server, DEFAULT_SET.server);
+                str +=   ")";
+                str += ");";
+                str += getConnectString(DIRECT.uid, uid);
+                str += getConnectString(DIRECT.pwd, pwd);
+                break;
+            }
+        }
+        return str;
+    },
+    mainConnect: function() {
+        this.state.isSubConnection = false;
+        return this;
+    },
+    subConnect: function() {
+        this.state.isSubConnection = true;
+        return this;
+    },
+    setConnectObject: function() {
+        const isSubConnection = this.state.isSubConnection;
+        if(!isSubConnection) {
+            this.state.db = new ActiveXObject(this.Define.ADODB.connection);
+        }
+        else {
+            this.state.subDb = new ActiveXObject(this.Define.ADODB.connection);
+        }
+        return this;
+    },
+    open: function(connectString) {
+        const isSubConnection = this.state.isSubConnection;
+        const db = !isSubConnection ? this.state.db : this.state.subDb;
+        if(db) {
+            db.Open(connectString);
+        }
+        return this;
+    },
+    subClose: function() {
+        if(this.state.subDb) {
+            this.state.subDb.Close();
+        }
+        return this;
+    },
+    close: function() {
+        if(this.state.db) {
+            this.state.db.Close();
+        }
+        this.state.lock = false;
+        return this;
+    },
+    redirect: function() {
+        const _this = this;
+        _this.close();
+        if(_this.state.db) {
+            const info = _this.state.info;
+            const connectString = _this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
+            _this.mainConnect().setConnectObject().open(connectString);
+        }
+        return this;
+    },
+    dbCommand: function(connection) {
+        if(connection) {
+            const commandType = this.Define.TYPES.command;
+            this.state.command = new ActiveXObject(this.Define.ADODB.command);
+            this.state.command.ActiveConnection = connection;
+            this.state.command.CommandType = commandType.adCmdText;
+            this.state.command.Prepared = true;
+        }
+        return this;
+    },
+    setQuery: function(query, isNoneQuery) {
+        if(this.state.command) {
+            this.state.command.CommandText = query;
+            this.state.noneQuery = isNoneQuery;
+        }
+        return this;
+    },
+    setParameter: function() {
+        const _this = this;
+        const argumentsList = Array.prototype.slice.call(arguments);
+        _this.state.command.Parameters.Refresh();
+        argumentsList.forEach(function(item, i) {
+            _this.state.command.Parameters(i).Value = item;
+        });
+        return this;
+    },
+    execute: function() {
+        const noneQuery = this.state.noneQuery;
+        if(this.state.command) {
+            this.state.recordSet = this.state.command.Execute();
+        }
+        return this;
+    },
+    getData: function() {
+        const rs = this.state.recordSet;
+        const dataSet = {
+            error: true,
+            count: 0,
+            name: new Array(),
+            data: new Array(),
+            type: new Array()
+        };
+        if(rs) {
+            try {
+                for(let i = 0; i < rs.Fields.Count; i++) {
+                    dataSet.name.push(rs.Fields.Item(i).Name);
                 }
-            });
-            return $input;
+                while(!rs.EOF) {
+                    const valueStack = new Array();
+                    const typeStack = new Array();
+                    for(let i = 0; i < dataSet.name.length; i++) {
+                        const item = rs.Fields.Item(i);
+                        valueStack.push(item.Value);
+                        typeStack.push(item.Type);
+                    }
+                    dataSet.data.push(valueStack);
+                    dataSet.type.push(typeStack);
+                    dataSet.count += 1;
+                    rs.MoveNext();
+                }
+                rs.Close();
+                dataSet.error = false;
+            }
+            catch(e) {}
+        }
+        return dataSet;
+    },
+    transaction: function() {
+        const _this = this;
+        const state = {
+            error: false,
+            message: null
         };
-        const getButton = function() {
-            const $button = jqNode("button").text("ACCESS");
-            $button.click(function() {
-                _this.onAccess();
-            });
-            return $button;
-        };
-        const $sid = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.sid, captions[seId.sid]));
-        const $uid = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.uid, captions[seId.uid]));
-        const $pwd = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.pwd, captions[seId.pwd]));
-        const $confirm = jqNode("div", { class: seClass.commandLine }).append(getButton());
-        [$sid, $uid, $pwd, $confirm].forEach(function(item) { $accessCommand.append(item); });
-        return $accessCommand;
+        if(_this.state.lock) {
+            const message = "Locking by other transaction";
+            state.error = true;
+            state.message = message;
+            return state;
+        }
+        if(_this.state.db) {
+            _this.state.db.BeginTrans();
+            _this.state.lock = true;
+        }
+        return state;
+    },
+    commit: function() {
+        if(this.state.db) {
+            this.state.db.CommitTrans();
+        }
+        this.state.lock = false;
+        return this;
+    },
+    rollback: function() {
+        if(this.state.db) {
+            this.state.db.RollbackTrans();
+        }
+        this.state.lock = false;
+        return this;
+    },
+    recordSetClose: function() {
+        return this;
     },
     setPage: function(type) {
         const _this = this;
@@ -333,14 +630,14 @@ SqlModule.prototype = {
                 };
                 const cardList = [
                     {
-                        id: seId.createUserCard,
-                        title: captions.createUser,
-                        contents: "create user tool"
-                    },
-                    {
                         id: seId.dataCopyCard,
                         title: captions.dataCopy,
                         contents: _this.buildDataCopyContents()
+                    },
+                    {
+                        id: seId.createUserCard,
+                        title: captions.createUser,
+                        contents: _this.buildCreateUserContents()
                     }
                 ];
                 cardList.forEach(function(item) {
@@ -353,6 +650,35 @@ SqlModule.prototype = {
         }
         _this.state.page = pageType;
         return null;
+    },
+    buildAccessCommand: function($accessCommand){
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const getInput = function(id, ph) {
+            const $input = jqNode("input", { type: "text", id: id, placeholder: ph });
+            $input.keypress(function(e) {
+                const keyCode = e.which || e.keyCode;
+                if(keyCode === 13) {
+                    _this.onAccess();
+                }
+            });
+            return $input;
+        };
+        const getButton = function() {
+            const $button = jqNode("button").text("ACCESS");
+            $button.click(function() {
+                _this.onAccess();
+            });
+            return $button;
+        };
+        const $sid = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.sid, captions[seId.sid]));
+        const $uid = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.uid, captions[seId.uid]));
+        const $pwd = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.pwd, captions[seId.pwd]));
+        const $confirm = jqNode("div", { class: seClass.commandLine }).append(getButton());
+        [$sid, $uid, $pwd, $confirm].forEach(function(item) { $accessCommand.append(item); });
+        return $accessCommand;
     },
     buildDataCopyContents: function() {
         const _this = this;
@@ -479,70 +805,20 @@ SqlModule.prototype = {
                 [$insertButton, $optionButton, $exportButton, $backupButton, $resetButton].forEach(function(item) {
                     $actionArea.append(item);
                 });
-                $optionButton.click(function() {
-                    const optionContents = _this.buildOptionContents();
-                    const option = { "min-width": "400px", "max-height": "530px" };
-                    const callback = function(dialogClose) {
-                        _this.saveOptionDataCopy(dialogClose);
-                    };
-                    const $export = jqNode("button").text(upperCase(captions.export));
-                    const $import = jqNode("button").text(upperCase(captions.import));
-                    $export.click(function() {
-                        const fileData = _this.saveOptionDataCopy();
-                        if(fileData) {
-                            if(isVoid(fileData.data)) {
-                                new Notification().error().open(MESSAGES.nothing_data);
-                                return false;
-                            }
-                            saveAsFile(JSON.stringify(fileData.data), TYPES.file.mime.TEXT_UTF8, concatString("OptionData", TYPES.file.extension.txt));
-                        }
-                    });
-                    $import.click(function() {
-                        const onReadFile = function(data) {
-                            try {
-                                const parsedData = JSON.parse(data);
-                                const structureCheck = function() {
-                                    let isCorrect = true;
-                                    parsedData.some(function(item) {
-                                        if(!(!isVoid(item.table) && typeIs(item.table).string) || !(!isVoid(item.script) && typeIs(item.script).string)) {
-                                            isCorrect = false;
-                                            return true;
-                                        }
-                                    });
-                                    return isCorrect;
-                                };
-                                if(parsedData.length >= 1 && structureCheck()) {
-                                    const $container = jqById(seId.optionContainerDataCopy).parent();
-                                    $container.empty().append(_this.buildOptionContents(parsedData));
-                                }
-                                else {
-                                    new Notification().error().open(MESSAGES.incorrect_data);
-                                }
-                            }
-                            catch(e) {
-                                new Notification().error().open(MESSAGES.incorrect_data);
-                            }
-                        };
-                        new FileController().setListener(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
-                    });
-                    new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export]).open(callback);
-                });
                 $insertButton.click(function() {
                     _this.insertDataCopy();
+                });
+                $optionButton.click(function() {
+                    _this.openOptionDataCopy();
                 });
                 $exportButton.click(function() {
                     _this.exportToExcelDataCopy();
                 });
                 $backupButton.click(function() {
-                    const extractedData = _this.state.dataCopy.extractedData;
-                    const key = Object.keys(extractedData)[0];
-                    const fileDefine = TYPES.file;
-                    const parts = JSON.stringify(extractedData);
-                    const fileName = concatString(key, "_Backup_", getSystemDate(), fileDefine.extension.txt);
-                    const mime = TYPES.file.mime.TEXT_UTF8;
-                    saveAsFile(parts, mime, fileName);
+                    _this.backupDataCopy();
                 });
                 $resetButton.click(function() {
+                    _this.redirect();
                     _this.state.dataCopy = new Object();
                     $cardContents.html(_this.buildDataCopyContents());
                 });
@@ -550,22 +826,136 @@ SqlModule.prototype = {
             }
             case phaseType.commit: {
                 const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
+                const $rollbackButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.rollback));
                 const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
+                const $exportButton = jqNode("button", { class: eClass.buttonColorCalm }).text(upperCase(captions.export));
+                const $backupButton = jqNode("button", { class: eClass.buttonColorRoyal }).text(upperCase(captions.backup));
                 const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
                 $actionArea.empty();
-                [$commitButton, $logButton, $resetButton].forEach(function(item) {
+                [$commitButton, $rollbackButton, $logButton, $exportButton, $backupButton, $resetButton].forEach(function(item) {
                     $actionArea.append(item);
                 });
+                $commitButton.click(function() {
+                    _this.commit().redirect();
+                    const message = "Data copy successfully";
+                    new Notification().complete().open(message);
+                    _this.actionControllerDataCopy(phaseType.complete);
+                });
+                $rollbackButton.click(function() {
+                    _this.rollback().redirect().actionControllerDataCopy(phaseType.insert);
+                });
+                $logButton.click(function() {
+                    _this.downloadLogDataCopy();
+                });
+                $exportButton.click(function() {
+                    _this.exportToExcelDataCopy();
+                });
+                $backupButton.click(function() {
+                    _this.backupDataCopy();
+                });
                 $resetButton.click(function() {
+                    _this.redirect();
                     _this.state.dataCopy = new Object();
                     $cardContents.html(_this.buildDataCopyContents());
                 });
                 break;
             }
             case phaseType.complete: {
+                const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
+                const $exportButton = jqNode("button", { class: eClass.buttonColorCalm }).text(upperCase(captions.export));
+                const $backupButton = jqNode("button", { class: eClass.buttonColorRoyal }).text(upperCase(captions.backup));
+                const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+                $actionArea.empty();
+                [$logButton, $exportButton, $backupButton, $resetButton].forEach(function(item) {
+                    $actionArea.append(item);
+                });
+                $logButton.click(function() {
+                    _this.downloadLogDataCopy();
+                });
+                $exportButton.click(function() {
+                    _this.exportToExcelDataCopy();
+                });
+                $backupButton.click(function() {
+                    _this.backupDataCopy();
+                });
+                $resetButton.click(function() {
+                    _this.redirect();
+                    _this.state.dataCopy = new Object();
+                    $cardContents.html(_this.buildDataCopyContents());
+                });
                 break;
             }
         }
+        return null;
+    },
+    backupDataCopy: function() {
+        const _this = this;
+        const extractedData = _this.state.dataCopy.extractedData;
+        const key = Object.keys(extractedData)[0];
+        const fileDefine = TYPES.file;
+        const parts = JSON.stringify(extractedData);
+        const fileName = concatString(["Backup", key, getFileStamp()].join("_"), fileDefine.extension.txt);
+        const mime = TYPES.file.mime.TEXT_UTF8;
+        saveAsFile(parts, mime, fileName);
+        return null;
+    },
+    openOptionDataCopy: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const optionContents = _this.buildOptionContents();
+        const option = { "min-width": "400px", "max-height": "530px" };
+        const callback = function(dialogClose) {
+            _this.saveOptionDataCopy(dialogClose);
+        };
+        const $export = jqNode("button").text(upperCase(captions.export));
+        const $import = jqNode("button").text(upperCase(captions.import));
+        $export.click(function() {
+            const fileData = _this.saveOptionDataCopy();
+            if(fileData) {
+                if(isVoid(fileData.data)) {
+                    new Notification().error().open(MESSAGES.nothing_data);
+                    return false;
+                }
+                saveAsFile(JSON.stringify(fileData.data), TYPES.file.mime.TEXT_UTF8, concatString("OptionData_", getFileStamp(), TYPES.file.extension.txt));
+            }
+        });
+        $import.click(function() {
+            const onReadFile = function(data) {
+                try {
+                    const parsedData = JSON.parse(data);
+                    const structureCheck = function() {
+                        let isCorrect = true;
+                        parsedData.some(function(item) {
+                            if(!(!isVoid(item.table) && typeIs(item.table).string) || !(!isVoid(item.script) && typeIs(item.script).string)) {
+                                isCorrect = false;
+                                return true;
+                            }
+                        });
+                        return isCorrect;
+                    };
+                    if(parsedData.length >= 1 && structureCheck()) {
+                        const $container = jqById(seId.optionContainerDataCopy).parent();
+                        $container.empty().append(_this.buildOptionContents(parsedData));
+                    }
+                    else {
+                        new Notification().error().open(MESSAGES.incorrect_data);
+                    }
+                }
+                catch(e) {
+                    new Notification().error().open(MESSAGES.incorrect_data);
+                }
+            };
+            new FileController().setListener(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
+        });
+        new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export]).open(callback);
+        return null;
+    },
+    downloadLogDataCopy: function() {
+        const _this = this;
+        const dataCopyState = _this.state.dataCopy;
+        const logData = dataCopyState.log;
+        saveAsFile(logData.join(SIGN.crlf), TYPES.file.mime.TEXT_UTF8, concatString("LogData_", getFileStamp(), TYPES.file.extension.txt));
         return null;
     },
     importDataCopy: function() {
@@ -633,7 +1023,7 @@ SqlModule.prototype = {
             let pnf, pnt;
             let extractedData = new Object();
             if(!dataCopyState.extractedData) {
-                    // const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
+                // const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
                 // const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
                 // const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
                 // const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
@@ -687,9 +1077,9 @@ SqlModule.prototype = {
                     const dataSet = testDataSet[table];
                     dataSet.sort = i;
                     //test
-
                     const query = _this.getDataCopySelectQuery(table, pnf);
                     // const dataSet = _this.dbCommand(_this.state.subDb).setQuery(query).execute().getData();
+                    dataSet.sort = i;
                     extractedData[pnf][table] = dataSet;
                     if(dataSet.error) {
                         actionStatus.extractError = true;
@@ -698,8 +1088,6 @@ SqlModule.prototype = {
                     return dataSet.error;
                 });
                 // _this.subClose().redirect();
-                // _this.redirect();
-                // _this.subConnect().close().mainConnect();
                 if(actionStatus.extractError) {
                     new Notification().error().open(actionStatus.message);
                     loading.off();
@@ -768,8 +1156,6 @@ SqlModule.prototype = {
             loading.off();
         }).catch(function(e) {
             // _this.subClose().redirect();
-            // _this.redirect();
-            // _this.subConnect().close().mainConnect();
             new Notification().error().open(e.message);
             loading.off();
         });
@@ -953,7 +1339,8 @@ SqlModule.prototype = {
             wb.Sheets[table] = ws;
         });
         const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
-        saveAsFile(s2ab(wbout), fileDefine.mime.OCTET_STREAM, "DataCopyCheck.xlsx");
+        const fileName = concatString("DataCopyCheck_", getFileStamp(), TYPES.file.extension.xlsx);
+        saveAsFile(s2ab(wbout), fileDefine.mime.OCTET_STREAM, fileName);
         return null;
     },
     saveOptionDataCopy: function(dialogClose) {
@@ -1049,7 +1436,7 @@ SqlModule.prototype = {
             const insertData = dataCopyState.insertData;
             const insertQuery = new Object();
             const getQuery = function(table, columns, values) {
-                return concatString("INSERT INTO ", table, " (", columns, ") VALUES (", values, ");");
+                return concatString("INSERT INTO ", table, " (", columns, ") VALUES (", values, ")");
             };
             Object.keys(insertData).forEach(function(table) {
                 const name = insertData[table].name;
@@ -1064,16 +1451,24 @@ SqlModule.prototype = {
                     insertQuery[table].push(getQuery(table, columns, values));
                 });
             });
-            _this.transaction().dbCommand(_this.state.db);
-            Object.keys(insertQuery).forEach(function(table) {
-                dataCopyState.log.push(table);
-                insertQuery[table].forEach(function(query) {
-                    _this.setQuery(query).execute();
-                    dataCopyState.log.push(query);
+            const transaction = _this.transaction();
+            if(!transaction.error) {
+                _this.dbCommand(_this.state.db);
+                Object.keys(insertQuery).forEach(function(table) {
+                    dataCopyState.log.push(concatString("■", table, "■"));
+                    insertQuery[table].forEach(function(query) {
+                        _this.setQuery(query).execute();
+                        dataCopyState.log.push(query);
+                        const timeLog = concatString("# > inserted query at ", getSystemDateTimeMilliseconds(), SIGN.crlf);
+                        dataCopyState.log.push(timeLog);
+                    });
                 });
-            });
-            const phaseType = _this.Define.TYPES.phase.dataCopy;
-            _this.actionControllerDataCopy(phaseType.commit);
+                const phaseType = _this.Define.TYPES.phase.dataCopy;
+                _this.actionControllerDataCopy(phaseType.commit);
+            }
+            else {
+                new Notification().error().open(transaction.message);
+            }
             loading.off();
         }).catch(function(e) {
             console.log(e);
@@ -1081,304 +1476,144 @@ SqlModule.prototype = {
             _this.rollback().redirect();
             loading.off();
         });
-    },
-    transition: function(type) {
-        const _this = this;
-        const seStyle = _this.Define.ELEMENTS.style;
-        const $contents = jqById(getContentsId());
-        $contents.css({ opacity: 0 });
-        setTimeout(function() {
-            _this.setPage(type);
-            $contents.css({ opacity: 1 });
-        }, seStyle.transitionDuration);
         return null;
     },
-    openMenu: function() {
+    buildCreateUserContents: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
-        const $container = jqById(eId.container);
-        const $menuContainer = jqById(seId.sqlMenuContainer);
-        $container.click(function() { $menuContainer.removeClass(eClass.isVisible); });
-        $menuContainer.empty();
-        const $menu = jqNode("ul", { class: classes(eClass.menu, eClass.menuBottomRight) });
-        const itemList = new Array();
-        createMenuItem(itemList, eIcon.home, CAPTIONS.home, transitonMenu);
-        if(_this.state.isConnect) {
-            const menuInfo = { sid: _this.state.info.sid, uid: _this.state.info.uid };
-            const onDisconnect = function() { _this.onDisconnect(); };
-            createMenuItem(itemList, eIcon.signOut, CAPTIONS.disconnect, onDisconnect);
-            createMenuInfo(itemList, menuInfo);
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $createButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.create));
+        $actionArea.append($createButton);
+        $container.append($actionArea);
+        const itemList = [
+            {
+                label: captions.userCode,
+                inputType: "input",
+                inputId: seId.userCode
+            },
+            {
+                label: captions.userName,
+                inputType: "input",
+                inputId: seId.userName
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: seClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+        });
+        $createButton.click(function() {
+            _this.createUser();
+        });
+        return $container;
+    },
+    actionControllerCreateUser: function(phase) {
+        const _this = this;
+        const phaseType = _this.Define.TYPES.phase.createUser;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const $card = jqById(seId.createUserCard);
+        const $cardContents = $card.find(concatString(".", eClass.cardContents));
+        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
+        switch(phase) {
+            case phaseType.commit: {
+                const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
+                const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
+                const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+                $actionArea.empty();
+                [$commitButton, $logButton, $resetButton].forEach(function(item) {
+                    $actionArea.append(item);
+                });
+                $commitButton.click(function() {
+                    _this.commit().redirect();
+                    const message = "Create user successfully";
+                    new Notification().complete().open(message);
+                    _this.actionControllerCreateUser(phaseType.complete);
+                });
+                $logButton.click(function() {
+                    _this.downloadLogCreateUser();
+                });
+                $resetButton.click(function() {
+                    _this.redirect();
+                    _this.state.dataCopy = new Object();
+                    $cardContents.html(_this.buildCreateUserContents());
+                });
+                break;
+            }
+            case phaseType.complete: {
+                const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
+                const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+                $actionArea.empty();
+                [$logButton, $resetButton].forEach(function(item) {
+                    $actionArea.append(item);
+                });
+                $logButton.click(function() {
+                    _this.downloadLogCreateUser();
+                });
+                $resetButton.click(function() {
+                    _this.redirect();
+                    _this.state.dataCopy = new Object();
+                    $cardContents.html(_this.buildCreateUserContents());
+                });
+                break;
+            }
         }
-        itemList.forEach(function(item) { $menu.append(item); });
-        $menuContainer.append($menu);
-        setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
         return null;
     },
-    onAccess: function() {
+    downloadLogCreateUser: function() {
+        return null;
+    },
+    createUser: function() {
         const _this = this;
         const loading = new Loading();
         loading.on().then(function() {
-            const pageType = _this.Define.TYPES.page;
             const seId = _this.Define.ELEMENTS.id;
             const captions = _this.Define.CAPTIONS;
-            const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
-            const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
-            const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
-            const result = _this.validation(sid, uid, pwd);
+            const userCode = _this.getCheckObject(jqById(seId.userCode).val(), captions.userCode);
+            const userName = _this.getCheckObject(jqById(seId.userName).val(), captions.userName);
+            const result = _this.validation(userCode, userName);
             if(result.error) {
                 new Notification().error().open(result.message);
                 loading.off();
                 return false;
             }
-            const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
-            // _this.mainConnect().setConnectObject().open(connectString);
-            _this.state.isConnect = true;
-            _this.state.info = {
-                sid: sid,
-                uid: uid,
-                pwd: pwd
-            };
-            _this.transition(pageType.application);
+            else {
+                const numericCheckResult = {
+                    error: false,
+                    message: new Array()
+                };
+                if(!userCode.value.match(REG_EXP.numeric)) {
+                    numericCheckResult.error = true;
+                    numericCheckResult.message.push([captions.userCode, MESSAGES.allowedOnlyNumeric].join(" : "));
+                }
+                if(numericCheckResult.error) {
+                    new Notification().error().open(numericCheckResult.message.join(SIGN.br));
+                    loading.off();
+                    return false;
+                }
+            }
+            const transaction = _this.transaction();
+            if(!transaction.error) {
+                _this.dbCommand(_this.state.db);
+                const phaseType = _this.Define.TYPES.phase.createUser;
+                _this.actionControllerCreateUser(phaseType.commit);
+            }
+            else {
+                new Notification().error().open(transaction.message);
+            }
             loading.off();
         }).catch(function(e) {
             console.log(e);
             new Notification().error().open(e.message);
             loading.off();
         });
-        // new Notification().complete().open("Successfully connected");
         return null;
-    },
-    onDisconnect: function() {
-        const _this = this;
-        const pageType = _this.Define.TYPES.page;
-        _this.state.isConnect = false;
-        _this.state.info = new Object();
-        _this.transition(pageType.access);
-        return null;
-    },
-    getCheckObject: function(value, name) {
-        return {
-            value: value,
-            name: name
-        };
-    },
-    validation: function() {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        const result = {
-            error: false,
-            message: null
-        };
-        const argumentsList = Array.prototype.slice.call(arguments);
-        const errorMsg = new Array();
-        argumentsList.forEach(function(arg) {
-            const value = arg.value;
-            const name = arg.name;
-            if(!value) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.required, name));
-            }
-            else if(value.match(new RegExp(SIGN.ws, "g"))) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
-            }
-        });
-        if(result.error) {
-            result.message = errorMsg.join(SIGN.br);
-        }
-        return result;
-    },
-    getMessage: function(type, msg) {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        switch(type) {
-            case msgTypes.required: {
-                msg = msg + " is required";
-                break;
-            }
-            case msgTypes.matchWhitespace: {
-                msg = msg + " : whitespace is not allowed";
-                break;
-            }
-        }
-        return msg;
-    },
-    createConnectString: function(sid, uid, pwd, type) {
-        const _this = this;
-        const ODBC = _this.Define.ODBC;
-        const DIRECT = _this.Define.DIRECT;
-        const DEFAULT_SET = _this.Define.DEFAULT_SET;
-        const paramType = type ? type : _this.Define.TYPES.connect.direct;
-        const connectType = this.Define.TYPES.connect;
-        const getConnectString = function(name, value) {
-            return name + value + SIGN.sc;
-        };
-        const getDataSourceString = function(name, value) {
-            return SIGN.bs + name + value + SIGN.be;
-        };
-        let str = "";
-        switch(paramType) {
-            case connectType.odbc: {
-                str += ODBC.driver;
-                str += ODBC.connect_string;
-                str += getConnectString(ODBC.uid, uid);
-                str += getConnectString(ODBC.pwd, pwd);
-                break;
-            }
-            case connectType.direct: {
-                str += DIRECT.provider;
-                str += "Data Source=(";
-                str +=  "DESCRIPTION=";
-                str +=   "(CID=GTU_APP)";
-                str +=   "(ADDRESS_LIST=(ADDRESS="
-                str +=    getDataSourceString(DIRECT.protocol, DEFAULT_SET.protocol);
-                str +=    getDataSourceString(DIRECT.host, DEFAULT_SET.host);
-                str +=    getDataSourceString(DIRECT.port, DEFAULT_SET.port);
-                str +=   "))"
-                str +=   "(CONNECT_DATA=";
-                str +=    getDataSourceString(DIRECT.sid, sid);
-                str +=    getDataSourceString(DIRECT.server, DEFAULT_SET.server);
-                str +=   ")";
-                str += ");";
-                str += getConnectString(DIRECT.uid, uid);
-                str += getConnectString(DIRECT.pwd, pwd);
-                break;
-            }
-        }
-        return str;
-    },
-    mainConnect: function() {
-        this.state.isSubConnection = false;
-        return this;
-    },
-    subConnect: function() {
-        this.state.isSubConnection = true;
-        return this;
-    },
-    setConnectObject: function() {
-        const isSubConnection = this.state.isSubConnection;
-        if(!isSubConnection) {
-            this.state.db = new ActiveXObject(this.Define.ADODB.connection);
-        }
-        else {
-            this.state.subDb = new ActiveXObject(this.Define.ADODB.connection);
-        }
-        return this;
-    },
-    open: function(connectString) {
-        const isSubConnection = this.state.isSubConnection;
-        const db = !isSubConnection ? this.state.db : this.state.subDb;
-        if(db) {
-            db.Open(connectString);
-        }
-        return this;
-    },
-    subClose: function() {
-        if(this.state.subDb) {
-            this.state.subDb.Close();
-        }
-        return this;
-    },
-    close: function() {
-        if(this.state.db) {
-            this.state.db.Close();
-        }
-        return this;
-    },
-    redirect: function() {
-        const _this = this;
-        if(_this.state.db) {
-            _this.state.db.Close();
-            const info = _this.state.info;
-            const connectString = _this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
-            _this.mainConnect().setConnectObject().open(connectString);
-        }
-        return this;
-    },
-    dbCommand: function(connection) {
-        const commandType = this.Define.TYPES.command;
-        this.state.command = new ActiveXObject(this.Define.ADODB.command);
-        this.state.command.ActiveConnection = connection;
-        this.state.command.CommandType = commandType.adCmdText;
-        this.state.command.Prepared = true;
-        return this;
-    },
-    setQuery: function(query, isNoneQuery) {
-        if(this.state.command) {
-            this.state.command.CommandText = query;
-            this.state.noneQuery = isNoneQuery;
-        }
-        return this;
-    },
-    setParameter: function() {
-        const _this = this;
-        const argumentsList = Array.prototype.slice.call(arguments);
-        _this.state.command.Parameters.Refresh();
-        argumentsList.forEach(function(item, i) {
-            _this.state.command.Parameters(i).Value = item;
-        });
-        return this;
-    },
-    execute: function() {
-        const noneQuery = this.state.noneQuery;
-        if(this.state.command) {
-            this.state.recordSet = this.state.command.Execute();
-        }
-        return this;
-    },
-    getData: function() {
-        const rs = this.state.recordSet;
-        const dataSet = {
-            error: true,
-            count: 0,
-            name: new Array(),
-            data: new Array(),
-            type: new Array()
-        };
-        if(rs) {
-            try {
-                for(let i = 0; i < rs.Fields.Count; i++) {
-                    dataSet.name.push(rs.Fields.Item(i).Name);
-                }
-                while(!rs.EOF) {
-                    const valueStack = new Array();
-                    const typeStack = new Array();
-                    for(let i = 0; i < dataSet.name.length; i++) {
-                        const item = rs.Fields.Item(i);
-                        valueStack.push(item.Value);
-                        typeStack.push(item.Type);
-                    }
-                    dataSet.data.push(valueStack);
-                    dataSet.type.push(typeStack);
-                    dataSet.count += 1;
-                    rs.MoveNext();
-                }
-                rs.Close();
-                dataSet.error = false;
-            }
-            catch(e) {}
-        }
-        return dataSet;
-    },
-    transaction: function() {
-        if(this.state.db) {
-            this.state.db.BeginTrans();
-        }
-        return this;
-    },
-    commit: function() {
-        if(this.state.db) {
-            this.state.db.CommitTrans();
-        }
-        return this;
-    },
-    rollback: function() {
-        if(this.state.db) {
-            this.state.db.RollbackTrans();
-        }
-        return this;
-    },
-    recordSetClose: function() {
-        return this;
     }
 };

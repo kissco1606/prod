@@ -68,45 +68,44 @@ textarea {
 .red-color { color: #F44336 !important; }
 .blue-color { color: #2196F3 !important }
 
-.button--color-green { background-color: #47b293; }
-.button--color-green:hover, .button--color-green:focus {
-    background-color: #47b293;
-    opacity: .8;
-}
 .button--colored:hover, .button--colored:focus { opacity: .8; }
 .button--accent:hover, .button--accent:focus { opacity: .8; }
 
-.button--color-positive { background-color: #387ef5; }
+.button--color-positive { background-color: #2979FF; }
 .button--color-positive:hover {
-    background-color: rgba(70, 142, 245, 0.8);
+    background-color: #448AFF;
 }
-.button--color-calm { background-color: #11c1f3; }
+.button--color-calm { background-color: #03A9F4; }
 .button--color-calm:hover {
-    background-color: rgba(17, 193, 243, 0.8);
+    background-color: #29B6F6;
 }
-.button--color-balanced { background-color: #47b293; }
+.button--color-balanced { background-color: #009688; }
 .button--color-balanced:hover {
-    background-color: rgba(71, 178, 147, 0.8);
+    background-color: #26A69A;
 }
-.button--color-energized { background-color: #ffc900; }
+.button--color-energized { background-color: #FFC107; }
 .button--color-energized:hover {
-    background-color: rgba(255, 201, 0, 0.8);
+    background-color: #FFD54F;
 }
-.button--color-assertive { background-color: #ef473a; }
+.button--color-assertive { background-color: #F44336; }
 .button--color-assertive:hover {
-    background-color: rgba(239, 71, 58, 0.8);
+    background-color: #EF5350;
 }
-.button--color-royal { background-color: #886aea; }
+.button--color-royal { background-color: #673AB7; }
 .button--color-royal:hover {
-    background-color: rgba(136, 106, 234, 0.8);
+    background-color: #7E57C2;
 }
 .button--color-dark { background-color: #444; }
 .button--color-dark:hover {
-    background-color: rgba(68, 68, 68, 0.8);
+    background-color: #555;
 }
-.button--color-cyan { background-color: #00BCD4 }
+.button--color-cyan { background-color: #00BCD4; }
 .button--color-cyan:hover {
-    background-color: rgba(0, 188, 212, 0.8);
+    background-color: #26C6DA;
+}
+.button--color-orange { background-color: #FF9800; }
+.button--color-orange:hover {
+    background-color: #FFA726;
 }
 
 .cell-ellipsis {
@@ -417,7 +416,7 @@ textarea {
     max-width: 980px;
     width: 100%;
     margin: 10px 0;
-    border-radius: 0.25em;
+    border-radius: 0.3em;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 }
 .card:first-child {
@@ -433,7 +432,7 @@ textarea {
 .card > .card-title {
     background-color: #e91e63;
     color: #fff;
-    border-radius: 0.25em 0.25em 0 0;
+    border-radius: 0.2em 0.2em 0 0;
     font-size: 15px;
     font-weight: 500;
     line-height: 1.5;

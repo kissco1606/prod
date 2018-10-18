@@ -156,6 +156,48 @@ function getSystemDate() {
     return concatString(year, month, date);
 };
 
+function getSystemDateTime(dateSep, timeSep) {
+    const ds = dateSep ? dateSep : SIGN.ssh;
+    const ts = timeSep ? timeSep : SIGN.gc;
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const fullDate = [year, month, date].join(ds);
+    const fullTime = [hours, minutes, seconds].join(ts);
+    return [fullDate, fullTime].join(SIGN.ws);
+};
+
+function getSystemDateTimeMilliseconds(dateSep, timeSep) {
+    const ds = dateSep ? dateSep : SIGN.ssh;
+    const ts = timeSep ? timeSep : SIGN.gc;
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const milliseconds = String(d.getMilliseconds());
+    const fullDate = [year, month, date].join(ds);
+    const fullTime = concatString([hours, minutes, seconds].join(ts), ".", milliseconds);
+    return [fullDate, fullTime].join(SIGN.ws);
+};
+
+function getFileStamp() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    return concatString(year, month, date, hours,minutes, seconds);
+};
+
 function cloneJS(data) {
     const type = typeIs(data);
     if(type.object) {

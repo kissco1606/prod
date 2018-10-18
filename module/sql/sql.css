@@ -121,19 +121,22 @@
 	background-color: #ec407a;
 }
 
-#data-copy-card .contents-container > .command-area {
+#data-copy-card .contents-container > .command-area,
+#create-user-card .contents-container > .command-area {
 	display: flex;
 	flex-direction: row;
 	padding: 10px 0;
 }
 
-#data-copy-card .contents-container > .command-area > label {
+#data-copy-card .contents-container > .command-area > label,
+#create-user-card .contents-container > .command-area > label {
 	width: 200px;
 	text-align: left;
 	line-height: 1.5;
 }
 
-#data-copy-card .contents-container > .command-area > input {
+#data-copy-card .contents-container > .command-area > input,
+#create-user-card .contents-container > .command-area > input {
 	padding: 5px;
 	border: none;
 	border: 1px solid rgba(0, 0, 0, 0.4);
@@ -152,12 +155,14 @@
 	overflow: auto;
 }
 
-#data-copy-card .contents-container > .action-area {
+#data-copy-card .contents-container > .action-area,
+#create-user-card .contents-container > .action-area {
 	padding: 10px 0;
 	text-align: right;
 }
 
-#data-copy-card .contents-container > .action-area > button {
+#data-copy-card .contents-container > .action-area > button,
+#create-user-card .contents-container > .action-area > button {
 	margin-left: 10px;
 	margin-top: 5px;
 	margin-bottom: 5px;
