@@ -68,6 +68,11 @@ textarea {
 .red-color { color: #F44336 !important; }
 .blue-color { color: #2196F3 !important }
 
+.button-disable {
+    background-color: #ccc !important;
+    cursor: default !important;    
+}
+
 .button--colored:hover, .button--colored:focus { opacity: .8; }
 .button--accent:hover, .button--accent:focus { opacity: .8; }
 
@@ -107,6 +112,23 @@ textarea {
 .button--color-orange:hover {
     background-color: #FFA726;
 }
+.button--color-lime { background-color: #CDDC39; }
+.button--color-lime:hover {
+    background-color: #D4E157;
+}
+.button--color-deepOrange { background-color: #FF5722; }
+.button--color-deepOrange:hover {
+    background-color: #FF7043;
+}
+.button--color-brown { background-color: #795548; }
+.button--color-brown:hover {
+    background-color: #8D6E63;
+}
+.button--color-blueGrey { background-color: #607D8B; }
+.button--color-blueGrey:hover {
+    background-color: #78909C;
+}
+
 
 .cell-ellipsis {
     max-width: 250px;

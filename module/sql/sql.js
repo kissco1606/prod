@@ -1,72 +1,4 @@
-const testDataSet = {
-    KT_KokKykKanren: {
-        error: false,
-        count: 2,
-        name: ["S_SYONO", "S_KOKNO", "N_SKEIKIKEIYAKUKBN"],
-        data: [["100012345", "1000", "2"], ["100012345", "1001", "2"]],
-        type: new Array()
-    },
-    KT_NayoseKihon: {
-        error: false,
-        count: 2,
-        name: ["S_KOKNO", "S_HKSNAME"],
-        data: [["1000", "S214"], ["1001", null]],
-        type: new Array()
-    },
-    WFT_KOUTEIKANRI: {
-        error: false,
-        count: 3,
-        name: ["S_SYONO", "S_DOCUMENTID", "S_JIMUTETUZUKICD"],
-        data: [["100012345", "20181013112330001", "skei"], ["100012345", "20181013112330002", "keiyaku"], ["100012345", "20181013112330003", "skei"]],
-        type: new Array()
-    },
-    CM_SyonoKanri: {
-        error: false,
-        count: 1,
-        name: ["S_SYONONINE", "S_TEST"],
-        data: [["0001234", "TEST"]],
-        type: new Array()
-    }
-};
-
 const SqlModule = function() {
-    this.export = {
-        dataCopy: {
-            tableList: [
-                "KT_KokKykKanren",
-                "KT_NayoseKihon",
-                "WFT_KOUTEIKANRI",
-                "CM_SyonoKanri"
-            ],
-            keySet: {
-            	defaultKey: "S_SYONO",
-            	KT_NayoseKihon: {
-            		key: "S_KOKNO",
-            		type: 0
-                },
-                CM_SyonoKanri: {
-                    key: "S_SYONONINE",
-                    type: 1
-                }
-            },
-            rules: {
-                KT_KokKykKanren: {
-                    S_KOKNO: "identifyCustomerNumber",
-                    N_SKEIKIKEIYAKUKBN: "changeTo"
-                },
-                KT_NayoseKihon: {
-                    S_KOKNO: "getIdentifierCustomerNumber"
-                },
-                WFT_KOUTEIKANRI: {
-                    S_DOCUMENTID: "identifyTimeStamp",
-                    S_JIMUTETUZUKICD: "deleteExceptSkei"
-                },
-                CM_SyonoKanri: {
-                    S_SYONONINE: "slicePolicyNumber"
-                }
-            }
-        }    
-    };
     this.Define = {
         ADODB: {
             connection: "ADODB.Connection",
@@ -108,8 +40,9 @@ const SqlModule = function() {
                 sqlMenuContainer: "sql-menu-container",
                 headerToolsConfigIcon: "header-tools-config-icon",
                 applicationPage: "application-page",
-                createUserCard: "create-user-card",
+                queryCommandCard: "query-command-card",
                 dataCopyCard: "data-copy-card",
+                createUserCard: "create-user-card",
                 policyNumberFrom: "policy-number__from",
                 policyNumberTo: "policy-number-to",
                 subSid: "sub-sid",
@@ -117,7 +50,14 @@ const SqlModule = function() {
                 subPwd: "sub-pwd",
                 optionContainerDataCopy: "option-container__data-copy",
                 userCode: "user-code",
-                userName: "user-name"
+                userName: "user-name",
+                queryEditor: "query-editor",
+                queryGridTabs: "query-grid-tabs",
+                queryGridContents: "query-grid-contents",
+                tab: "tab",
+                queryTabs: "query-tabs", 
+                dataGrid: "data-grid",
+                queryTimer: "query-timer"
             },
             class: {
                 commandLine: "command-line",
@@ -127,7 +67,10 @@ const SqlModule = function() {
                 optionCommandArea: "option-command-area",
                 optionRemoveButton: "option-remove-button",
                 commandLineRow: "command-line-row",
-                removeRow: "remove-row"
+                removeRow: "remove-row",
+                queryEditorTextInput: "ace_text-input",
+                queryGridContainer: "query-grid-container",
+                dataGrid: "data-grid"
             },
             src: {
                 cloudgs_dbaas: "assets/cloudgs_dbaas.png"
@@ -143,9 +86,15 @@ const SqlModule = function() {
             sid: "SID",
             uid: "USER ID",
             pwd: "PASSWORD",
-            createUser: "Create User",
+            queryCommand: "Query Command",
             dataCopy: "Data Copy",
+            createUser: "Create User",
+            access: "access",
             exec: "exec",
+            cancel: "cancel",
+            tab: "tab",
+            console: "console",
+            check: "check",
             extract: "extract",
             import: "import",
             export: "export",
@@ -163,7 +112,8 @@ const SqlModule = function() {
             policyNumberTo: "Policy Number(To)",
             userCode: "User Code",
             userName: "User Name",
-            create: "create"
+            create: "create",
+            delete: "delete"
         },
         TYPES: {
             message: {
@@ -187,6 +137,9 @@ const SqlModule = function() {
                 adCmdTableDirect: 512
             },
             phase: {
+                queryCommand: {
+                    executing: "executing"
+                },
                 dataCopy: {
                     insert: "insert",
                     commit: "commit",
@@ -196,7 +149,27 @@ const SqlModule = function() {
                     commit: "commit",
                     complete: "complete"
                 }
+            },
+            editor: {
+                mode: {
+                    sql: "ace/mode/sqlserver"
+                },
+                theme: {
+                    monokai: "ace/theme/monokai",
+                    terminal: "ace/theme/terminal",
+                    twilight: "ace/theme/twilight"
+                }
+            },
+            path: {
+                export: "module/sql/export.json"
+            },
+            action: {
+                commit: "commit",
+                delete: "delete"
             }
+        },
+        MESSAGES: {
+            only_exec_select_query: "Can be excuted only 「SELECT」 query"
         }
     };
     this.state = {
@@ -210,31 +183,25 @@ const SqlModule = function() {
         recordSet: null,
         noneQuery: false,
         lock: false,
-        dataCopy: new Object()
+        queryCommand: {
+            ui: new Object(),
+            phase: null,
+            timer: null,
+            element: null
+        },
+        dataCopy: new Object(),
+        createUser: new Object()
     };
+    this.export = new Object();
 };
 SqlModule.prototype = {
-    testOnAccess: function() {
-        const _this = this;
-        const pageType = _this.Define.TYPES.page;
-        const sid = { name: "SID", value: "test" };
-        const uid = { name: "UID", value: "test" };
-        const pwd = { name: "PWD", value: "test" };
-        _this.state.isConnect = true;
-        _this.state.info = {
-            sid: sid,
-            uid: uid,
-            pwd: pwd
-        };
-        _this.transition(pageType.application);
-        return null;
-    },
     initSqlModule: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seSrc = _this.Define.ELEMENTS.src;
         const seStyle = _this.Define.ELEMENTS.style;
         const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
         const $container = jqById(eId.container);
         $container.css({ "margin-top": seStyle.headerHeight, "background-color": seStyle.backgroundColor });
         const $header = jqNode("header", { id: getHeaderId() });
@@ -266,7 +233,14 @@ SqlModule.prototype = {
         jqById(eId.titleIcon).css({ width: (Math.ceil(titleIconSize) + 2) + "px" });
         jqById(eId.headerTitle).css({ width: "calc(100% - " + Math.ceil(headerToolsSize) + "px)" });
 
-        fadeIn($container);
+        getJson(types.path.export).then(function(data) {
+            _this.export = data;
+            fadeIn($container);
+        }).catch(function(e) {
+            $container.empty();
+            console.log(e);
+            new Notification().error().open("Failed init module");
+        });
         return this;
     },
     transition: function(type) {
@@ -318,7 +292,7 @@ SqlModule.prototype = {
                 return false;
             }
             const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
-            // _this.mainConnect().setConnectObject().open(connectString);
+            _this.mainConnect().setConnectObject().open(connectString);
             _this.state.isConnect = true;
             _this.state.info = {
                 sid: sid,
@@ -509,9 +483,12 @@ SqlModule.prototype = {
         return this;
     },
     execute: function() {
-        const noneQuery = this.state.noneQuery;
+        this.state.recordSet = this.state.command.Execute();
+        return this;
+    },
+    cancel: function() {
         if(this.state.command) {
-            this.state.recordSet = this.state.command.Execute();
+            this.state.command.Cancel();
         }
         return this;
     },
@@ -630,6 +607,11 @@ SqlModule.prototype = {
                 };
                 const cardList = [
                     {
+                        id: seId.queryCommandCard,
+                        title: captions.queryCommand,
+                        contents: _this.buildQueryCommand()
+                    },
+                    {
                         id: seId.dataCopyCard,
                         title: captions.dataCopy,
                         contents: _this.buildDataCopyContents()
@@ -645,6 +627,7 @@ SqlModule.prototype = {
                 });
                 $screen.append($cardContainer);
                 $contents.append($screen);
+                _this.renderQueryEditor();
                 break;
             }
         }
@@ -667,7 +650,7 @@ SqlModule.prototype = {
             return $input;
         };
         const getButton = function() {
-            const $button = jqNode("button").text("ACCESS");
+            const $button = jqNode("button").text(upperCase(captions.access));
             $button.click(function() {
                 _this.onAccess();
             });
@@ -680,6 +663,263 @@ SqlModule.prototype = {
         [$sid, $uid, $pwd, $confirm].forEach(function(item) { $accessCommand.append(item); });
         return $accessCommand;
     },
+    buildQueryCommand: function() {
+        const _this = this;
+        const qcState = _this.state.queryCommand;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $timer = jqNode("div", { id: seId.queryTimer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
+        const $cancelButton = jqNode("button", { class: classes(eClass.buttonColorOrange, eClass.buttonDisable) }).text(upperCase(captions.cancel));
+        $cancelButton.prop("disabled", true);
+        [$execButton, $cancelButton].forEach(function(item) { $actionArea.append(item); });
+        const $queryEditor = jqNode("div", { id: seId.queryEditor });
+        const $queryGridContainer = jqNode("div", { class: seClass.queryGridContainer });
+        const $queryGridTabs = jqNode("div", { id: seId.queryGridTabs });
+        const $queryGridContents = jqNode("div", { id: seId.queryGridContents });
+        [$queryGridTabs, $queryGridContents].forEach(function(item) { $queryGridContainer.append(item); });
+        [$timer, $actionArea, $queryEditor, $queryGridContainer].forEach(function(item) { $container.append(item); });
+        $execButton.click(function() {
+            const editor = _this.state.queryEditor;
+            if(editor) {
+                const selection = editor.getSession().doc.getTextRange(editor.selection.getRange());
+                _this.execQuery(selection);
+            }
+        });
+        $cancelButton.click(function() {
+            if(!qcState.phase) return false;
+            _this.cancel();
+            _this.actionControllerQueryCommand(null);
+        });
+        qcState.element = $cancelButton;
+        return $container;
+    },
+    renderQueryEditor: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const editorTypes = _this.Define.TYPES.editor;
+        try {
+            const editor = ace.edit(seId.queryEditor);
+            _this.state.queryEditor = editor;
+            editor.setShowPrintMargin(false);
+            editor.getSession().setMode(editorTypes.mode.sql);
+            editor.setTheme(editorTypes.theme.monokai);
+            editor.setFontSize(15);
+            editor.getSession().setUseWrapMode(false);
+            editor.commands.addCommand({
+                name: "exec_key_event",
+                exec: function() {
+                    const selection = editor.getSession().doc.getTextRange(editor.selection.getRange());
+                    _this.execQuery(selection);
+                },
+                bindKey: { mac: "cmd-e", win: "ctrl-e" }
+            });
+        }
+        catch(e) {
+            console.log(e);
+        }
+        return null;
+    },
+    actionControllerQueryCommand: function(phase) {
+        const _this = this;
+        const phaseType = _this.Define.TYPES.phase.queryCommand;
+        const qcState = _this.state.queryCommand;
+        const seId = _this.Define.ELEMENTS.id;
+        const $timer = jqById(seId.queryTimer);
+        switch(phase) {
+            case phaseType.executing: {
+                const getTimerView = function(time) {
+                    return concatString("Elapsed time : ", time, "sec");
+                };
+                qcState.element.removeClass(eClass.buttonDisable);
+                qcState.element.prop("disabled", false);
+                qcState.phase = phase;
+                let queryTimeCounter = 0;
+                $timer.text(getTimerView(queryTimeCounter));
+                qcState.timer = setInterval(function() {
+                    queryTimeCounter += 1;
+                    const milisec = (queryTimeCounter / 10).toFixed(1);
+                    $timer.text(getTimerView(milisec));
+                }, 100);
+                break;
+            }
+            default: {
+                setTimeout(function() {
+                    qcState.element.addClass(eClass.buttonDisable);
+                    qcState.element.prop("disabled", true);
+                    qcState.phase = null;
+                    clearInterval(qcState.timer);
+                });
+                break;
+            }
+        }
+        return null;
+    },
+    clearQueryCommandUI: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const qcState = _this.state.queryCommand;
+        const $tabs = jqById(seId.queryGridTabs);
+        const $contents = jqById(seId.queryGridContents);
+        if(w2ui[seId.queryTabs]) {
+            w2ui[seId.queryTabs].destroy();
+        }
+        qcState.ui.gridIdList.forEach(function(gridId) {
+            if(w2ui[gridId]) {
+                w2ui[gridId].destroy();
+            }
+        });
+        $tabs.empty();
+        $contents.empty();
+        _this.state.queryCommand.ui = new Object();
+        return null;
+    },
+    execQuery: function(selection) {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const messages = _this.Define.MESSAGES;
+        const qcState = _this.state.queryCommand;
+        if(isVoid(selection)) return false;
+        try {
+            const exceptionRule = new RegExp("(((INSERT).+?(INTO))|((UPDATE).+?(SET))|((DELETE FROM))|(CREATE TABLE)|(DROP TABLE)|(TRUNCATE TABLE))", "gi");
+            if(selection.match(exceptionRule)) {
+                new Notification().error().open(messages.only_exec_select_query);
+                return false;
+            }
+            const queryStack = selection.split(SIGN.sc).filter(function(item) {
+                return item;
+            }).map(function(item) {
+                return item.trim().replace(new RegExp("\nSELECT", "gi"), "SELECT");
+            });
+            const $tabs = jqById(seId.queryGridTabs);
+            const $contents = jqById(seId.queryGridContents);
+            if(!isVoid(qcState.ui)) {
+                _this.clearQueryCommandUI();
+            }
+            const uiTabIdList = new Array();
+            const uiGridIdList = new Array();
+            const tabsStack = new Array();
+            const mapping = new Object();
+            const getTabId = function(idx) {
+                return concatString(seId.tab, idx);
+            };
+            const getGridId = function(idx) {
+                return concatString(seId.dataGrid, idx);
+            };
+            const createTabs = function(idx) {
+                const tabId = getTabId(idx);
+                uiTabIdList.push(tabId);
+                return {
+                    id: tabId,
+                    text: concatString(upperCase(captions.console, 0), idx),
+                    closable: true
+                };
+            };
+            const createDataGrid = function(idx, name, data) {
+                const option = {
+                    header: false,
+                    toolbar: false,
+                    footer: false,
+                    lineNumbers: true,
+                    selectColumn: false,
+                    expandColumn: false
+                };
+                const fieldStack = new Array();
+                const columns = name.map(function(item) {
+                    const field = item.replace(new RegExp(SIGN.ws, "g"), SIGN.none);
+                    fieldStack.push(field);
+                    return {
+                        field: field,
+                        caption: item,
+                        sortable:true
+                    };
+                });
+                const recordStack = new Array();
+                data.forEach(function(row, i) {
+                    const recordObj = new Object();
+                    recordObj.recid = i + 1;
+                    row.forEach(function(col, i) {
+                        recordObj[fieldStack[i]] = col;
+                    });
+                    recordStack.push(recordObj);
+                });
+                const gridId = getGridId(idx);
+                uiGridIdList.push(gridId);
+                return {
+                    name: gridId,
+                    header: SIGN.none,
+                    show: option,
+                    columns: columns,
+                    records: recordStack
+                };
+            };
+            const phaseType = _this.Define.TYPES.phase.queryCommand;
+            _this.actionControllerQueryCommand(phaseType.executing);
+            queryStack.forEach(function(query, i, a) {
+                const idx = i + 1;
+                const dataSet = _this.dbCommand(_this.state.db).setQuery(query).getData();
+                tabsStack.push(createTabs(idx));
+                const gridId = getGridId(idx);
+                const $grid = jqNode("div", { id: gridId, style: "width: 100%; height: 300px;" });
+                $contents.append($grid);
+                mapping[getTabId(idx)] = $grid;
+                const dataGrid = createDataGrid(idx, dataSet.name, dataSet.data);
+                $grid.w2grid(dataGrid);
+                if(idx < a.length) {
+                    $grid.hide();
+                }
+            });
+            $tabs.w2tabs({
+                name: seId.queryTabs,
+                active: tabsStack[tabsStack.length - 1].id,
+                tabs: tabsStack,
+                onClick: function(e) {
+                    const tabId = e.target;
+                    Object.keys(mapping).forEach(function(key, i) {
+                        const idx = i + 1;
+                        const $iGrid = mapping[key];
+                        if(tabId === key) {
+                            $iGrid.show();
+                            w2ui[getGridId(idx)].reload();
+                        }
+                        else {
+                            $iGrid.hide();
+                        }
+                    });
+                },
+                onClose: function(e) {
+                    const removeTab = e.target;
+                    const tabUI = w2ui[seId.queryTabs];
+                    const activeTab = tabUI.active;
+                    const tabs = qcState.ui.tabIdList;
+                    tabs.splice(tabs.indexOf(removeTab), 1);
+                    if(tabs.length >= 1) {
+                        if(activeTab === removeTab) {
+                            const lastTab = tabs[tabs.length - 1];
+                            tabUI.select(lastTab);
+                            tabUI.click(lastTab);
+                        }
+                    }
+                    else {
+                        _this.clearQueryCommandUI();
+                    }
+                }
+            });
+            qcState.ui.tabIdList = uiTabIdList;
+            qcState.ui.gridIdList = uiGridIdList;
+            _this.actionControllerQueryCommand(null);
+        }
+        catch(e) {
+            console.log(e);
+            new Notification().error().open(e.message);
+            _this.actionControllerQueryCommand(null);
+        }
+        return null;
+    },
     buildDataCopyContents: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
@@ -687,9 +927,10 @@ SqlModule.prototype = {
         const captions = _this.Define.CAPTIONS;
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
         const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
         const $importButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase(captions.import));
-        $actionArea.append($extractButton).append($importButton);
+        [$checkButton, $extractButton, $importButton].forEach(function(item) { $actionArea.append(item); });
         $container.append($actionArea);
         const itemList = [
             {
@@ -725,6 +966,9 @@ SqlModule.prototype = {
             $commandArea.append($label).append($input);
             $container.append($commandArea);
         });
+        $checkButton.click(function() {
+            _this.checkDataCopy();
+        });
         $extractButton.click(function() {
             _this.extractDataCopy();
         });
@@ -756,7 +1000,8 @@ SqlModule.prototype = {
             const $input = jqNode("input", { type: "text" });
             const $textareaRow = jqNode("div", { class: seClass.commandLineRow });
             const $textareaLabel = jqNode("label").text("Script");
-            const $textarea = jqNode("textarea");
+            const placeholder = "@column\nvalue1\nvalue2";
+            const $textarea = jqNode("textarea", { placeholder: placeholder });
             if(table && script) {
                 $input.val(table);
                 $textarea.val(script);
@@ -958,6 +1203,58 @@ SqlModule.prototype = {
         saveAsFile(logData.join(SIGN.crlf), TYPES.file.mime.TEXT_UTF8, concatString("LogData_", getFileStamp(), TYPES.file.extension.txt));
         return null;
     },
+    checkDataCopy: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const loading = new Loading();
+        loading.on().then(function() {
+            const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
+            const result = _this.validation(policyNumberTo);
+            if(result.error) {
+                new Notification().error().open(result.message);
+                loading.off();
+                return false;
+            }
+            else {
+                const numericCheckResult = {
+                    error: false,
+                    message: new Array()
+                };
+                if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
+                    numericCheckResult.error = true;
+                    numericCheckResult.message.push([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
+                }
+                if(numericCheckResult.error) {
+                    new Notification().error().open(numericCheckResult.message.join(SIGN.br));
+                    loading.off();
+                    return false;
+                }
+            }
+            const pnt = policyNumberTo.value;
+            const pntList = pnt.split(SIGN.nl).filter(function(item) { return item });
+            const inConditions = pntList.map(function(item) { return concatString(SIGN.sq, item, SIGN.sq); }).join(SIGN.cw);
+            const query = concatString("SELECT S_SYONO FROM KT_KokKykKanren WHERE S_SYONO IN (", inConditions, ")");
+            const dataSet = _this.dbCommand(_this.state.db).setQuery(query).execute().getData();
+            if(dataSet.count >= 1) {
+                const ngMessage = new Array();
+                ngMessage.push(concatString("Already exists", SIGN.br));
+                dataSet.data.forEach(function(record) {
+                    ngMessage.push(record[0]);
+                });
+                new Notification().error().open(ngMessage.join(SIGN.br));
+            }
+            else {
+                const okMessage = "You can use these";
+                new Notification().complete().open(okMessage);
+            }
+            loading.off();
+        }).catch(function(e) {
+            console.log(e);
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+    },
     importDataCopy: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
@@ -1013,30 +1310,21 @@ SqlModule.prototype = {
     },
     extractDataCopy: function() {
         const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const dataCopyExport = _this.export.dataCopy;
+        const dataCopyState = _this.state.dataCopy;
         const loading = new Loading();
         loading.on().then(function() {
-            const seId = _this.Define.ELEMENTS.id;
-            const captions = _this.Define.CAPTIONS;
-            const dataCopyExport = _this.export.dataCopy;
-            const dataCopyState = _this.state.dataCopy;
             dataCopyState.dataKey = { from: null, to: new Object() };
             let pnf, pnt;
             let extractedData = new Object();
             if(!dataCopyState.extractedData) {
-                // const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
-                // const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
-                // const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
-                // const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
-                // const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-                
-                // test
-                const subSid = _this.getCheckObject("xora", captions.subSid);
-                const subUid = _this.getCheckObject("test", captions.subUid);
-                const subPwd = _this.getCheckObject("test", captions.subPwd);
-                const policyNumberFrom = _this.getCheckObject("100012345", captions.policyNumberFrom);
-                const policyNumberTo = _this.getCheckObject("100012356\n100012367\n", captions.policyNumberTo);
-                // test
-
+                const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
+                const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
+                const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
+                const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
+                const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
                 const result = _this.validation(subSid, subUid, subPwd, policyNumberFrom, policyNumberTo);
                 if(result.error) {
                     new Notification().error().open(result.message);
@@ -1069,16 +1357,12 @@ SqlModule.prototype = {
                 };
                 pnf = policyNumberFrom.value;
                 pnt = policyNumberTo.value;
-                // const connectString = _this.createConnectString(subSid.value, subUid.value, subPwd.value);
-                // _this.subConnect().setConnectObject().open(connectString);
+                const connectString = _this.createConnectString(subSid.value, subUid.value, subPwd.value);
+                _this.subConnect().setConnectObject().open(connectString);
                 extractedData[pnf] = new Object();
                 dataCopyExport.tableList.some(function(table, i) {
-                    //test
-                    const dataSet = testDataSet[table];
-                    dataSet.sort = i;
-                    //test
                     const query = _this.getDataCopySelectQuery(table, pnf);
-                    // const dataSet = _this.dbCommand(_this.state.subDb).setQuery(query).execute().getData();
+                    const dataSet = _this.dbCommand(_this.state.subDb).setQuery(query).execute().getData();
                     dataSet.sort = i;
                     extractedData[pnf][table] = dataSet;
                     if(dataSet.error) {
@@ -1087,7 +1371,7 @@ SqlModule.prototype = {
                     }
                     return dataSet.error;
                 });
-                // _this.subClose().redirect();
+                _this.subClose().redirect();
                 if(actionStatus.extractError) {
                     new Notification().error().open(actionStatus.message);
                     loading.off();
@@ -1149,15 +1433,16 @@ SqlModule.prototype = {
             dataCopyState.insertData = insertData;
             dataCopyState.insertDataStatic = cloneJS(insertData);
             dataCopyState.dataKey.from = pnf;
-            console.log(extractedData);
-            console.log(insertData);
             const phaseType = _this.Define.TYPES.phase.dataCopy;
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
         }).catch(function(e) {
-            // _this.subClose().redirect();
-            new Notification().error().open(e.message);
-            loading.off();
+            try { _this.subClose().redirect(); } catch(e) {}
+            finally {
+                console.log(e);
+                new Notification().error().open(e.message);
+                loading.off();
+            }
         });
         return null;
     },
@@ -1168,13 +1453,7 @@ SqlModule.prototype = {
             case "identifyCustomerNumber": {
                 state.customerNumberIdentifier = new Array();
                 const query = "SELECT S_KOKNO FROM KT_KokKykKanren";
-                // const dataSet = _this.dbCommand(_this.state.db).setQuery(query).execute().getData();
-                // test
-                const dataSet = {
-                    data: [["10"],["11"],["12"],["13"],["14"],["15"],["17"],["18"],["19"],["20"],["22"]],
-                    count: 11
-                };
-                // test
+                const dataSet = _this.dbCommand(_this.state.db).setQuery(query).execute().getData();
                 let numberCollection = new Array();
                 if(dataSet.count >= 1) {
                     numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
@@ -1236,6 +1515,26 @@ SqlModule.prototype = {
             case "slicePolicyNumber": {
                 applyData.forEach(function(record, i) {
                     record[state.applyIndex] = state.keys[i].slice(1, state.keys[i].length - 1);
+                });
+                break;
+            }
+            case "identifyAccountNumber": {
+                const accountNumberIdentifier = new Array();
+                const query = "SELECT S_KOUZANO FROM ST_HrkmKouzaKanri";
+                const dataSet = _this.dbCommand(_this.state.db).setQuery(query).execute().getData();
+                let numberCollection = new Array();
+                if(dataSet.count >= 1) {
+                    numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
+                }
+                let identifier = Math.floor(Math.random() * 999999) + 1000000;
+                while(accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
+                    if(numberCollection.indexOf(identifier) < 0) {
+                        accountNumberIdentifier.push(toString(identifier));
+                    }
+                    identifier++;
+                }
+                applyData.forEach(function(record, i) {
+                    record[state.applyIndex] = accountNumberIdentifier[i];
                 });
                 break;
             }
@@ -1445,7 +1744,7 @@ SqlModule.prototype = {
                 const columns = name.join(SIGN.cw);
                 data.forEach(function(record) {
                     const values = record.map(function(item) {
-                        const v = item ? item : "";
+                        const v = item || item == 0 ? item : "";
                         return concatString(SIGN.sq, v, SIGN.sq);
                     }).join(SIGN.cw);
                     insertQuery[table].push(getQuery(table, columns, values));
@@ -1455,11 +1754,11 @@ SqlModule.prototype = {
             if(!transaction.error) {
                 _this.dbCommand(_this.state.db);
                 Object.keys(insertQuery).forEach(function(table) {
-                    dataCopyState.log.push(concatString("■", table, "■"));
+                    dataCopyState.log.push(concatString("[[", table, "]]"));
                     insertQuery[table].forEach(function(query) {
                         _this.setQuery(query).execute();
                         dataCopyState.log.push(query);
-                        const timeLog = concatString("# > inserted query at ", getSystemDateTimeMilliseconds(), SIGN.crlf);
+                        const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
                         dataCopyState.log.push(timeLog);
                     });
                 });
@@ -1471,10 +1770,12 @@ SqlModule.prototype = {
             }
             loading.off();
         }).catch(function(e) {
-            console.log(e);
-            new Notification().error().open(e.message);
-            _this.rollback().redirect();
-            loading.off();
+            try { _this.rollback().redirect(); } catch(e) {}
+            finally {
+                console.log(e);
+                new Notification().error().open(e.message);
+                loading.off();
+            }
         });
         return null;
     },
@@ -1483,10 +1784,13 @@ SqlModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const createUserState = _this.state.createUser;
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
         const $createButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.create));
-        $actionArea.append($createButton);
+        const $deleteButton = jqNode("button", { class: eClass.buttonColorDeepOrange }).text(upperCase(captions.delete));
+        [$createButton, $deleteButton].forEach(function(item) { $actionArea.append(item); });
         $container.append($actionArea);
         const itemList = [
             {
@@ -1508,16 +1812,22 @@ SqlModule.prototype = {
             $container.append($commandArea);
         });
         $createButton.click(function() {
+            createUserState.actionType = types.action.commit;
             _this.createUser();
         });
+        $deleteButton.click(function() {
+            createUserState.actionType = types.action.delete;
+            _this.createUser();
+        });
+        createUserState.actionType = null;
         return $container;
     },
     actionControllerCreateUser: function(phase) {
         const _this = this;
-        const phaseType = _this.Define.TYPES.phase.createUser;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
+        const phaseType = _this.Define.TYPES.phase.createUser;
         const $card = jqById(seId.createUserCard);
         const $cardContents = $card.find(concatString(".", eClass.cardContents));
         const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
@@ -1568,10 +1878,20 @@ SqlModule.prototype = {
         return null;
     },
     downloadLogCreateUser: function() {
+        const _this = this;
+        const createUserState = _this.state.createUser;
+        const logData = createUserState.log;
+        saveAsFile(logData.join(SIGN.crlf), TYPES.file.mime.TEXT_UTF8, concatString("LogData_", getFileStamp(), TYPES.file.extension.txt));
         return null;
     },
     createUser: function() {
         const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const createUserExport = _this.export.createUser;
+        const createUserState = _this.state.createUser;
+        createUserState.log = new Array();
         const loading = new Loading();
         loading.on().then(function() {
             const seId = _this.Define.ELEMENTS.id;
@@ -1599,9 +1919,26 @@ SqlModule.prototype = {
                     return false;
                 }
             }
+            const uc = userCode.value;
+            const un = userName.value;
             const transaction = _this.transaction();
             if(!transaction.error) {
+                const getInsertQuery = function(table) {
+                    return "INSERT " + table + " INTO";
+                };
+                const getDeleteQuery = function(table) {
+                    return "DELETE FROM " + table;
+                };
                 _this.dbCommand(_this.state.db);
+                createUserExport.tableList.forEach(function(table) {
+                    createUserState.log.push(concatString("[[", table, "]]"));
+                    const query = createUserState.actionType === types.action.commit ? getInsertQuery(table) : getDeleteQuery(table);
+                    _this.setQuery(query).execute();
+                    createUserState.log.push(query);
+                    const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
+                    createUserState.log.push(timeLog);
+                    console.log(table);
+                });
                 const phaseType = _this.Define.TYPES.phase.createUser;
                 _this.actionControllerCreateUser(phaseType.commit);
             }
@@ -1610,9 +1947,12 @@ SqlModule.prototype = {
             }
             loading.off();
         }).catch(function(e) {
-            console.log(e);
-            new Notification().error().open(e.message);
-            loading.off();
+            try { _this.rollback().redirect(); } catch(e) {}
+            finally {
+                console.log(e);
+                new Notification().error().open(e.message);
+                loading.off();
+            }
         });
         return null;
     }

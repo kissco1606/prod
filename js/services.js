@@ -71,7 +71,10 @@ function upperCase(str, position) {
     if (!typeIs(position).number) {
         return str.toUpperCase();
     };
-    return str.charAt(position).toUpperCase() + str.slice(position + 1);
+    const ahead = str.slice(0, position);
+    const middle = str.charAt(position).toUpperCase();
+    const behind = str.slice(position + 1);
+    return  concatString(ahead, middle, behind);
 };
 
 function lowerCase(str, position) {
@@ -268,6 +271,51 @@ function filter(value, array, keys, matchFunc) {
     };
 };
 
+function getSelection(e) {
+    const noneObj = {
+        start: e.value.length,
+        end: e.value.length,
+        length: 0,
+        text: SIGN.none
+    };
+    if("selectionStart" in e) {
+        const l = e.selectionEnd - e.selectionStart;
+        return {
+            start: e.selectionStart,
+            end: e.selectionEnd,
+            length: l,
+            text: e.value.substr(e.selectionStart, l)
+        };
+    }
+    else if(document.selection) {
+        e.focus();
+        const r = document.selection.createRange();
+        const tr = e.createTextRange();
+        const tr2 = tr.duplicate();
+        tr2.moveToBookmark(r.getBookmark());
+        tr.setEndPoint("EndToStart", tr2);
+        if (r == null || tr == null) return noneObj;
+        const text_part = r.text.replace(/[\r\n]/g, ".");
+        const text_whole = e.value.replace(/[\r\n]/g, ".");
+        const the_start = text_whole.indexOf(text_part, tr.text.length);
+        return {
+            start: the_start,
+            end: the_start + text_part.length,
+            length: text_part.length,
+            text: r.text
+        };
+    }
+    return noneObj;
+};
+function getSelectionById(id) {
+    const e = document.getElementById(id);
+    return getSelection(e);
+};
+function getSelectionByClass(className) {
+    const e = document.getElementsByClassName(className)[0];
+    return getSelection(e);
+};
+
 function createMenuItem(itemList, icon, text, func) {
     const $item = jqNode("li", { class: eClass.menuItem });
     const $icon = jqNode("span", { class: eClass.menuItemIcon }).append(jqNode("i", { class: icon }));
@@ -359,6 +407,10 @@ Notification.prototype = {
     },
     error: function() {
         this.type = TYPES.dialog.error;
+        return this;
+    },
+    warning: function() {
+        this.type = TYPES.dialog.warning;
         return this;
     },
     open: function (message) {
@@ -597,4 +649,59 @@ function datenum(v, date1904) {
 	if(date1904) v+=1462;
 	var epoch = Date.parse(v);
 	return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+};
+
+const ActiveXMLHttpRequest = function() {
+    this.req = null;
+    this.contentType = null;
+    try {
+        this.req = new ActiveXObject("MSXML2.XMLHTTP");
+    } catch (e) {
+        this.req = new XMLHttpRequest();
+    }
+};
+ActiveXMLHttpRequest.prototype = {
+    setContentType: function(type) {
+        this.contentType = type;
+        return this;
+    },
+    get: function(path, async) {
+        const req = this.req;
+        const contentType = this.contentType;
+        return new Promise(function(resolve, reject) {
+            try {
+                req.open("GET", path, async);
+                if(contentType) req.setRequestHeader("Content-Type", contentType);
+                req.onreadystatechange = function() {
+                    if(req.readyState === 4) {
+                        const data = req.responseText;
+                        return resolve(data);
+                    }
+                }
+                req.send();
+            }
+            catch(e) {
+                return reject(e);
+            }
+        });
+    }
+};
+
+function getJson(path) {
+    return new Promise(function(resolve, reject) {
+        const typeJSON = TYPES.file.mime.JSON;
+        const axhr = new ActiveXMLHttpRequest();
+        axhr.setContentType(typeJSON);
+        axhr.get(path, true).then(function(data) {
+            try {
+                const jsonData = JSON.parse(data);
+                return resolve(jsonData);
+            }
+            catch(e) {
+                return reject(e);
+            }
+        }).catch(function(e) {
+            return reject(e);
+        });
+    });
 };

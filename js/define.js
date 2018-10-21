@@ -64,6 +64,7 @@ const ELEMENTS = {
         errorColor: "error-color",
         warningColor: "warning-color",
         hide: "hide",
+        hidden: "hidden",
         menuContainer: "menu-container",
         menu: "menu",
         menuItem: "menu-item",
@@ -89,7 +90,13 @@ const ELEMENTS = {
         buttonColorAssertive: "button--color-assertive",
         buttonColorRoyal: "button--color-royal",
         buttonColorDark: "button--color-dark",
-        buttonColorCyan: "button--color-cyan"
+        buttonColorCyan: "button--color-cyan",
+        buttonColorOrange: "button--color-orange",
+        buttonColorLime: "button--color-lime",
+        buttonColorDeepOrange: "button--color-deepOrange",
+        buttonColorBrown: "button--color-brown",
+        buttonColorBlueGrey: "button--color-blueGrey",
+        buttonDisable: "button-disable"
     },
     icon: {
         database: "fas fa-database",
@@ -141,7 +148,8 @@ const TYPES = {
         mime: {
             TEXT_UTF8: "text/plain;charset=utf-8",
             TEXT: "text/plain",
-            OCTET_STREAM: "application/octet-stream"
+            OCTET_STREAM: "application/octet-stream",
+            JSON: "application/json"
         },
         extension: {
             txt: ".txt",
@@ -161,6 +169,9 @@ const TYPES = {
             blob: "blob",
             nodebuffer: "nodebuffer"
         }
+    },
+    client: {
+        activeXObejct: "ActiveXObject"
     }
 };
 
@@ -186,7 +197,7 @@ const MESSAGES = {
     save_complete: "You have successfully save data",
     success_copy: "Copy to your clipboard",
     nothing_data: "Nothing data",
-    allowedOnlyNumeric: "Allowed to only numeric"
+    allowedOnlyNumeric: "Only numeric is allowed"
 };
 
 const REG_EXP = {

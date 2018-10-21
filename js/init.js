@@ -12,9 +12,6 @@ Module.prototype = {
 		fadeOut(_this.container).then(function() {
 			clearContainer();
 			initMenuModule(_this.container);
-
-			// test
-			_this.sql();
 		});
 		return this;
 	},
@@ -22,10 +19,7 @@ Module.prototype = {
 		state.module = { id: MI.sql };
 		fadeOut(this.container).then(function() {
 			clearContainer();
-			// new SqlModule().initSqlModule();
-			
-			// test
-			new SqlModule().initSqlModule().testOnAccess();
+			new SqlModule().initSqlModule();
 		});
 		return this;
 	},
@@ -82,10 +76,7 @@ function clearContainer() {
 
 function transitonMenu() {
 	new Module().menu();
+	if(!(TYPES.client.activeXObejct in window)) {
+		new Notification().warning().open("Not supported this client");
+	}
 };
-
-// function headerEnableScroll() {
-// 	$(window).on("scroll", function() {
-// 		jqById("header").css("left", -$(window).scrollLeft());
-// 	});
-// };

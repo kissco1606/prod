@@ -155,12 +155,14 @@
 	overflow: auto;
 }
 
+#query-command-card .contents-container > .action-area,
 #data-copy-card .contents-container > .action-area,
 #create-user-card .contents-container > .action-area {
 	padding: 10px 0;
 	text-align: right;
 }
 
+#query-command-card .contents-container > .action-area > button,
 #data-copy-card .contents-container > .action-area > button,
 #create-user-card .contents-container > .action-area > button {
 	margin-left: 10px;
@@ -246,4 +248,22 @@
 }
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row > .option-remove-button:hover {
     background-color: #eee;
+}
+
+#query-command-card .contents-container > #query-editor {
+	width: 100%;
+	height: 200px;
+}
+
+#query-command-card .contents-container > .query-grid-container {
+	padding: 10px 0;
+}
+
+#query-command-card .contents-container {
+	position: relative;
+}
+#query-command-card .contents-container > #query-timer {
+	position: absolute;
+	padding: 10px 0;
+	line-height: 2.5;
 }
