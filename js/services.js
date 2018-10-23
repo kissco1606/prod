@@ -316,6 +316,10 @@ function getSelectionByClass(className) {
     return getSelection(e);
 };
 
+function getIterator(size) {
+    return Array.apply(null, new Array(size));
+};
+
 function createMenuItem(itemList, icon, text, func) {
     const $item = jqNode("li", { class: eClass.menuItem });
     const $icon = jqNode("span", { class: eClass.menuItemIcon }).append(jqNode("i", { class: icon }));
@@ -704,4 +708,39 @@ function getJson(path) {
             return reject(e);
         });
     });
+};
+
+const WorkerBuilder = function() {
+    this.windowURL = window.URL || window.webkitURL;
+    this.worker = null;
+    this.blob = null;
+};
+WorkerBuilder.prototype = {
+    stringifyFunction: function(func) {
+        if(!typeIs(func).function) return null;
+        return concatString("(", func.toString(), ")();");
+    },
+    process: function(func) {
+        const code = this.stringifyFunction(func);
+        try {
+            this.blob = new Blob([code], { type: TYPES.file.mime.JAVASCRIPT });
+        }
+        catch(e) {
+            window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+            this.blob = new BlobBuilder();
+            this.blob.append(code);
+            this.blob = this.blob.getBlob();
+        }
+        const objectURL = this.windowURL.createObjectURL(this.blob);
+        this.worker = new Worker(objectURL);
+        return this;
+    }
+};
+
+function threadMessage(module, actionType, params) {
+    return {
+        module: module,
+        type: actionType,
+        params: params
+    };
 };

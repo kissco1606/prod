@@ -161,15 +161,20 @@ const SqlModule = function() {
                 }
             },
             path: {
-                export: "module/sql/export.json"
+                export: "module/sql/export.json",
+                worker: "module/sql/actions/worker.js"
             },
             action: {
                 commit: "commit",
                 delete: "delete"
+            },
+            worker: {
+                onAccess: "onAccess",
+
             }
         },
         MESSAGES: {
-            only_exec_select_query: "Can be excuted only 「SELECT」 query"
+            only_exec_select_query: "Can be excuted only [SELECT] query"
         }
     };
     this.state = {
@@ -190,7 +195,8 @@ const SqlModule = function() {
             element: null
         },
         dataCopy: new Object(),
-        createUser: new Object()
+        createUser: new Object(),
+        worker: null
     };
     this.export = new Object();
 };
@@ -276,33 +282,64 @@ SqlModule.prototype = {
         return null;
     },
     onAccess: function() {
-        const _this = this;
+        let _this = this;
+        const types = _this.Define.TYPES;
         const loading = new Loading();
         loading.on().then(function() {
-            const pageType = _this.Define.TYPES.page;
-            const seId = _this.Define.ELEMENTS.id;
-            const captions = _this.Define.CAPTIONS;
-            const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
-            const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
-            const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
-            const result = _this.validation(sid, uid, pwd);
-            if(result.error) {
-                new Notification().error().open(result.message);
-                loading.off();
-                return false;
-            }
-            const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
-            _this.mainConnect().setConnectObject().open(connectString);
-            _this.state.isConnect = true;
-            _this.state.info = {
-                sid: sid,
-                uid: uid,
-                pwd: pwd
+            const test = function() {
+                importScripts("external.js");
+                postMessage("ok worker");
             };
-            _this.transition(pageType.application);
-            loading.off();
+            const response = "(" + test.toString() + ")();";
+            var worker = new Worker(types.path.worker);
+            worker.onmessage = function(e) {
+                console.log(e.data);
+            }
+            worker.postMessage(response);
+            
+            // const pageType = _this.Define.TYPES.page;
+            // const seId = _this.Define.ELEMENTS.id;
+            // const captions = _this.Define.CAPTIONS;
+            // const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
+            // const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
+            // const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
+            // const result = _this.validation(sid, uid, pwd);
+            // if(result.error) {
+            //     new Notification().error().open(result.message);
+            //     loading.off();
+            //     return false;
+            // }
+            // const thread = new Worker(types.path.worker);
+            // thread.onmessage = function(e) {
+            //     // _this = e.data;
+            //     // _this.state.isConnect = true;
+            //     // _this.state.info = {
+            //     //     sid: sid,
+            //     //     uid: uid,
+            //     //     pwd: pwd
+            //     // };
+            //     // _this.transition(pageType.application);
+            //     // loading.off();
+            //     console.log(e.data);
+            // };
+            // thread.onerror = function(e) {
+            //     new Notification().error().open(e.message);
+            //     loading.off();
+            // };
+            // const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
+            // const messageObj = threadMessage(_this, types.worker.onAccess, { connectString: connectString });
+            // thread.postMessage(messageObj);
+            // const connectString = _this.createConnectString(sid.value, uid.value, pwd.value);
+            // _this.mainConnect().setConnectObject().open(connectString);
+            // _this.state.isConnect = true;
+            // _this.state.info = {
+            //     sid: sid,
+            //     uid: uid,
+            //     pwd: pwd
+            // };
+            // _this.transition(pageType.application);
+            // loading.off();
         }).catch(function(e) {
-            console.log(e);
             new Notification().error().open(e.message);
             loading.off();
         });
@@ -441,6 +478,9 @@ SqlModule.prototype = {
     },
     close: function() {
         if(this.state.db) {
+            if(this.state.lock) {
+                this.rollback();
+            }
             this.state.db.Close();
         }
         this.state.lock = false;
@@ -545,16 +585,12 @@ SqlModule.prototype = {
         return state;
     },
     commit: function() {
-        if(this.state.db) {
-            this.state.db.CommitTrans();
-        }
+        this.state.db.CommitTrans();
         this.state.lock = false;
         return this;
     },
     rollback: function() {
-        if(this.state.db) {
-            this.state.db.RollbackTrans();
-        }
+        this.state.db.RollbackTrans();
         this.state.lock = false;
         return this;
     },
@@ -785,7 +821,7 @@ SqlModule.prototype = {
         const qcState = _this.state.queryCommand;
         if(isVoid(selection)) return false;
         try {
-            const exceptionRule = new RegExp("(((INSERT).+?(INTO))|((UPDATE).+?(SET))|((DELETE FROM))|(CREATE TABLE)|(DROP TABLE)|(TRUNCATE TABLE))", "gi");
+            const exceptionRule = new RegExp("(((INSERT INTO))|((UPDATE).+?(SET))|((DELETE FROM))|(CREATE TABLE)|(DROP TABLE)|(TRUNCATE TABLE))", "gi");
             if(selection.match(exceptionRule)) {
                 new Notification().error().open(messages.only_exec_select_query);
                 return false;
@@ -861,7 +897,7 @@ SqlModule.prototype = {
             _this.actionControllerQueryCommand(phaseType.executing);
             queryStack.forEach(function(query, i, a) {
                 const idx = i + 1;
-                const dataSet = _this.dbCommand(_this.state.db).setQuery(query).getData();
+                const dataSet = _this.dbCommand(_this.state.db).setQuery(query).execute().getData();
                 tabsStack.push(createTabs(idx));
                 const gridId = getGridId(idx);
                 const $grid = jqNode("div", { id: gridId, style: "width: 100%; height: 300px;" });
@@ -1087,7 +1123,7 @@ SqlModule.prototype = {
                     _this.actionControllerDataCopy(phaseType.complete);
                 });
                 $rollbackButton.click(function() {
-                    _this.rollback().redirect().actionControllerDataCopy(phaseType.insert);
+                    _this.redirect().actionControllerDataCopy(phaseType.insert);
                 });
                 $logButton.click(function() {
                     _this.downloadLogDataCopy();
@@ -1476,6 +1512,18 @@ SqlModule.prototype = {
                 });
                 break;
             }
+            case "changeUpdateFunction": {
+                applyData.forEach(function(record) {
+                    record[state.applyIndex] = "mousikomisyo";
+                });
+                break;
+            }
+            case "changeUpdateUser": {
+                applyData.forEach(function(record) {
+                    record[state.applyIndex] = "80563901";
+                });
+                break;
+            }
             case "getIdentifierCustomerNumber": {
                 applyData.forEach(function(record, i) {
                     record[state.applyIndex] = state.customerNumberIdentifier[i];
@@ -1489,7 +1537,7 @@ SqlModule.prototype = {
                 const date = setCharPadding(String(d.getDate()), 2);
                 const hours = setCharPadding(String(d.getHours()), 2);
                 const minutes = setCharPadding(String(d.getMinutes()), 2);
-                const seconds = "30";
+                const seconds = setCharPadding(String(d.getSeconds()), 2);
                 state.timeStampIdentifier = concatString(year, month, date, hours, minutes, seconds);
                 applyData.forEach(function(record, i) {
                     record[state.applyIndex] = concatString(state.timeStampIdentifier, setCharPadding(String(i + 1), 3));
@@ -1752,11 +1800,10 @@ SqlModule.prototype = {
             });
             const transaction = _this.transaction();
             if(!transaction.error) {
-                _this.dbCommand(_this.state.db);
                 Object.keys(insertQuery).forEach(function(table) {
                     dataCopyState.log.push(concatString("[[", table, "]]"));
                     insertQuery[table].forEach(function(query) {
-                        _this.setQuery(query).execute();
+                        _this.dbCommand(_this.state.db).setQuery(query).execute();
                         dataCopyState.log.push(query);
                         const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
                         dataCopyState.log.push(timeLog);
@@ -1770,7 +1817,7 @@ SqlModule.prototype = {
             }
             loading.off();
         }).catch(function(e) {
-            try { _this.rollback().redirect(); } catch(e) {}
+            try { _this.redirect(); } catch(e) {}
             finally {
                 console.log(e);
                 new Notification().error().open(e.message);
@@ -1923,21 +1970,119 @@ SqlModule.prototype = {
             const un = userName.value;
             const transaction = _this.transaction();
             if(!transaction.error) {
+                const tableList = createUserExport.tableList;
+                const tableCode = createUserExport.tableCode;
+                const keySet = createUserExport.keySet;
+                const querySet = createUserExport.querySet;
+                const rules = createUserExport.rules;
                 const getInsertQuery = function(table) {
-                    return "INSERT " + table + " INTO";
+                    const insertQueryStack = new Array();
+                    const qs = querySet[table];
+                    switch(tableCode[table]) {
+                        case "1": {
+                            const base = rules.base[table];
+                            const iterator = qs[base].length;
+                            for(let i = 0; i < iterator; i++) {
+                                const columnStack = new Array();
+                                const valueStack = new Array();
+                                Object.keys(qs).forEach(function(column) {
+                                    let value = typeIs(qs[column]).array ? qs[column][i] : qs[column];
+                                    if(rules.combine.code.indexOf(column) >= 0) {
+                                        value = concatString(uc, value);
+                                    }
+                                    else if(rules.combine.name.indexOf(column) >= 0) {
+                                        value = concatString(un, "@", value);
+                                    }
+                                    columnStack.push(column);
+                                    valueStack.push(concatString(SIGN.sq, value, SIGN.sq));
+                                });
+                                const n = concatString("(", columnStack.join(SIGN.cw), ")");
+                                const v = concatString("(", valueStack.join(SIGN.cw), ")");
+                                const query = concatString("INSERT INTO ", table, SIGN.ws, n, " VALUES ", v);
+                                insertQueryStack.push(query);
+                            }
+                            break;
+                        }
+                        case "2": {
+                            const iterator = 1;
+                            for(let i = 0; i < iterator; i++) {
+                                const columnStack = new Array();
+                                const valueStack = new Array();
+                                Object.keys(qs).forEach(function(column) {
+                                    let value = typeIs(qs[column]).array ? qs[column][i] : qs[column];
+                                    if(rules.combine.code.indexOf(column) >= 0) {
+                                        value = concatString(uc, value);
+                                    }
+                                    else if(rules.combine.name.indexOf(column) >= 0) {
+                                        value = concatString(un, "@", value);
+                                    }
+                                    columnStack.push(column);
+                                    valueStack.push(concatString(SIGN.sq, value, SIGN.sq));
+                                });
+                                const n = concatString("(", columnStack.join(SIGN.cw), ")");
+                                const v = concatString("(", valueStack.join(SIGN.cw), ")");
+                                const query = concatString("INSERT INTO ", table, SIGN.ws, n, " VALUES ", v);
+                                insertQueryStack.push(query);
+                            }
+                            break;
+                        }
+                        case "3": {
+                            const base = rules.base[table];
+                            const getIterator = function(idx) {
+                                return qs[base[Object.keys(base)[idx]]];
+                            };
+                            getIterator(0).forEach(function(a, ai) {
+                                getIterator(1).forEach(function(b, bi) {
+                                    getIterator(2).forEach(function(c, ci) {
+                                        const columnStack = new Array();
+                                        const valueStack = new Array();
+                                        Object.keys(qs).forEach(function(column) {
+                                            columnStack.push(column);
+                                        });
+                                        valueStack.push(concatString(SIGN.sq, a, SIGN.sq));
+                                        valueStack.push(concatString(SIGN.sq, b, SIGN.sq));
+                                        valueStack.push(concatString(SIGN.sq, c, SIGN.sq));
+                                        const n = concatString("(", columnStack.join(SIGN.cw), ")");
+                                        const v = concatString("(", valueStack.join(SIGN.cw), ")");
+                                        const query = concatString("INSERT INTO ", table, SIGN.ws, n, " VALUES ", v);
+                                        insertQueryStack.push(query);
+                                    });
+                                });
+                            });
+                            break;
+                        }
+                    }
+                    return insertQueryStack;
                 };
                 const getDeleteQuery = function(table) {
-                    return "DELETE FROM " + table;
+                    const ks = keySet[table];
+                    const code = concatString(SIGN.sq, uc, "%", SIGN.sq);
+                    const condition = concatString(ks, " LIKE ", code);
+                    const deleteQuery = concatString("DELETE FROM ", table, " WHERE ", condition);
+                    return deleteQuery;
                 };
-                _this.dbCommand(_this.state.db);
-                createUserExport.tableList.forEach(function(table) {
+                tableList.forEach(function(table) {
                     createUserState.log.push(concatString("[[", table, "]]"));
-                    const query = createUserState.actionType === types.action.commit ? getInsertQuery(table) : getDeleteQuery(table);
-                    _this.setQuery(query).execute();
-                    createUserState.log.push(query);
-                    const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
-                    createUserState.log.push(timeLog);
-                    console.log(table);
+                    switch(createUserState.actionType) {
+                        case types.action.commit: {
+                            const insertQueryList = getInsertQuery(table);
+                            insertQueryList.forEach(function(query) {
+                                _this.dbCommand(_this.state.db).setQuery(query).execute();
+                                createUserState.log.push(query);
+                                const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
+                                createUserState.log.push(timeLog);
+                            });
+                            break;
+                        }
+                        case types.action.delete: {
+                            const query = getDeleteQuery(table);
+                            _this.dbCommand(_this.state.db).setQuery(query).execute();
+                            createUserState.log.push(query);
+                            const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
+                            createUserState.log.push(timeLog);
+                            break;
+                        }
+                    }
                 });
                 const phaseType = _this.Define.TYPES.phase.createUser;
                 _this.actionControllerCreateUser(phaseType.commit);
@@ -1947,7 +2092,7 @@ SqlModule.prototype = {
             }
             loading.off();
         }).catch(function(e) {
-            try { _this.rollback().redirect(); } catch(e) {}
+            try { _this.redirect(); } catch(e) {}
             finally {
                 console.log(e);
                 new Notification().error().open(e.message);

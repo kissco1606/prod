@@ -149,7 +149,8 @@ const TYPES = {
             TEXT_UTF8: "text/plain;charset=utf-8",
             TEXT: "text/plain",
             OCTET_STREAM: "application/octet-stream",
-            JSON: "application/json"
+            JSON: "application/json",
+            JAVASCRIPT: "application/javascript"
         },
         extension: {
             txt: ".txt",
