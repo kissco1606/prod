@@ -426,7 +426,7 @@ Notification.prototype = {
         _this.dialogContainer.append(_this.dialog);
         state.notification = _this;
         _this.okButton.focus();
-        return false;
+        return this;
     },
     close: function () {
         const _this = this;

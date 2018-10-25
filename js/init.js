@@ -1,5 +1,26 @@
 function init() {
 	transitonMenu();
+
+	// const obj = {
+	// 	connection: ""
+	// };
+	// var p = new Parallel(1000, {
+	// 	evalPath: 'lib/parallel-js/eval.js'
+	// });
+	// const log = function(data) { console.log(data); };
+	// const test = function(n) {
+	// 	const ax = new ActiveXObject("ADODB.Connection");
+	// 	return n;
+	// };
+	// p.map(test).then(log);
+	// const slowSquare = function(n) { 
+	// 	let i = 0; 
+	// 	while (++i < n * n) {}
+	// 	return i;
+	// };
+	// p.spawn(slowSquare).then(function(data) {
+	// 	console.log(data);
+	// });
 };
 
 const Module = function() {
