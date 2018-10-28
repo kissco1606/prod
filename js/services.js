@@ -252,6 +252,10 @@ function getProperty(obj, key) {
     return obj[accessKey];
 };
 
+function getExistArray(list) {
+    return list.filter(function(item) { return item; });
+};
+
 function filter(value, array, keys, matchFunc) {
     const match = function(a, b) {
         if(matchFunc&&typeIs(matchFunc).function) {
@@ -708,6 +712,25 @@ function getJson(path) {
             return reject(e);
         });
     });
+};
+
+function removeDuplicationArray(list) {
+    return isVoid(list) ? list : list.filter(function(item, i) {
+        return list.indexOf(item) === i;
+    });
+};
+
+function bindQuery(query, mapping) {
+    let resultQuery = query;
+    const getBinder = function(key) {
+        return concatString("\\${", key, "}");
+    };
+    Object.keys(mapping).forEach(function(key) {
+        const value = mapping[key];
+        const binder = getBinder(key);
+        resultQuery = resultQuery.replace(new RegExp(binder, "g"), value);
+    });
+    return resultQuery;
 };
 
 const WorkerBuilder = function() {

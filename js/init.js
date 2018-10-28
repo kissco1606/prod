@@ -1,6 +1,5 @@
 function init() {
 	transitonMenu();
-
 	// const obj = {
 	// 	connection: ""
 	// };
