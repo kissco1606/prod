@@ -241,6 +241,14 @@ function accessObject(obj, keys) {
     }, obj);
 };
 
+function setObject(obj, keys, value) {
+    return keys.reduce(function(prev, curr, i, a) {
+        if(a.length === i + 1) return prev[curr] = value;
+        if(isVoid(prev[curr])) return prev[curr] = new Object();
+        return prev[curr];
+    }, obj);
+};
+
 function getProperty(obj, key) {
     let accessKey = null;
     Object.keys(obj).some(function(k) {
