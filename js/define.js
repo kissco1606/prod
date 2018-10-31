@@ -13,7 +13,8 @@ const SIGN = {
     sq: "'",
     dq: '"',
     ssh: "/",
-    crlf: "\r\n"
+    crlf: "\r\n",
+    dash: "-"
 };
 
 const ELEMENTS = {
@@ -83,6 +84,7 @@ const ELEMENTS = {
         cardTitleText: "card-title-text",
         cardContents: "card-contents",
         cardActions: "card-actions",
+        cardContentsOpenned: "card-contents-openned",
         buttonColorPositive: "button--color-positive",
         buttonColorCalm: "button--color-calm",
         buttonColorBalanced: "button--color-balanced",
@@ -100,6 +102,8 @@ const ELEMENTS = {
     },
     icon: {
         database: "fas fa-database",
+        fileCode: "fas fa-file-code",
+        atom: "fas fa-atom",
         cog: "fas fa-cog",
         home: "fas fa-home",
         checkCircle: "fas fa-check-circle",
@@ -148,6 +152,7 @@ const TYPES = {
         mime: {
             TEXT_UTF8: "text/plain;charset=utf-8",
             TEXT: "text/plain",
+            CSV: "text/csv",
             OCTET_STREAM: "application/octet-stream",
             JSON: "application/json",
             JAVASCRIPT: "application/javascript"
@@ -158,7 +163,8 @@ const TYPES = {
             json: ".json",
             png: ".png",
             xls: ".xls",
-            xlsx: ".xlsx"
+            xlsx: ".xlsx",
+            csv: ".csv"
         },
         contentType: {
             string: "string",
@@ -208,7 +214,8 @@ const REG_EXP = {
 
 const MODULE_ID = {
     sql: "sql",
-    batch: "batch"
+    batch: "batch",
+    common: "common"
 };
 
 const state = new Object();

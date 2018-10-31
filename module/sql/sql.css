@@ -273,3 +273,20 @@
 	padding: 10px 0;
 	line-height: 2.5;
 }
+
+#export-container__query-command {
+	padding: 10px 0;
+}
+#export-container__query-command > label {
+	width: 100%;
+	text-align: left;
+	line-height: 1.5;
+	padding-bottom: 5px;
+}
+#export-container__query-command > select {
+	width: 100%;
+	padding: 5px;
+	border: 1px solid rgba(0, 0, 0, 0.4);
+	border-radius: 0.3em;
+	box-sizing: border-box;
+}

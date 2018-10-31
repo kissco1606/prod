@@ -201,6 +201,10 @@ function getFileStamp() {
     return concatString(year, month, date, hours,minutes, seconds);
 };
 
+function convertPath(path) {
+    return path.replace(new RegExp("\\\\", "g"), "\\\\");
+};
+
 function cloneJS(data) {
     const type = typeIs(data);
     if(type.object) {
@@ -358,6 +362,31 @@ function createMenuInfo(itemList, info) {
             itemList.push($item);
         });
     }
+};
+
+function buildCard(cardInfo) {
+    const $card = jqNode("div", { id: cardInfo.id, class: eClass.card });
+    const $cardTitle = jqNode("div", { class: eClass.cardTitle });
+    const $titleIcon = jqNode("span", { class: eClass.cardTitleIcon }).append(jqNode("i", { class: eIcon.wrench }));
+    const $titleText = jqNode("span", { class: eClass.cardTitleText }).text(cardInfo.title);
+    $cardTitle.append($titleIcon).append($titleText);
+    const $cardContentsContainer = jqNode("div", { class: eClass.cardContentsContainer });
+    const $cardContents = jqNode("div", { class: eClass.cardContents }).html(cardInfo.contents);
+    const $cardActions = jqNode("div", { class: eClass.cardActions });
+    const $openIcon = jqNode("i", { class: eIcon.chevronCircleDown });
+    $openIcon.click(function() {
+        const isOpenned = $card.hasClass(eClass.cardContentsOpenned);
+        if(isOpenned) {
+            $card.removeClass(eClass.cardContentsOpenned);
+        }
+        else {
+            $card.addClass(eClass.cardContentsOpenned);
+        }
+    });
+    $cardContentsContainer.append($cardContents);
+    $cardActions.append($openIcon);
+    $card.append($cardTitle).append($cardContentsContainer).append($cardActions);
+    return $card;
 };
 
 function getDialogTitle(type) {
@@ -638,6 +667,12 @@ function readFile(fr, type, file) {
 
 function saveAsFile(parts, type, fileName) {
     try {
+        switch(type) {
+            case TYPES.file.mime.CSV: {
+                parts = concatString("\ufeff", parts);
+                break;
+            }
+        }
         const blob = new Blob([parts], { tpye: type });
         saveAs(blob, fileName);
     }
@@ -774,4 +809,85 @@ function threadMessage(module, actionType, params) {
         type: actionType,
         params: params
     };
+};
+
+const FileTree = function(path) {
+	this.absolutePath = null;
+	this.path = path;
+	this.tree = new Object();
+	this.treeSize = 0;
+	this.u = "\\";
+};
+FileTree.prototype = {
+	getAbsolutePath: function() {
+	    const path = this.path.split(this.u).filter(function(item, i, a) { return a.length > i + 1; }).join(this.u);
+		return path + this.u;
+	},
+	getRootPath: function(path) {
+	    const oPath = path.replace(this.absolutePath, "");
+	    const pathList = oPath.split(this.u);
+	    const size = pathList.length;
+	    const rootObj = { key: oPath, reference: "", size: size };
+	    if(size >= 1) rootObj.reference = pathList.slice(0, size - 1).join(this.u);
+		return rootObj;
+	},
+	getAccessKey: function(path) {
+		return getExistArray(path.replace(this.absolutePath, "").split(this.u));
+	},
+	setTreeObject: function(obj, root, fileName) {
+	    const key = root.key;
+	    const reference = root.reference;
+	    if(!obj[key]) {
+	        obj[key] = { root: reference, files: [fileName] };
+	    }
+	    else {
+	        obj[key].files.push(fileName);
+	    }
+	},
+	setFilesTree: function(fileObj, _this) {
+		const folder = fileObj.folder;
+		const path = fileObj.path;
+		const file = fileObj.file;
+		const root = _this.getRootPath(path);
+		const key = root.key;
+	    const reference = root.reference;
+	    const rootSize = root.size;
+	    _this.treeSize = _this.treeSize >= rootSize ? _this.treeSize : rootSize;
+	    const obj = _this.tree;
+	    if(!obj[key]) {
+	        obj[key] = { root: reference, folder: folder, files: [file.Name] };
+	    }
+	    else {
+	        obj[key].files.push(file.Name);
+	    }
+	},
+	iterateFiles: function(path, folder, recursive, actionPerFileCallback) {
+		const _this = this;
+		const fso = new ActiveXObject("Scripting.FileSystemObject"); 
+		const folderObj = fso.GetFolder(path);
+		const fileEnum = new Enumerator(folderObj.Files);
+		for(; !fileEnum.atEnd(); fileEnum.moveNext()){
+			const fileObj = {
+				path: path,
+				folder: folder ? folder : "",
+				file: fso.GetFile(fileEnum.item())
+			};
+			actionPerFileCallback(fileObj, _this);
+		}
+		if(recursive){
+			const subFolderEnum = new Enumerator(folderObj.SubFolders);
+			for(; !subFolderEnum.atEnd(); subFolderEnum.moveNext()){
+				var subFolderObj = fso.GetFolder(subFolderEnum.item());
+				this.iterateFiles(subFolderObj.Path, subFolderObj.Name, true, actionPerFileCallback);
+			}
+		}
+	},
+	build: function() {
+		this.absolutePath = this.getAbsolutePath(this.path);
+		this.iterateFiles(this.path, null, true, this.setFilesTree);
+		return {
+		    tree: this.tree,
+		    size: this.treeSize
+		};
+	}
 };

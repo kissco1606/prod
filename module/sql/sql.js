@@ -9,6 +9,7 @@ const SqlModule = function() {
                 uid: "uid",
                 pwd: "pwd",
                 sqlHeader: "sql-header",
+                sqlContents: "sql-contents",
                 sqlMenuContainer: "sql-menu-container",
                 headerToolsConfigIcon: "header-tools-config-icon",
                 applicationPage: "application-page",
@@ -31,7 +32,9 @@ const SqlModule = function() {
                 queryTabs: "query-tabs", 
                 dataGrid: "data-grid",
                 queryTimer: "query-timer",
-                lincPolicyNumber: "linc-policy-number"
+                lincPolicyNumber: "linc-policy-number",
+                exportButtonQueryCommand: "export-button__query-command",
+                exportContainerQueryCommand: "export-container__query-command"
             },
             class: {
                 commandLine: "command-line",
@@ -90,7 +93,8 @@ const SqlModule = function() {
             userCode: "User Code",
             userName: "User Name",
             create: "create",
-            delete: "delete"
+            delete: "delete",
+            exportType: "Export Type"
         },
         TYPES: {
             toolId: {
@@ -109,7 +113,8 @@ const SqlModule = function() {
             },
             phase: {
                 queryCommand: {
-                    executing: "executing"
+                    executing: "executing",
+                    complete: "complete"
                 },
                 dataCopy: {
                     insert: "insert",
@@ -142,6 +147,13 @@ const SqlModule = function() {
             action: {
                 create: "create",
                 delete: "delete"
+            },
+            export: {
+                queryCommand: [
+                    { label: "All", value: "all" },
+                    { label: "All(without columns)", value: "all_without_columns" },
+                    { label: "Separate by consoles", value: "separate_by_consoles" }
+                ]
             }
         },
         MESSAGES: {
@@ -158,7 +170,11 @@ const SqlModule = function() {
             ui: new Object(),
             phase: null,
             timer: null,
-            element: null
+            element: null,
+            export: {
+                data: null,
+                type: this.Define.TYPES.export.queryCommand[0].value
+            }
         },
         dataCopy: new Object(),
         createUser: new Object(),
@@ -251,7 +267,6 @@ SqlModule.prototype = {
         else {
             db.rollback();
         }
-        db.close();
         delete lock[id];
         return null;
     },
@@ -395,30 +410,6 @@ SqlModule.prototype = {
             case pageType.application: {
                 const $screen = jqNode("div", { id: seId.applicationPage, class: eClass.screen });
                 const $cardContainer = jqNode("div", { class: eClass.cardContainer });
-                const buildCard = function(cardInfo) {
-                    const $card = jqNode("div", { id: cardInfo.id, class: eClass.card });
-                    const $cardTitle = jqNode("div", { class: eClass.cardTitle });
-                    const $titleIcon = jqNode("span", { class: eClass.cardTitleIcon }).append(jqNode("i", { class: eIcon.wrench }));
-                    const $titleText = jqNode("span", { class: eClass.cardTitleText }).text(cardInfo.title);
-                    $cardTitle.append($titleIcon).append($titleText);
-                    const $cardContentsContainer = jqNode("div", { class: eClass.cardContentsContainer });
-                    const $cardContents = jqNode("div", { class: eClass.cardContents }).html(cardInfo.contents);
-                    const $cardActions = jqNode("div", { class: eClass.cardActions });
-                    const $openIcon = jqNode("i", { class: eIcon.chevronCircleDown });
-                    $openIcon.click(function() {
-                        const isOpenned = $card.hasClass("card-contents-openned");
-                        if(isOpenned) {
-                            $card.removeClass("card-contents-openned");
-                        }
-                        else {
-                            $card.addClass("card-contents-openned");
-                        }
-                    });
-                    $cardContentsContainer.append($cardContents);
-                    $cardActions.append($openIcon);
-                    $card.append($cardTitle).append($cardContentsContainer).append($cardActions);
-                    return $card;
-                };
                 const cardList = [
                     {
                         id: seId.queryCommandCard,
@@ -494,7 +485,7 @@ SqlModule.prototype = {
         const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
         const $cancelButton = jqNode("button", { class: classes(eClass.buttonColorOrange, eClass.buttonDisable) }).text(upperCase(captions.cancel));
         $cancelButton.prop("disabled", true);
-        [$execButton, $cancelButton].forEach(function(item) { $actionArea.append(item); });
+        [$execButton].forEach(function(item) { $actionArea.append(item); });
         const $queryEditor = jqNode("div", { id: seId.queryEditor });
         const $queryGridContainer = jqNode("div", { class: seClass.queryGridContainer });
         const $queryGridTabs = jqNode("div", { id: seId.queryGridTabs });
@@ -544,9 +535,17 @@ SqlModule.prototype = {
     },
     actionControllerQueryCommand: function(phase) {
         const _this = this;
-        const phaseType = _this.Define.TYPES.phase.queryCommand;
-        const qcState = _this.state.queryCommand;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.queryCommand;
+        const exportType = types.export.queryCommand;
         const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const qcState = _this.state.queryCommand;
+        const $card = jqById(seId.queryCommandCard);
+        const $cardContents = $card.find(concatString(".", eClass.cardContents));
+        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
         const $timer = jqById(seId.queryTimer);
         switch(phase) {
             case phaseType.executing: {
@@ -560,9 +559,38 @@ SqlModule.prototype = {
                 $timer.text(getTimerView(queryTimeCounter));
                 qcState.timer = setInterval(function() {
                     queryTimeCounter += 1;
-                    const milisec = (queryTimeCounter / 10).toFixed(1);
+                    const milisec = (queryTimeCounter / 10).toFixed(3);
                     $timer.text(getTimerView(milisec));
                 }, 100);
+                break;
+            }
+            case phaseType.complete: {
+                jqById(seId.exportButtonQueryCommand).remove();
+                const $exportButton = jqNode("button", { id: seId.exportButtonQueryCommand, class: eClass.buttonColorPositive }).text(upperCase(captions.export));
+                $actionArea.append($exportButton);
+                $exportButton.click(function() {
+                    const callback = function(dialogClose) {
+                        _this.exportQueryCommandConsoles(dialogClose);
+                    };
+                    const exportContents = function() {
+                        const $container = jqNode("div", { id: seId.exportContainerQueryCommand });
+                        const $label = jqNode("label").text(captions.exportType);
+                        const $select = jqNode("select");
+                        exportType.forEach(function(item) {
+                            const $option = jqNode("option", { value: item.value }).text(item.label);
+                            if(qcState.export.type === item.value) {
+                                $option.attr({ selected: true });
+                            }
+                            $select.append($option);
+                        });
+                        [$label, $select].forEach(function(item) { $container.append(item); });
+                        $select.change(function(e) {
+                           qcState.export.type = e.target.value; 
+                        });
+                        return $container;
+                    };
+                    new Dialog().setContents(upperCase(captions.export, 0), exportContents()).open(callback);
+                });
                 break;
             }
             default: {
@@ -575,6 +603,54 @@ SqlModule.prototype = {
                 break;
             }
         }
+        return null;
+    },
+    exportQueryCommandConsoles: function(dialogClose) {
+        const _this = this;
+        const types = _this.Define.TYPES;
+        const exportType = types.export.queryCommand;
+        const qcState = _this.state.queryCommand;
+        const exportState = qcState.export;
+        if(!exportState.data) {
+            new Notification.error().open(MESSAGES.nothing_data);
+            return false;
+        }
+        const loading = new Loading();
+        loading.on().then(function() {
+            const consoleData = exportState.data;
+            const type = exportState.type;
+            let convertedData = new Array();
+            const convertColumns = function(columns) {
+                return columns.map(function(cObj) { return cObj.caption; });
+            };
+            const convertData = function(data) {
+                return data.map(function(dObj) {
+                    return Object.keys(dObj).map(function(key) { return dObj[key] });
+                });
+            };
+            switch(type) {
+                case exportType[0].value: {
+                    consoleData.forEach(function(dataSet) {
+                       const columns = convertColumns(dataSet.name);
+                       const data = convertData(dataSet.data);
+                       convertedData.push(columns.concat(data));
+                    });
+                    break;
+                }
+                case exportType[1].value: {
+                    break;
+                }
+                case exportType[2].value: {
+                    break;
+                }
+            }
+            const wb = new Workbook();
+            dialogClose();
+            loading.off();
+        }).catch(function(e) {
+            new Notification.error().open(e.message);
+            loading.off();
+        });
         return null;
     },
     clearQueryCommandUI: function() {
@@ -611,11 +687,7 @@ SqlModule.prototype = {
                 new Notification().error().open(messages.only_exec_select_query);
                 return false;
             }
-            const queryStack = selection.split(SIGN.sc).filter(function(item) {
-                return item;
-            }).map(function(item) {
-                return item.trim().replace(new RegExp("\nSELECT", "gi"), "SELECT");
-            });
+            const queryStack = getExistArray(selection.split(SIGN.sc).map(function(item) { return item.trim().replace(new RegExp("\r\nSELECT", "g"), "SELECT"); }));
             const $tabs = jqById(seId.queryGridTabs);
             const $contents = jqById(seId.queryGridContents);
             if(!isVoid(qcState.ui)) {
@@ -623,6 +695,7 @@ SqlModule.prototype = {
             }
             const uiTabIdList = new Array();
             const uiGridIdList = new Array();
+            const dataList = new Array();
             const tabsStack = new Array();
             const mapping = new Object();
             const getTabId = function(idx) {
@@ -651,6 +724,7 @@ SqlModule.prototype = {
                 };
                 const gridId = getGridId(idx);
                 uiGridIdList.push(gridId);
+                dataList.push(dataSet);
                 return {
                     name: gridId,
                     header: SIGN.none,
@@ -659,11 +733,11 @@ SqlModule.prototype = {
                     records: dataSet.data
                 };
             };
-            _this.actionControllerQueryCommand(phaseType.executing);
+            // _this.actionControllerQueryCommand(phaseType.executing);
             const db = new DBUtils().connect(_this.state.info);
             queryStack.forEach(function(query, i, a) {
                 const idx = i + 1;
-                const dataSet = db.onEnd(a.length === i).executeSelectGrid(query);
+                const dataSet = db.executeSelectGrid(query).onEnd(a.length === idx).dataSet;
                 tabsStack.push(createTabs(idx));
                 const gridId = getGridId(idx);
                 const $grid = jqNode("div", { id: gridId, style: "width: 100%; height: 300px;" });
@@ -675,7 +749,6 @@ SqlModule.prototype = {
                     $grid.hide();
                 }
             });
-            db.close();
             $tabs.w2tabs({
                 name: seId.queryTabs,
                 active: tabsStack[tabsStack.length - 1].id,
@@ -714,11 +787,12 @@ SqlModule.prototype = {
             });
             qcState.ui.tabIdList = uiTabIdList;
             qcState.ui.gridIdList = uiGridIdList;
-            _this.actionControllerQueryCommand(null);
+            qcState.export.data = dataList;
+            _this.actionControllerQueryCommand(phaseType.complete);
         }
         catch(e) {
             new Notification().error().open(e.message);
-            _this.actionControllerQueryCommand(null);
+            // _this.actionControllerQueryCommand(null);
         }
         return null;
     },
@@ -1405,7 +1479,7 @@ SqlModule.prototype = {
             const to = getExportData(getProperty(insertData, table), "to", dataCopyState.dataKey.to[table]);
             wb.SheetNames.push(table);
             const a = new Array(from.name).concat(from.data);
-            const b = [[SIGN.none], [SIGN.none], [SIGN.none], [SIGN.none]];
+            const b = getIterator(4).map(function() { return [SIGN.none]; });
             const c = new Array(to.name).concat(to.data);
             const ws_data = a.concat(b).concat(c);
             const ws = sheet_from_array_of_arrays(ws_data, from.count);
@@ -2050,7 +2124,7 @@ DBUtils.prototype = {
     connect: function(info) {
         const ADODB = this.Define.ADODB;
         const types = this.Define.TYPES;
-        const connectString = this.createConnectString(info.sid.value, info.uid.valud, info.pwd.value);
+        const connectString = this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
         this.driver = new ActiveXObject(ADODB.connection);
         this.driver.Open(connectString);
         this.type = types.actionType.query;
@@ -2167,7 +2241,6 @@ DBUtils.prototype = {
         this.driver = null;
         this.command = null;
         this.type = null;
-        this.dataSet = null;
         return null;
     },
     onEnd: function(condition, callback, bindParam) {
