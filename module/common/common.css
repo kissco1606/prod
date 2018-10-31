@@ -1,0 +1,109 @@
+/* header */
+#common-header {
+	position: fixed;
+	height: 50px;
+	top: 0;
+	left: 0;
+	right: 0;
+	background-color: #3f51b5;
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 20px;
+	font-size: 18px;
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.7);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#common-header > #header-title {
+    display: table;
+    table-layout: fixed;
+	white-space: nowrap;
+	line-height: 1.5;
+    /* width: calc(100% - (${#header-tools-width} + ${header-padding})px); */
+}
+
+#common-header > #header-title > * {
+    display: table-cell;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+
+#common-header > #header-title > #title-icon {
+    padding-right: 10px;
+    /* width: ${icon-width}px; */
+}
+#common-header > #header-tools > .tools-icon {
+    margin-left: 20px;
+}
+#common-header > #header-tools > .tools-icon > i {
+    cursor: pointer;
+}
+#common-header > #header-tools > .icon-button {
+	display: block;
+	padding: 2px 0;
+	width: 28px;
+	text-align: center;
+    border-radius: 100%;
+	cursor: pointer;
+	background-color: transparent;
+    transition: background-color 0.3s ease-in-out;
+}
+#common-header > #header-tools > .icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+#common-header > #header-tools > .tools-icon > #header-tools-config-icon {
+	transition: transform .4s ease-in-out;
+}
+#common-header > #header-tools > .tools-icon > #header-tools-config-icon:hover {
+	transform: rotate(45deg);
+}
+
+/* contents */
+#common-contents {
+	position: relative;
+	height: 100%;
+	transition: opacity 0.2s ease-in-out;
+}
+
+#file-tree-card .contents-container > .command-area
+{
+	display: flex;
+	flex-direction: row;
+	padding: 10px 0;
+}
+#file-tree-card .contents-container > .command-area > label
+{
+	width: 200px;
+	text-align: left;
+	line-height: 1.5;
+}
+#file-tree-card .contents-container > .command-area > input
+{
+	padding: 5px;
+	border: none;
+	border: 1px solid rgba(0, 0, 0, 0.4);
+	border-radius: 0.3em;
+	width: 100%;
+}
+#file-tree-card .contents-container > .action-area
+{
+	padding: 10px 0;
+	text-align: right;
+}
+#file-tree-card .contents-container > .action-area > button
+{
+	margin-left: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding: 10px;
+	color: #fff;
+	border: none;
+	border-radius: 0.2em;
+	cursor: pointer;
+}
