@@ -98,7 +98,10 @@ const ELEMENTS = {
         buttonColorDeepOrange: "button--color-deepOrange",
         buttonColorBrown: "button--color-brown",
         buttonColorBlueGrey: "button--color-blueGrey",
-        buttonDisable: "button-disable"
+        buttonDisable: "button-disable",
+        radio: "radio",
+        checkbox: "checkbox",
+        rcColorDefault: "rc-color__default"
     },
     icon: {
         database: "fas fa-database",
@@ -219,3 +222,4 @@ const MODULE_ID = {
 };
 
 const state = new Object();
+

@@ -214,7 +214,7 @@ CommonModule.prototype = {
             const worker = new Worker(types.path.fileTreeWorker);
             worker.onmessage = function(e) {
                 const fileTreeData = e.data;
-                const fileName = concatString("FileTree_", getFileStamp(), TYPES.file.extension.csv);
+                const fileName = concatString("FileTree_", fileTree.target, "_", getFileStamp(), TYPES.file.extension.csv);
                 saveAsFile(fileTreeData, TYPES.file.mime.CSV, fileName);
                 loading.off();
             };

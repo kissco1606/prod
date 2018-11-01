@@ -228,7 +228,7 @@ SqlModule.prototype = {
         }).catch(function(e) {
             $container.empty();
             console.log(e);
-            new Notification().error().open("Failed init module");
+            new Notification().error().open("Failed load module");
         });
         return this;
     },
@@ -340,11 +340,11 @@ SqlModule.prototype = {
     },
     onAccess: function() {
         const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const pageType = _this.Define.TYPES.page;
         const loading = new Loading();
         loading.on().then(function() {
-            const pageType = _this.Define.TYPES.page;
-            const seId = _this.Define.ELEMENTS.id;
-            const captions = _this.Define.CAPTIONS;
             const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
             const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
             const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
@@ -611,6 +611,7 @@ SqlModule.prototype = {
         const exportType = types.export.queryCommand;
         const qcState = _this.state.queryCommand;
         const exportState = qcState.export;
+        const fileType = TYPES.file.mime.OCTET_STREAM;
         if(!exportState.data) {
             new Notification.error().open(MESSAGES.nothing_data);
             return false;
@@ -621,30 +622,76 @@ SqlModule.prototype = {
             const type = exportState.type;
             let convertedData = new Array();
             const convertColumns = function(columns) {
-                return columns.map(function(cObj) { return cObj.caption; });
+                return [columns.map(function(cObj) { return cObj.caption; })];
             };
             const convertData = function(data) {
+                if(isVoid(data)) return [SIGN.none];
                 return data.map(function(dObj) {
+                    delete dObj.recid;
                     return Object.keys(dObj).map(function(key) { return dObj[key] });
                 });
             };
+            const headerStyle = {
+                fill: {
+                    patternType: "solid",
+                    fgColor:{ rgb: "9E9E9E" }
+                }
+            };
             switch(type) {
                 case exportType[0].value: {
+                    const setStyle = function(R, C, cell) {
+                        if(headerIndex.indexOf(R) >= 0) cell.s = headerStyle;
+                    };
+                    const headerIndex = new Array();
                     consoleData.forEach(function(dataSet) {
                        const columns = convertColumns(dataSet.name);
                        const data = convertData(dataSet.data);
-                       convertedData.push(columns.concat(data));
+                       headerIndex.push(convertedData.length);
+                       convertedData = convertedData.concat(columns.concat(data));
                     });
+                    const wb = new Workbook();
+                    const ws = sheetFromArrayOfArrays(convertedData, setStyle);
+                    wb.SheetNames.push(type);
+                    wb.Sheets[type] = ws;
+                    const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
+                    const fileName = concatString("QueryCommand_", type ,"_", getFileStamp(), TYPES.file.extension.xlsx);
+                    saveAsFile(s2ab(wbout), fileType, fileName);
                     break;
                 }
                 case exportType[1].value: {
+                	consoleData.forEach(function(dataSet) {
+                       const data = convertData(dataSet.data);
+                       convertedData = convertedData.concat(data);
+                    });
+                    const wb = new Workbook();
+                    const ws = sheetFromArrayOfArrays(convertedData);
+                    wb.SheetNames.push(type);
+                    wb.Sheets[type] = ws;
+                    const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
+                    const fileName = concatString("QueryCommand_", type ,"_", getFileStamp(), TYPES.file.extension.xlsx);
+                    saveAsFile(s2ab(wbout), fileType, fileName);
                     break;
                 }
                 case exportType[2].value: {
+                    const setStyle = function(R, C, cell) {
+                        if(R === 0) cell.s = headerStyle;
+                    };
+                    const wb = new Workbook();
+                    consoleData.forEach(function(dataSet, i) {
+                        const columns = convertColumns(dataSet.name);
+                        const data = convertData(dataSet.data);
+                        const ws_data = columns.concat(data);
+                        const ws = sheetFromArrayOfArrays(ws_data, setStyle);
+                        const console = concatString("Console", i + 1);
+                        wb.SheetNames.push(console);
+                        wb.Sheets[console] = ws;
+                    });
+                    const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
+                    const fileName = concatString("QueryCommand_", type ,"_", getFileStamp(), TYPES.file.extension.xlsx);
+                    saveAsFile(s2ab(wbout), fileType, fileName);
                     break;
                 }
             }
-            const wb = new Workbook();
             dialogClose();
             loading.off();
         }).catch(function(e) {
@@ -876,7 +923,7 @@ SqlModule.prototype = {
             const $input = jqNode("input", { type: "text" });
             const $textareaRow = jqNode("div", { class: seClass.commandLineRow });
             const $textareaLabel = jqNode("label").text("Script");
-            const placeholder = "@column\nvalue1\nvalue2";
+            const placeholder = "@column\nvalue1\nvalue2...($null: remove, $eq: pass)";
             const $textarea = jqNode("textarea", { placeholder: placeholder });
             if(table && script) {
                 $input.val(table);
@@ -1003,7 +1050,7 @@ SqlModule.prototype = {
         const $export = jqNode("button").text(upperCase(captions.export));
         const $import = jqNode("button").text(upperCase(captions.import));
         $templateButton.click(function() {
-            console.log("template");
+            _this.openTemplateDataCopy();
         });
         $export.click(function() {
             const fileData = _this.saveOptionDataCopy();
@@ -1044,6 +1091,41 @@ SqlModule.prototype = {
             new FileController().setListener(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
         });
         new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export, $templateButton]).open(callback);
+        return null;
+    },
+    openTemplateDataCopy: function() {
+        const _this = this;
+        const dataCopyState = _this.state.dataCopy;
+        const template = _this.export.dataCopy.template;
+        const $templateContainer = jqNode("div", { class: "option-template-container" });
+        const $pannel = jqNode("div");
+        const applyTemplate = function(menu) {
+            const optionState = dataCopyState.option;
+            const optionStack = new Array();
+            template[menu].forEach(function(item) {
+                const obj = {
+                    table: item.table,
+                    script: item.columns.map(function(c) { return concatString("@", c); }).join(SIGN.nl)
+                };
+                optionStack.push(obj);
+            });
+            if(isVoid(optionState)) {
+                dataCopyState.option = optionStack;
+            }
+            else {
+                dataCopyState.option = optionState.concat(optionStack);
+            }
+            $templateContainer.remove();
+        };
+        Object.keys(template).forEach(function(menu) {
+            const $labelButton = jqNode("div").text(menu);
+            $labelButton.click(function() { applyTemplate(menu); });
+            $pannel.append($labelButton);
+        });
+        $templateContainer.append($pannel);
+        $templateContainer.click(function() { this.remove(); });
+        $pannel.click(function(e) { e.stopPropagation(); });
+        jqByTag("body").append($templateContainer);
         return null;
     },
     checkDataCopy: function() {
@@ -1395,64 +1477,28 @@ SqlModule.prototype = {
         const dataCopyState = _this.state.dataCopy;
         const extractedData = dataCopyState.extractedData[Object.keys(dataCopyState.extractedData)[0]];
         const insertData = dataCopyState.insertData;
-        const wb = new Workbook();
-        const sheet_from_array_of_arrays = function(data, count) {
-            const ws = new Object();
-            const range = {
-                s: { c: 10000000, r: 10000000 },
-                e: { c: 0, r: 0 }
-            };
-            const headerStyle = {
-                fill: {
-                    patternType: "solid",
-                    fgColor:{ rgb: "9E9E9E" }
-                },
-                font: {
-                    bold: false
-                },
-                border: {
-                    top: { style: "thin", tint: 1 },
-                    left: { style: "thin", tint: 1 },
-                    right: { style: "thin", tint: 1 },
-                    bottom: { style: "thin", tint: 1 }
-                }
-            };
-            const bodyStyle = {
-                border: {
-                    top: { style: "thin", tint: 1 },
-                    left: { style: "thin", tint: 1 },
-                    right: { style: "thin", tint: 1 },
-                    bottom: { style: "thin", tint: 1 }
-                }
-            };
-            for(let R = 0; R != data.length; ++R) {
-                for(let C = 0; C != data[R].length; ++C) {
-                    if(range.s.r > R) range.s.r = R;
-                    if(range.s.c > C) range.s.c = C;
-                    if(range.e.r < R) range.e.r = R;
-                    if(range.e.c < C) range.e.c = C;
-                    const cell = { v: data[R][C] };
-                    if(cell.v == null) cell.v = SIGN.none;
-                    const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
-                    if(typeof cell.v === "number") cell.t = "n";
-                    else if(typeof cell.v === "boolean") cell.t = "b";
-                    else if(cell.v instanceof Date) {
-                        cell.t = "n";
-                        cell.z = XLSX.SSF._table[14];
-                        cell.v = datenum(cell.v);
-                    }
-                    else cell.t = "s";
-                    if(R === 0 || R === count + 5 || (C === 0 && cell.v)) {
-                        cell.s = headerStyle;
-                    }
-                    else if(R <= count || R >= count + 5) {
-                        cell.s = bodyStyle;
-                    }
-                    ws[cell_ref] = cell;
-                }
+        const headerStyle = {
+            fill: {
+                patternType: "solid",
+                fgColor:{ rgb: "9E9E9E" }
+            },
+            font: {
+                bold: false
+            },
+            border: {
+                top: { style: "thin", tint: 1 },
+                left: { style: "thin", tint: 1 },
+                right: { style: "thin", tint: 1 },
+                bottom: { style: "thin", tint: 1 }
             }
-            if(range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
-            return ws;
+        };
+        const bodyStyle = {
+            border: {
+                top: { style: "thin", tint: 1 },
+                left: { style: "thin", tint: 1 },
+                right: { style: "thin", tint: 1 },
+                bottom: { style: "thin", tint: 1 }
+            }
         };
         const getExportData = function(data, type, toKey) {
             const dataKey = dataCopyState.dataKey;
@@ -1474,6 +1520,15 @@ SqlModule.prototype = {
             }
             return cd;
         };
+        const setStyle = function(R, C, cell, count) {
+            if(R === 0 || R === count + 5 || (C === 0 && cell.v)) {
+                cell.s = headerStyle;
+            }
+            else if(R <= count || R >= count + 5) {
+                cell.s = bodyStyle;
+            }
+        };
+        const wb = new Workbook();
         Object.keys(insertData).forEach(function(table) {
             const from = getExportData(getProperty(extractedData, table), "from");
             const to = getExportData(getProperty(insertData, table), "to", dataCopyState.dataKey.to[table]);
@@ -1482,7 +1537,7 @@ SqlModule.prototype = {
             const b = getIterator(4).map(function() { return [SIGN.none]; });
             const c = new Array(to.name).concat(to.data);
             const ws_data = a.concat(b).concat(c);
-            const ws = sheet_from_array_of_arrays(ws_data, from.count);
+            const ws = sheetFromArrayOfArrays(ws_data, setStyle, from.count);
             wb.Sheets[table] = ws;
         });
         const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
@@ -1567,7 +1622,8 @@ SqlModule.prototype = {
                                 actionState.msg.push(concatString(column, " > ", s, " : Overflow data"));
                                 return;
                             }
-                            tableData.data[i][applyIndex] = lowerCase(s) === "null" ? SIGN.none : s;
+                            else if(s === "$eq") return;
+                            tableData.data[i][applyIndex] = lowerCase(s) === "$null" ? SIGN.none : s;
                         });
                     });
                 }
