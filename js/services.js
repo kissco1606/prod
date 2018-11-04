@@ -268,7 +268,7 @@ function getExistArray(list) {
     return list.filter(function(item) { return item; });
 };
 
-function filter(value, array, keys, matchFunc) {
+function find(value, array, keys, matchFunc) {
     const match = function(a, b) {
         if(matchFunc&&typeIs(matchFunc).function) {
             return matchFunc(a) === matchFunc(b);
@@ -476,7 +476,7 @@ Notification.prototype = {
             _this.dialogContainer.addClass(eClass.hide);
             _this.dialogContainer.empty();
         }
-        return false;
+        return null;
     },
     exit: function (consoleMsg) {
         throw new Error(consoleMsg);
@@ -486,6 +486,7 @@ Notification.prototype = {
 const Dialog = function () {
     this.dialogContainer = jqById(eId.dialogContainer);
     this.dialog = null;
+    this.contents = null;
     this.okButton = null;
     this.actions = null;
 };
@@ -516,6 +517,7 @@ Dialog.prototype = {
             $contents.css(option);
         }
         this.dialog = $dialog;
+        this.contents = $contents;
         this.okButton = $okButton;
         this.actions = $actions;
         return this;
@@ -539,21 +541,25 @@ Dialog.prototype = {
         _this.okButton.click(function() {
             callback(close);
         });
-        _this.dialogContainer.addClass(classes(eClass.dialogBackdrop, eClass.mostTop));
+        _this.dialogContainer.addClass(classes(eClass.dialogBackdrop, eClass.subTop));
         _this.dialogContainer.removeClass(eClass.hide);
         _this.dialogContainer.append(_this.dialog);
         // jqById(eId.container).addClass(eClass.overflowHidden);
-        return false;
+        return this;
     },
     close: function () {
         const _this = this;
         if (_this.dialogContainer) {
-            _this.dialogContainer.removeClass(classes(eClass.dialogBackdrop, eClass.mostTop));
+            _this.dialogContainer.removeClass(classes(eClass.dialogBackdrop, eClass.subTop));
             _this.dialogContainer.addClass(eClass.hide);
             _this.dialogContainer.empty();
             // jqById(eId.container).removeClass(eClass.overflowHidden);
         }
-        return false;
+        return null;
+    },
+    render: function(contents) {
+        this.contents.html(contents);
+        return null;
     }
 };
 

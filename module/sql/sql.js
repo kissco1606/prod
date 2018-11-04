@@ -47,7 +47,11 @@ const SqlModule = function() {
                 removeRow: "remove-row",
                 queryEditorTextInput: "ace_text-input",
                 queryGridContainer: "query-grid-container",
-                dataGrid: "data-grid"
+                dataGrid: "data-grid",
+                optionTemplateContainer: "option-template-container",
+                optionTemplatePannel: "option-template-pannel",
+                optionTemplateClose: "option-template-close",
+                optionTemplateTab: "option-template-tab"
             },
             src: {
                 cloudgs_dbaas: "assets/cloudgs_dbaas.png"
@@ -906,51 +910,54 @@ SqlModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const $container = jqNode("div", { id: seId.optionContainerDataCopy });
+        const $commandArea = jqNode("div", { class: seClass.optionCommandArea });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
         const $addButton = jqNode("button").append(jqNode("i", { class: eIcon.plus }));
         $addButton.click(function() {
-            $commandArea.append(createCommandLine());
+            $commandArea.append(_this.createOptionCommandLine());
+            jqByClass(eClass.dialogContents).scrollTop(function() { return this.scrollHeight; });
         });
         $actionArea.append($addButton);
-        const $commandArea = jqNode("div", { class: seClass.optionCommandArea });
-        const createCommandLine = function(table, script) {
-            const $commandLine = jqNode("div", { class: seClass.commandLine });
-            const $removeRow = jqNode("div", { class: classes(seClass.commandLineRow, seClass.removeRow) });
-            const $removeButton = jqNode("button", { class: seClass.optionRemoveButton }).append(jqNode("i", { class: eIcon.trash }))
-            $removeRow.append($removeButton);
-            const $inputRow = jqNode("div", { class: seClass.commandLineRow });
-            const $inputLabel = jqNode("label").text("Table");
-            const $input = jqNode("input", { type: "text" });
-            const $textareaRow = jqNode("div", { class: seClass.commandLineRow });
-            const $textareaLabel = jqNode("label").text("Script");
-            const placeholder = "@column\nvalue1\nvalue2...($null: remove, $eq: pass)";
-            const $textarea = jqNode("textarea", { placeholder: placeholder });
-            if(table && script) {
-                $input.val(table);
-                $textarea.val(script);
-            }
-            [$inputLabel, $input].forEach(function(item) {
-                $inputRow.append(item);
-            });
-            [$textareaLabel, $textarea].forEach(function(item) {
-                $textareaRow.append(item);
-            });
-            [$removeRow, $inputRow, $textareaRow].forEach(function(item) {
-                $commandLine.append(item);
-            });
-            $removeButton.click(function() {
-                $commandLine.remove();
-            });
-            return $commandLine;
-        };
         const data = optionData ? optionData : dataCopyState.option;
         if(data) {
             data.forEach(function(item) {
-                $commandArea.append(createCommandLine(item.table, item.script));
+                $commandArea.append(_this.createOptionCommandLine(item.table, item.script));
             });
         }
-        $container.append($actionArea).append($commandArea);
+        [$commandArea, $actionArea].forEach(function(item) { $container.append(item); });
         return $container;
+    },
+    createOptionCommandLine: function(table, script) {
+        const _this = this;
+        const seClass = _this.Define.ELEMENTS.class;
+        const $commandLine = jqNode("div", { class: seClass.commandLine });
+        const $removeRow = jqNode("div", { class: classes(seClass.commandLineRow, seClass.removeRow) });
+        const $removeButton = jqNode("button", { class: seClass.optionRemoveButton }).append(jqNode("i", { class: eIcon.trash }))
+        $removeRow.append($removeButton);
+        const $inputRow = jqNode("div", { class: seClass.commandLineRow });
+        const $inputLabel = jqNode("label").text("Table");
+        const $input = jqNode("input", { type: "text" });
+        const $textareaRow = jqNode("div", { class: seClass.commandLineRow });
+        const $textareaLabel = jqNode("label").text("Script");
+        const placeholder = "@column\nvalue1\nvalue2...($null: remove, $eq: pass)";
+        const $textarea = jqNode("textarea", { placeholder: placeholder });
+        if(table && script) {
+            $input.val(table);
+            $textarea.val(script);
+        }
+        [$inputLabel, $input].forEach(function(item) {
+            $inputRow.append(item);
+        });
+        [$textareaLabel, $textarea].forEach(function(item) {
+            $textareaRow.append(item);
+        });
+        [$removeRow, $inputRow, $textareaRow].forEach(function(item) {
+            $commandLine.append(item);
+        });
+        $removeButton.click(function() {
+            $commandLine.remove();
+        });
+        return $commandLine;
     },
     actionControllerDataCopy: function(phase) {
         const _this = this;
@@ -1095,36 +1102,62 @@ SqlModule.prototype = {
     },
     openTemplateDataCopy: function() {
         const _this = this;
-        const dataCopyState = _this.state.dataCopy;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
         const template = _this.export.dataCopy.template;
-        const $templateContainer = jqNode("div", { class: "option-template-container" });
-        const $pannel = jqNode("div");
+        const $templateContainer = jqNode("div", { class: seClass.optionTemplateContainer });
+        const $pannel = jqNode("div", { class: seClass.optionTemplatePannel });
+        const $closeButton = jqNode("div", { class: seClass.optionTemplateClose });
+        const $closeIcon = jqNode("i", { class: eIcon.timesCircle });
+        $closeIcon.click(function() { $templateContainer.remove(); });
+        $closeButton.append($closeIcon);
+        $pannel.append($closeButton);
         const applyTemplate = function(menu) {
-            const optionState = dataCopyState.option;
-            const optionStack = new Array();
+            const $optionContainer = jqById(seId.optionContainerDataCopy);
+            const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
+            const option = new Array();
+            $commandLines.each(function(i, item) {
+                const $input = $(item).find("input");
+                const $textarea = $(item).find("textarea");
+                const table = _this.getCheckObject($input.val());
+                const script = _this.getCheckObject($textarea.val());
+                option.push({ table: table.value, script: script.value });
+            });
+            const result = {
+                error: false,
+                message: new Array()
+            };
+            const templateStack = new Array();
             template[menu].forEach(function(item) {
                 const obj = {
                     table: item.table,
                     script: item.columns.map(function(c) { return concatString("@", c); }).join(SIGN.nl)
                 };
-                optionStack.push(obj);
+                templateStack.push(obj);
+                if(find(item.table, option, ["table"], upperCase).isExist) {
+                    result.error = true;
+                    result.message.push(item.table);
+                }
             });
-            if(isVoid(optionState)) {
-                dataCopyState.option = optionStack;
+            if(result.error) {
+                const aet = "Already exists table";
+                const message = concatString(aet, SIGN.br, SIGN.br, result.message.join(SIGN.br));
+                new Notification().error().open(message);
+                return false;
             }
-            else {
-                dataCopyState.option = optionState.concat(optionStack);
-            }
+            const $commandArea = $optionContainer.find(concatString(".", seClass.optionCommandArea));
+            templateStack.forEach(function(item) {
+                $commandArea.append(_this.createOptionCommandLine(item.table, item.script));
+            });
+            jqByClass(eClass.dialogContents).scrollTop(function() { return this.scrollHeight; });
             $templateContainer.remove();
         };
         Object.keys(template).forEach(function(menu) {
-            const $labelButton = jqNode("div").text(menu);
+            const $labelButton = jqNode("div", { class: seClass.optionTemplateTab }).text(menu);
             $labelButton.click(function() { applyTemplate(menu); });
             $pannel.append($labelButton);
         });
         $templateContainer.append($pannel);
-        $templateContainer.click(function() { this.remove(); });
-        $pannel.click(function(e) { e.stopPropagation(); });
         jqByTag("body").append($templateContainer);
         return null;
     },
@@ -1566,11 +1599,11 @@ SqlModule.prototype = {
                 messageStack.push(result.message);
                 error = true;
             }
-            else if(filter(table.value, option, ["table"]).isExist) {
-                messageStack.push(concatString(messageIndex, "Table duplicated"));
+            else if(find(table.value, option, ["table"], upperCase).isExist) {
+                messageStack.push(concatString(messageIndex, "Table has duplicates"));
                 error = true;
             }
-            else if(!filter(table.value, _this.export.dataCopy.tableList, null, upperCase).isExist) {
+            else if(!find(table.value, _this.export.dataCopy.tableList, null, upperCase).isExist) {
                 messageStack.push(concatString(messageIndex, "Not exists table"));
                 error = true;
             }
@@ -1614,12 +1647,12 @@ SqlModule.prototype = {
                     Object.keys(script).forEach(function(column) {
                         const applyIndex = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
                         if(applyIndex < 0) {
-                            actionState.msg.push(concatString(column, " : Not exists column"));
+                            actionState.msg.push(concatString("[", table, "]", column, " : Not exists column"));
                             return;
                         }
                         getExistArray(script[column]).forEach(function(s, i) {
                             if(!tableData.data[i]) {
-                                actionState.msg.push(concatString(column, " > ", s, " : Overflow data"));
+                                actionState.msg.push(concatString("[", table, "]", column, " > ", s, " : Overflow data"));
                                 return;
                             }
                             else if(s === "$eq") return;

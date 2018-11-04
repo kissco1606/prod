@@ -47,6 +47,7 @@
 .min-width-initial { min-width: initial !important; }
 .full-width { width: 100% !important; }
 .most-top { z-index: 999999 !important; }
+.sub-top { z-index: 999998 !important; }
 .margin-right10 { margin-right: 10px !important; }
 .margin-right20 { margin-right: 20px !important; }
 .padding-top10 { padding-top: 10px !important; }

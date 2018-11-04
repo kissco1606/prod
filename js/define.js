@@ -48,6 +48,7 @@ const ELEMENTS = {
         iconButton: "icon-button",
         pannel: "pannel",
         mostTop: "most-top",
+        subTop: "sub-top",
         overflowHidden: "overflow-hidden",
         dialog: "dialog",
         dialogContainer: "dialog-container",
@@ -118,7 +119,8 @@ const ELEMENTS = {
         chevronCircleDown: "fas fa-chevron-circle-down",
         wrench: "fas fa-wrench",
         plus: "fas fa-plus",
-        trash: "fas fa-trash"
+        trash: "fas fa-trash",
+        timesCircle: "far fa-times-circle"
     },
     style: {
         transitionDuration: 300
@@ -222,4 +224,3 @@ const MODULE_ID = {
 };
 
 const state = new Object();
-

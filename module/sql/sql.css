@@ -300,22 +300,27 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 999999;
+	z-index: 999998;
 }
-.option-template-container > div {
+.option-template-container > .option-template-pannel {
+	position: relative;
 	width: 100%;
-	max-width: 500px;
-    padding: 40px;
+	max-width: 400px;
+    padding: 40px 50px;
     border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 1);
 }
 @media screen and (max-width: 400px) {
-	.option-template-container > div {
+	.option-template-container > .option-template-pannel {
         max-width: 100%;
 	}
 }
-.option-template-container > div > div {
+.option-template-container > .option-template-pannel > .option-template-tab {
+	position: relative;
+	word-wrap: break-word;
+	white-space: normal;
 	padding: 15px;
+	margin: 10px 0;
 	cursor: pointer;
 	text-align: center;
 	border-radius: 8px;
@@ -324,7 +329,20 @@
 	border: 2px solid #fff;
 	transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
-.option-template-container > div > div:hover {
+.option-template-container > .option-template-pannel > .option-template-tab:hover {
 	color: #000;
 	background-color: #fff;
+}
+.option-template-container > .option-template-pannel > .option-template-close {
+	position: absolute;
+	top: 10px;
+	right: 13px;
+	color: #fff;
+	transition: color 0.1s ease-in-out;
+}
+.option-template-container > .option-template-pannel > .option-template-close:hover {
+	color: #aaa;
+}
+.option-template-container > .option-template-pannel > .option-template-close > i {
+	cursor: pointer;
 }
