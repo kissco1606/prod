@@ -1,5 +1,9 @@
 function init() {
-	transitonMenu();
+	new Store(storage).load().then(function() {
+		transitionMenu();
+	}).catch(function(e) {
+		new Notification().error().open(MESSAGES.failed_load_application);
+	});
 };
 
 const Module = function() {
@@ -89,7 +93,7 @@ function clearContainer() {
 	jqById(eId.container).empty();
 };
 
-function transitonMenu() {
+function transitionMenu() {
 	new Module().menu();
 	if(!(TYPES.client.activeXObejct in window)) {
 		new Notification().warning().open("Not supported this client");

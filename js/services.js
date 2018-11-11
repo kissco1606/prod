@@ -264,6 +264,48 @@ function getProperty(obj, key) {
     return obj[accessKey];
 };
 
+function getObjectMaxOrder(o, orderKey) {
+    try {
+        const oKey = orderKey ? orderKey : "order";
+        const result = Object.keys(o).map(function(key) { return o[key] }).reduce(function(prev, curr) {
+            return prev[oKey] >= curr[oKey] ? prev : curr;
+        });
+        return result[oKey];
+    }
+    catch(e) {
+        return -1;
+    }
+};
+
+function getObjectOrderList(o, orderKey) {
+    const oKey = orderKey ? orderKey : "order";
+    const orderList = Object.keys(o).sort(function(a, b) {
+        const ao = o[a][oKey];
+        const bo = o[b][oKey];
+        if(ao < bo) return -1;
+        else if(ao > bo) return 1;
+        return 0;
+    });
+    return orderList;
+};
+
+function sortObjectByOrder(o, orderKey) {
+    const newObject = new Object();
+    const orderList = getObjectOrderList(o, orderKey);
+    orderList.forEach(function(key) {
+        newObject[key] = o[key];
+    });
+    return newObject;
+};
+
+function removeNullObject(obj) {
+    if(!typeIs(obj).object) return false;
+    Object.keys(obj).forEach(function(key) {
+        if(isVoid(obj[key])) delete obj[key];
+        else removeNullObject(obj[key]);
+    });
+};
+
 function getExistArray(list) {
     return list.filter(function(item) { return item; });
 };
@@ -389,7 +431,7 @@ function buildCard(cardInfo) {
     return $card;
 };
 
-function getDialogTitle(type) {
+function getDialogHeader(type) {
     let caption, titleClass, icon;
     switch(type) {
         case TYPES.dialog.complete: {
@@ -423,19 +465,37 @@ const Notification = function () {
     this.dialog = null;
     this.type = null;
     this.okButton = null;
+    this.callback = null;
 };
 Notification.prototype = {
     setContents: function(title, contents) {
         const _this = this;
+        const isWarningType = _this.type === TYPES.dialog.warning;
         const $dialog = jqNode("div", { id: eId.notification, class: eClass.dialog });
-        const $title = jqNode("div", { class: eClass.dialogTitle });
+        const $title = jqNode("div", { class: eClass.dialogHeader });
         const $contents = jqNode("div", { class: eClass.dialogContents });
         const $actions = jqNode("div", { class: eClass.dialogActions });
+        const actionStack = new Array();
         const $okButton = jqNode("button", { id: eId.notificationOk, class: eClass.dialogButton }).text(upperCase(CAPTIONS.ok));
+        const close = function() { _this.close(); };
         $okButton.click(function() {
-            _this.close();
+            if(isWarningType) {
+                _this.callback(close);
+            }
+            else {
+                _this.close();
+            }
         });
-        $actions.append($okButton);
+        actionStack.push($okButton);
+        if(isWarningType) {
+            const $cancelButton = jqNode("button", { id: eId.dialogClose, class: eClass.dialogButton }).text(upperCase(CAPTIONS.cancel));
+            $cancelButton.click(function() {
+                _this.close();
+            });
+            actionStack.push($cancelButton);
+        }
+        const eb = new ElementBuilder();
+        eb.listAppend($actions, actionStack);
         $title.html(title);
         $contents.html(contents);
         [$title, $contents, $actions].forEach(function(item) {
@@ -454,13 +514,14 @@ Notification.prototype = {
         this.type = TYPES.dialog.error;
         return this;
     },
-    warning: function() {
+    warning: function(callback) {
         this.type = TYPES.dialog.warning;
+        this.callback = callback;
         return this;
     },
     open: function (message) {
         const _this = this;
-        _this.setContents(getDialogTitle(_this.type), message);
+        _this.setContents(getDialogHeader(_this.type), message);
         if (!_this.dialog) return null;
         _this.dialogContainer.addClass(eClass.mostTop);
         _this.dialogContainer.removeClass(eClass.hide);
@@ -494,7 +555,7 @@ Dialog.prototype = {
     setContents: function (title, contents, option) {
         const _this = this;
         const $dialog = jqNode("div", { id: eId.dialog, class: eClass.dialog });
-        const $title = jqNode("div", { class: eClass.dialogTitle });
+        const $title = jqNode("div", { class: eClass.dialogHeader });
         const $contents = jqNode("div", { class: eClass.dialogContents });
         const $actions = jqNode("div", { class: eClass.dialogActions });
         const $titleContainer = jqNode("div", { class: eClass.dialogIconTitleContainer });
@@ -513,9 +574,7 @@ Dialog.prototype = {
         [$title, $contents, $actions].forEach(function(item) {
             $dialog.append(item);
         });
-        if(option) {
-            $contents.css(option);
-        }
+        if(option) $contents.css(option);
         this.dialog = $dialog;
         this.contents = $contents;
         this.okButton = $okButton;
@@ -530,6 +589,10 @@ Dialog.prototype = {
                 _this.actions.append(item);
             });
         }
+        return this;
+    },
+    disableOkButton: function() {
+        this.okButton.remove();
         return this;
     },
     open: function (callback) {
@@ -559,6 +622,66 @@ Dialog.prototype = {
     },
     render: function(contents) {
         this.contents.html(contents);
+        return null;
+    }
+};
+
+const SubDialog = function () {
+    this.dialogContainer = jqNode("div", { class: eClass.subDialogContainer });
+    this.dialog = jqNode("div", { class: eClass.subDialog });
+    this.header = jqNode("div", { class: eClass.subDialogHeader });
+    this.contents = jqNode("div", { class: eClass.subDialogContents });
+    this.actions = jqNode("div", { class: eClass.dialogActions });
+    this.okButton = null;
+    this.closeButton = null;
+};
+SubDialog.prototype = {
+    setContents: function(title, contents, option) {
+        const _this = this;
+        const $title = jqNode("span").text(title);
+        _this.header.append($title);
+        _this.contents.html(contents);
+        const $okButton = jqNode("button", { class: eClass.dialogButton }).text(upperCase(CAPTIONS.ok));
+        const $closeButton = jqNode("button", { class: eClass.dialogButton }).text(upperCase(CAPTIONS.cancel));
+        [$okButton, $closeButton].forEach(function(item) {
+            _this.actions.append(item);
+        });
+        $closeButton.click(function() { _this.close(); });
+        _this.okButton = $okButton;
+        _this.closeButton = $closeButton;
+        if(option) _this.contents.css(option);
+        [_this.header, _this.contents, _this.actions].forEach(function(item) { _this.dialog.append(item); });
+        _this.dialogContainer.append(_this.dialog);
+        return this;
+    },
+    setUserButton: function(okButton, closeButton) {
+        this.okButton.html(okButton);
+        this.closeButton.html(closeButton);
+        return this;
+    },
+    setButton: function(buttonItems) {
+        const _this = this;
+        if(_this.actions) {
+            buttonItems.forEach(function(item) {
+                item.addClass(eClass.dialogButton);
+                _this.actions.append(item);
+            });
+        }
+        return this;
+    },
+    open: function (callback) {
+        const _this = this;
+        const close = function() {
+            _this.close();
+        };
+        _this.okButton.click(function() {
+            callback(close);
+        });
+        jqByTag("body").append(_this.dialogContainer);
+        return this;
+    },
+    close: function () {
+        this.dialogContainer.remove();
         return null;
     }
 };
@@ -739,61 +862,6 @@ function datenum(v, date1904) {
 	return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 };
 
-const ActiveXMLHttpRequest = function() {
-    this.req = null;
-    this.contentType = null;
-    try {
-        this.req = new ActiveXObject("MSXML2.XMLHTTP");
-    } catch (e) {
-        this.req = new XMLHttpRequest();
-    }
-};
-ActiveXMLHttpRequest.prototype = {
-    setContentType: function(type) {
-        this.contentType = type;
-        return this;
-    },
-    get: function(path, async) {
-        const req = this.req;
-        const contentType = this.contentType;
-        return new Promise(function(resolve, reject) {
-            try {
-                req.open("GET", path, async);
-                if(contentType) req.setRequestHeader("Content-Type", contentType);
-                req.onreadystatechange = function() {
-                    if(req.readyState === 4) {
-                        const data = req.responseText;
-                        return resolve(data);
-                    }
-                }
-                req.send();
-            }
-            catch(e) {
-                return reject(e);
-            }
-        });
-    }
-};
-
-function getJson(path) {
-    return new Promise(function(resolve, reject) {
-        const typeJSON = TYPES.file.mime.JSON;
-        const axhr = new ActiveXMLHttpRequest();
-        axhr.setContentType(typeJSON);
-        axhr.get(path, true).then(function(data) {
-            try {
-                const jsonData = JSON.parse(data);
-                return resolve(jsonData);
-            }
-            catch(e) {
-                return reject(e);
-            }
-        }).catch(function(e) {
-            return reject(e);
-        });
-    });
-};
-
 function removeDuplicationArray(list) {
     return isVoid(list) ? list : list.filter(function(item, i) {
         return list.indexOf(item) === i;
@@ -848,6 +916,70 @@ function threadMessage(module, actionType, params) {
     };
 };
 
+function getApplicationDBPath(storagePath) {
+    const rootPath = window.location.pathname;
+    const rootPathList = getExistArray(rootPath.split(SIGN.ssh));
+    const storagePathList = getExistArray(storagePath.split(SIGN.ssh));
+    rootPathList.pop();
+    const pathCollection = rootPathList.concat(storagePathList);
+    return pathCollection.join("\\\\");
+};
+
+const ActiveXMLHttpRequest = function() {
+    this.req = null;
+    this.contentType = TYPES.file.mime.TEXT_UTF8;
+    try {
+        this.req = new ActiveXObject(TYPES.client.msxml2);
+    } catch (e) {
+        this.req = new XMLHttpRequest();
+    }
+};
+ActiveXMLHttpRequest.prototype = {
+    setContentType: function(type) {
+        this.contentType = type;
+        return this;
+    },
+    get: function(path, async) {
+        const req = this.req;
+        const contentType = this.contentType;
+        return new Promise(function(resolve, reject) {
+            try {
+                req.open("GET", path, async);
+                if(contentType) req.setRequestHeader("Content-Type", contentType);
+                req.onreadystatechange = function() {
+                    if(req.readyState === 4) {
+                        const data = req.responseText;
+                        return resolve(data);
+                    }
+                }
+                req.send();
+            }
+            catch(e) {
+                return reject(e);
+            }
+        });
+    }
+};
+
+function getJson(path) {
+    return new Promise(function(resolve, reject) {
+        const typeJSON = TYPES.file.mime.JSON;
+        const xhr = new ActiveXMLHttpRequest();
+        xhr.setContentType(typeJSON);
+        xhr.get(path, true).then(function(data) {
+            try {
+                const jsonData = JSON.parse(data);
+                return resolve(jsonData);
+            }
+            catch(e) {
+                return reject(e);
+            }
+        }).catch(function(e) {
+            return reject(e);
+        });
+    });
+};
+
 const FileTree = function(path) {
 	this.absolutePath = null;
 	this.path = path;
@@ -900,7 +1032,7 @@ FileTree.prototype = {
 	},
 	iterateFiles: function(path, folder, recursive, actionPerFileCallback) {
 		const _this = this;
-		const fso = new ActiveXObject("Scripting.FileSystemObject"); 
+		const fso = new ActiveXObject(TYPES.client.fileSystemObject); 
 		const folderObj = fso.GetFolder(path);
 		const fileEnum = new Enumerator(folderObj.Files);
 		for(; !fileEnum.atEnd(); fileEnum.moveNext()){
@@ -928,6 +1060,51 @@ FileTree.prototype = {
 		    size: this.treeSize,
 		    target: target
 		};
+	}
+};
+
+const FileSystem = function(path) {
+    const io = TYPES.file.io;
+	this.path = path;
+	this.mode = io.mode.forWriting;
+	this.option = false;
+	this.format = io.format.os;
+	this.data = null;
+};
+FileSystem.prototype = {
+	init: function() {
+		const fso = new ActiveXObject(TYPES.client.fileSystemObject);
+		return fso;
+	},
+	setFormat: function(format) {
+		this.format = format;
+		return this;
+	},
+	createNotExists: function() {
+		this.option = true;
+		return this;
+	},
+	setData: function(data) {
+		this.data = data;
+		return this;
+	},
+	read: function() {
+	    const fileTypes = TYPES.file.io;
+	    const mode = fileTypes.mode;
+		const fso = this.init();
+		const stream = fso.OpenTextFile(this.path, mode.forReading, this.option, this.format);
+		this.data = stream.ReadAll();
+		stream.Close();
+		return this;
+	},
+	write: function(data) {
+		const fileTypes = TYPES.file.io;
+	    const mode = fileTypes.mode;
+		const fso = this.init();
+		const stream = fso.OpenTextFile(this.path, mode.forWriting, this.option, this.format);
+		stream.Write(data);
+		stream.Close();
+		return this;
 	}
 };
 
@@ -997,5 +1174,168 @@ ElementBuilder.prototype = {
 			_this.elements.push(elm);
 		});
 		return this;
-	}
+    },
+    getFontAwesomeIcon: function(icon, classOption) {
+        const $icon = jqNode("i", { class: icon });
+        if(classes) $icon.addClass(classOption);
+        return $icon;
+    },
+    listAppend: function(target, list) {
+        list.forEach(function(item) {
+            target.append(item);
+        });
+        return null;
+    }
+};
+
+const Encryption = function() {
+    this.data = null;    
+};
+Encryption.prototype = {
+    getSerialNumber: function() {
+        const seed = SERIAL.seed;
+        const size = SERIAL.size;
+        const seedLength = seed.length;
+        let serialNumber = SIGN.none;
+        for (var i = 0; i < size; i++) {
+            serialNumber += seed[Math.floor(Math.random() * seedLength)];
+        }
+        return serialNumber;
+    },
+    getData: function() {
+        return this.data;
+    },
+    encode: function(data) {
+        const serialNumber = this.getSerialNumber();
+        this.data = CryptoJS.AES.encrypt(data, serialNumber).toString();
+        this.data = this.data + serialNumber;
+        return this;
+    },
+    decode: function(data) {
+        const size = SERIAL.size;
+        const pos = data.length - size;
+        const serialNumber = data.substr(pos);
+        const trueData = data.substring(0, pos);
+        const bytes = CryptoJS.AES.decrypt(trueData, serialNumber);
+        this.data = bytes.toString(CryptoJS.enc.Utf8);
+        this.data = this.data.replace(new RegExp("\\\\\"", "g"), "\"");
+        return this;
+    }
+};
+
+const Store = function(state) {
+    this.path = "storage/db.dat";
+    this.toState = state;
+    this.fromState = state.data;
+    this.state = null;
+    this.map = new Array();
+};
+Store.prototype = {
+    load: function() {
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+            const xhr = new ActiveXMLHttpRequest();
+            xhr.get(_this.path, true).then(function(data) {
+                if(!isVoid(data)) {
+                    const aes = new Encryption();
+                    const dec = aes.decode(data).getData();
+                    const jsData = JSON.parse(dec);
+                    _this.toState.data = jsData;
+                }
+                return resolve();
+            }).catch(function(e) {
+                return reject(e); 
+            });
+        });
+    },
+    init: function() {
+        return this.fromState;
+    },
+    connect: function(map) {
+        this.state = Immutable.fromJS(this.fromState);
+        this.map = map ? map : new Array();
+        return this;
+    },
+    select: function() {
+        if (!this.fromState) return null;
+        return Immutable.fromJS(this.fromState).getIn(this.map).toJS();
+    },
+    set: function(data) {
+        if (!this.fromState || !this.state || !this.map) return null;
+        const modified = this.state.setIn(this.map, data);
+        this.fromState = modified.toJS();
+        return this;
+    },
+    update: function(data) {
+        if (!this.fromState || !this.state || !this.map) return null;
+        const updated = this.state.updateIn(this.map, function(item) {
+            const itemType = typeIs(item);
+            if(itemType.object) {
+                return item.merge(data);
+            }
+            else if(itemType.array) {
+                return item.push(data);
+            }
+            else {
+                return data;
+            }
+        });
+        this.fromState = updated.toJS();
+        return this;
+    },
+    delete: function() {
+        if (!this.fromState || !this.state || !this.map) return null;
+        const deleted = this.state.deleteIn(this.map);
+        this.fromState = deleted.toJS();
+        removeNullObject(this.fromState);
+        return this;
+    },
+    apply: function() {
+        this.toState.data = this.fromState;
+        return this;
+    },
+    sync: function() {
+        const data = JSON.stringify(this.toState.data);
+        const aes = new Encryption();
+        const enc = aes.encode(data).getData();
+        const fs = new FileSystem(getApplicationDBPath(this.path));
+        fs.write(enc);
+        return null;
+    }
+};
+
+const Interface = function(structure) {
+    this.structure = structure;
+    this.root = null;
+};
+Interface.prototype = {
+    setRoot: function(root) {
+        this.root = root;
+        return this;
+    },
+    getKey: function() {
+        return this.structure.key;
+    },
+    getType: function() {
+        return this.structure.type;
+    },
+    getData: function() {
+        return this.structure.data;
+    },
+    create: function(store) {
+        const _this = this;
+        store.connect([_this.getKey()]).set(_this.getType()).apply();
+        return this;
+    },
+    getInjectData: function() {
+        const argumentsList = Array.prototype.slice.call(arguments);
+        const applied = this.getData().apply(null, argumentsList);
+        return applied;
+    },
+    inject: function(store, injectData, key) {
+        const _this = this;
+        if(isVoid(store.init()[_this.getKey()])) _this.create(store);
+        store.connect([_this.getKey(), key]).set(injectData).apply();
+        return null;
+    }
 };

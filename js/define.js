@@ -30,8 +30,6 @@ const ELEMENTS = {
         plate: "plate",
         dialogContainer: "dialog-container",
         dialog: "dialog",
-        dialogTitle: "dialog-title",
-        dialogContent: "dialog-content",
         dialogOk: "dialog-ok",
         dialogClose: "dialog-close",
         notificationContainer: "notification-container",
@@ -53,7 +51,7 @@ const ELEMENTS = {
         dialog: "dialog",
         dialogContainer: "dialog-container",
         dialogBackdrop: "dialog-backdrop",
-        dialogTitle: "dialog-title",
+        dialogHeader: "dialog-header",
         dialogContents: "dialog-contents",
         dialogDefaultContents: "dialog-default-contents",
         dialogActions: "dialog-actions",
@@ -62,6 +60,10 @@ const ELEMENTS = {
         dialogTitleIcon: "dialog-title-icon",
         dialogTitleText: "dialog-title-text",
         dialogBackdrop: "dialog-backdrop",
+        subDialogContainer: "sub-dialog-container",
+        subDialog: "sub-dialog",
+        subDialogHeader: "sub-dialog-header",
+        subDialogContents: "sub-dialog-contents",
         completeColor: "complete-color",
         errorColor: "error-color",
         warningColor: "warning-color",
@@ -102,7 +104,10 @@ const ELEMENTS = {
         buttonDisable: "button-disable",
         radio: "radio",
         checkbox: "checkbox",
-        rcColorDefault: "rc-color__default"
+        rcColorDefault: "rc-color__default",
+        applicationInput: "application-input",
+        applicationTextarea: "application-textarea",
+        flatButton: "flat-button"
     },
     icon: {
         database: "fas fa-database",
@@ -120,7 +125,11 @@ const ELEMENTS = {
         wrench: "fas fa-wrench",
         plus: "fas fa-plus",
         trash: "fas fa-trash",
-        timesCircle: "far fa-times-circle"
+        timesCircle: "far fa-times-circle",
+        listAlt: "far fa-list-alt",
+        edit: "fas fa-edit",
+        check: "fas fa-check",
+        times: "fas fa-times"
     },
     style: {
         transitionDuration: 300
@@ -180,10 +189,24 @@ const TYPES = {
             arrayBuffer: "arrayBuffer",
             blob: "blob",
             nodebuffer: "nodebuffer"
-        }
+        },
+        io: {
+            mode: {
+                forReading: 1,
+                forWriting: 2,
+                forAppending: 8
+            },
+            format: {
+                os: -2,
+                utf16: -1,
+                ascii: 0
+            }
+        },
     },
     client: {
-        activeXObejct: "ActiveXObject"
+        activeXObejct: "ActiveXObject",
+        msxml2: "MSXML2.XMLHTTP",
+        fileSystemObject: "Scripting.FileSystemObject"
     }
 };
 
@@ -209,7 +232,14 @@ const MESSAGES = {
     save_complete: "You have successfully save data",
     success_copy: "Copy to your clipboard",
     nothing_data: "Nothing data",
-    allowedOnlyNumeric: "Only numeric is allowed"
+    allowedOnlyNumeric: "Only numeric is allowed",
+    failed_load_application: "Failed load application",
+    warning_remove_record: "Are you sure you want to delete this record?"
+};
+
+const SERIAL = {
+    seed: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#$%^&',
+    size: 8
 };
 
 const REG_EXP = {
@@ -223,4 +253,21 @@ const MODULE_ID = {
     common: "common"
 };
 
+const STRUCTURE = {
+    accessList: {
+        key: "accessList",
+        type: new Object(),
+        data: function(name, sid, uid, pwd, order) {
+            return {
+                name: name,
+                sid: sid,
+                uid: uid,
+                pwd: pwd,
+                order: order
+            }
+        }
+    }
+};
+
 const state = new Object();
+const storage = { data: new Object() };
