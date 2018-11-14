@@ -1,0 +1,207 @@
+body {
+	margin: 0;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+#screen-container {
+	opacity: 0;
+	transition: opacity 300ms ease-in-out;
+}
+.screen-view {
+	opacity: 1 !important;
+}
+
+.header-icon {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+.header-button {
+	margin-left: 7px !important;
+}
+
+/* .mdl-layout__tab-bar-container {
+	position: absolute !important;
+	top: -1000px !important;
+	left: -1000px !important;
+	height: 0 !important;
+	display: none !important;
+}
+.mdl-layout__tab {
+	color: #2196F3 !important;
+} */
+
+#fab-container {
+	position: fixed;
+	bottom: 15px;
+	right: 15px;
+}
+
+.quill-button {
+	display: flex !important;
+	align-content: center !important;
+	justify-content: center !important;
+}
+
+.quill-icon {
+	width: 20px;
+	height: 20px;
+	background-image: url(../assets/quill.svg);
+	background-size: 100%;
+}
+
+select {
+	padding: 3px;
+	border-radius: 0.2em;
+	outline: 0;
+}
+
+.calendar-select {
+	width: 100%;
+}
+
+.select-container {
+	padding: 10px 0;
+}
+
+.container {
+	padding: 30px 20px 30px;
+}
+
+#table-container {
+	width: 100%;
+	max-width: 980px;
+}
+#table-container > table {
+	width: 100%;
+	border: none;
+}
+#table-container > table > thead > tr {
+    background: #80CBC4;
+	text-align: center;
+}
+#table-container > table > thead > tr > th {
+	color: #E8F5E9 !important;
+	height: 40px !important;
+	max-height: 40px !important;
+}
+
+#calendar-list > tr:hover {
+	cursor: pointer;
+};
+
+#list-nothing {
+	background-color: #fff !important;
+	cursor: default !important;
+}
+#list-nothing:hover {
+	background-color: #fff !important;
+	cursor: default !important;
+};
+
+.dialog-button {
+	color: #3F51B5 !important;
+}
+.notification-button {
+	color: #D32F2F !important;
+}
+
+.dialog-icon-title-container {
+	display: flex;
+    align-items: center;
+	color: #D32F2F;
+}
+.dialog-icon-title {
+	padding-left: 5px;
+}
+
+.delete-icon-button {
+	color: #D32F2F !important;
+}
+
+.rowHeader {
+    width: 65px !important;
+}
+
+.grid-container {
+	padding-left: 20px;
+	padding-right: 35px;
+	width: 100%;
+	max-width: 980px;
+}
+
+#viewer-container {
+	position: fixed;
+	top: 30px;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow-y: auto;
+	background-color: #fff;
+	opacity: 0;
+	z-index: 999998 !important;
+	transition: opacity 500ms ease-in-out, top 300ms ease-in-out;
+}
+.viewer-container {
+	opacity: 1 !important;
+	top: 0 !important;
+}
+.viewer-header {
+	background-color: #009688 !important;
+}
+#viewer-close {
+	cursor: pointer;
+}
+.copy-icon {
+	margin-right: 20px !important;
+}
+
+#viewer-tabs-container {
+	background-color: #009688 !important;
+}
+.viewer-sheet-container {
+	width: 100%;
+}
+
+.typeA-column {
+	color: #006064;
+}
+
+.typeB-column {
+	color: #1A237E;
+}
+
+.settings-content {
+	min-width: 400px;
+	max-width: 980px;
+	max-height: 300px;
+}
+
+.timestamp-textfield {
+	width: 100px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.setting-subtitle {
+	padding: 5px 0;
+	font-size: 16px;
+	font-style: oblique;
+	font-weight: bold;
+}
+
+.setting-type-title {
+	font-size: 18px;
+	font-weight: bold;
+	padding-top: 5px;
+	padding-bottom: 15px;
+}
+.setting-type-title::before {
+	font-family: 'Material Icons';
+	content: '\e862';
+	font-size: 20px;
+	font-weight: bold;
+	vertical-align: -20%;
+	margin-right: 3px;
+};
