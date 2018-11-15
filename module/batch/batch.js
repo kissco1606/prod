@@ -87,7 +87,7 @@ BatchModule.prototype = {
         $menuContainer.empty();
         const $menu = jqNode("ul", { class: classes(eClass.menu, eClass.menuBottomRight) });
         const itemList = new Array();
-        createMenuItem(itemList, eIcon.home, CAPTIONS.home, transitonMenu);
+        createMenuItem(itemList, eIcon.home, CAPTIONS.home, transitionMenu);
         itemList.forEach(function(item) { $menu.append(item); });
         $menuContainer.append($menu);
         setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });

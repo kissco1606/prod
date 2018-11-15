@@ -4,6 +4,13 @@ function init() {
 	}).catch(function(e) {
 		new Notification().error().open(MESSAGES.failed_load_application);
 	});
+	const v = new Viewer();
+	const a = jqNode("div");
+	getIterator(20).forEach(function() {
+		a.append(jqNode("div").text("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+	});
+	v.setContents("Testaaaaaaaaaaaaaaaaaaaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq", a);
+	setTimeout(function() { v.open(); }, 300);
 };
 
 const Module = function() {

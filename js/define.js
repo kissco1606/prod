@@ -38,7 +38,8 @@ const ELEMENTS = {
         notificationContent: "notification-content",
         notificationOk: "notification-ok",
         loadingContainer: "loading-container",
-        fileListener: "file-listener"
+        fileListener: "file-listener",
+        viewerContainer: "viewer-container"
     },
     class: {
         screen: "screen",
@@ -107,7 +108,18 @@ const ELEMENTS = {
         rcColorDefault: "rc-color__default",
         applicationInput: "application-input",
         applicationTextarea: "application-textarea",
-        flatButton: "flat-button"
+        flatButton: "flat-button",
+        viewerVisible: "viewer-visible",
+        viewerHeader: "viewer-header",
+        viewerHeaderWrapper: "viewer-header-wrapper",
+        viewerHeaderContext: "viewer-header-context",
+        viewerHeaderCloser: "viewer-header-closer",
+        viewerHeaderTitle: "viewer-header-title",
+        viewerHeaderTools: "viewer-header-tools",
+        viewerToolsItem: "viewer-tools-item",
+        viewerContentsWrapper: "viewer-contents-wrapper",
+        overflowContainer: "overflow-container",
+        overflowContents: "overflow-contents"
     },
     icon: {
         database: "fas fa-database",
@@ -129,7 +141,8 @@ const ELEMENTS = {
         listAlt: "far fa-list-alt",
         edit: "fas fa-edit",
         check: "fas fa-check",
-        times: "fas fa-times"
+        times: "fas fa-times",
+        arrowLeft: "fas fa-arrow-left"
     },
     style: {
         transitionDuration: 300
@@ -207,6 +220,19 @@ const TYPES = {
         activeXObejct: "ActiveXObject",
         msxml2: "MSXML2.XMLHTTP",
         fileSystemObject: "Scripting.FileSystemObject"
+    },
+    calendar: {
+        define: {
+            days: [
+                { id: 0, en: "sun", jp: "日" },
+                { id: 1, en: "mon", jp: "月" },
+                { id: 2, en: "tue", jp: "火" },
+                { id: 3, en: "wed", jp: "水" },
+                { id: 4, en: "thu", jp: "木" },
+                { id: 5, en: "fri", jp: "金" },
+                { id: 6, en: "sat", jp: "土" }
+            ]
+        }
     }
 };
 

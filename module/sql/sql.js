@@ -2012,7 +2012,7 @@ SqlModule.prototype = {
         $resetButton.click(function() {
             const db = _this.state.lock[transactionId];
             _this.destroy(transactionId, db);
-            _this.state.dataCopy = new Object();
+            _this.state.createUser = new Object();
             $cardContents.html(_this.buildCreateUserContents());
         });
         return null;
@@ -2262,7 +2262,7 @@ SqlModule.prototype = {
         $resetButton.click(function() {
             const db = _this.state.lock[transactionId];
             _this.destroy(transactionId, db);
-            _this.state.dataCopy = new Object();
+            _this.state.lincErrorResolution = new Object();
             $cardContents.html(_this.buildLincErrorResolution());
         });
         return null;

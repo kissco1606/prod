@@ -1339,3 +1339,50 @@ Interface.prototype = {
         return null;
     }
 };
+
+const Viewer = function() {
+    this.viewer = jqNode("div", { id: eId.viewerContainer });
+    this.title = null;
+    this.contents = null;
+    this.done = null;
+};
+Viewer.prototype = {
+    setContents: function(title, contents) {
+        this.title = title;
+        this.contents = contents;
+        return this;
+    },
+    open: function() {
+        const _this = this;
+        const eb = new ElementBuilder();
+        const $header = jqNode("div", { class: eClass.viewerHeader });
+        const $headerWrapper = jqNode("div", { class: eClass.viewerHeaderWrapper });
+        const $headerContext = jqNode("div", { class: eClass.viewerHeaderContext });
+        const $closer = jqNode("div", { class: eClass.viewerHeaderCloser }).append(eb.getFontAwesomeIcon(eIcon.arrowLeft));
+        const $title = jqNode("div", { class: eClass.viewerHeaderTitle }).text(_this.title);
+        eb.listAppend($headerContext, [$closer, $title]);
+        const $headerTools = jqNode("div", { class: eClass.viewerHeaderTools });
+        const $toolsItem = jqNode("div", { class: eClass.viewerToolsItem }).append(eb.getFontAwesomeIcon(eIcon.times));
+        $headerTools.append($toolsItem);
+        eb.listAppend($headerWrapper, [$headerContext, $headerTools]);
+        $header.append($headerWrapper);
+        const $contentsWrapper = jqNode("div", { class: eClass.viewerContentsWrapper });
+        const $overflowContainer = jqNode("div", { class: eClass.overflowContainer });
+        const $contents = jqNode("div", { class: eClass.overflowContents }).append(_this.contents);
+        $overflowContainer.append($contents).appendTo($contentsWrapper);
+        eb.listAppend(_this.viewer, [$header, $contentsWrapper]);
+        jqByTag("body").append(_this.viewer);
+        setTimeout(function() {
+            _this.viewer.addClass(eClass.viewerVisible);
+        });
+        return null;
+    },
+    close: function() {
+        const _this = this;
+        _this.viewer.removeClass(eClass.viewerVisible);
+        setTimeout(function() {
+            _this.viewer.remove();
+        }, 500);
+        return null;
+    }
+};
