@@ -151,6 +151,18 @@ function queryEscape(str) {
     return str.replace(/'/g, SIGN.none);
 };
 
+function getToday() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    return {
+        year: year,
+        month: month,
+        date: date
+    };
+};
+
 function getSystemDate() {
     const d = new Date();
     const year = String(d.getFullYear());
@@ -312,7 +324,7 @@ function getExistArray(list) {
 
 function find(value, array, keys, matchFunc) {
     const match = function(a, b) {
-        if(matchFunc&&typeIs(matchFunc).function) {
+        if(matchFunc && typeIs(matchFunc).function) {
             return matchFunc(a) === matchFunc(b);
         }
         return a === b;
@@ -631,6 +643,7 @@ const SubDialog = function () {
     this.dialog = jqNode("div", { class: eClass.subDialog });
     this.header = jqNode("div", { class: eClass.subDialogHeader });
     this.contents = jqNode("div", { class: eClass.subDialogContents });
+    this.actionsVisible = true;
     this.actions = jqNode("div", { class: eClass.dialogActions });
     this.okButton = null;
     this.closeButton = null;
@@ -638,6 +651,7 @@ const SubDialog = function () {
 SubDialog.prototype = {
     setContents: function(title, contents, option) {
         const _this = this;
+        const eb = new ElementBuilder();
         const $title = jqNode("span").text(title);
         _this.header.append($title);
         _this.contents.html(contents);
@@ -650,7 +664,7 @@ SubDialog.prototype = {
         _this.okButton = $okButton;
         _this.closeButton = $closeButton;
         if(option) _this.contents.css(option);
-        [_this.header, _this.contents, _this.actions].forEach(function(item) { _this.dialog.append(item); });
+        eb.listAppend(_this.dialog, [_this.header, _this.contents, _this.actions]);
         _this.dialogContainer.append(_this.dialog);
         return this;
     },
@@ -669,6 +683,14 @@ SubDialog.prototype = {
         }
         return this;
     },
+    hideActions: function() {
+        this.actionsVisible = false;
+        return this;
+    },
+    disableOkButton: function() {
+        this.okButton.remove();
+        return this;
+    },
     open: function (callback) {
         const _this = this;
         const close = function() {
@@ -677,8 +699,9 @@ SubDialog.prototype = {
         _this.okButton.click(function() {
             callback(close);
         });
+        if(!_this.actionsVisible) _this.actions.remove();
         jqByTag("body").append(_this.dialogContainer);
-        return this;
+        return null;
     },
     close: function () {
         this.dialogContainer.remove();
@@ -1075,7 +1098,22 @@ FileSystem.prototype = {
 	init: function() {
 		const fso = new ActiveXObject(TYPES.client.fileSystemObject);
 		return fso;
-	},
+    },
+    toJsonPath: function() {
+        if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("\\\\", "g"), "/");
+        return this;
+    },
+    toFilePath: function() {
+        if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("/", "g"), "\\");
+        return this;
+    },
+    toSystemPath: function() {
+        if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("\\\\", "g"), "\\\\");
+        return this;
+    },
+    getPath: function() {
+        return this.path;
+    },
 	setFormat: function(format) {
 		this.format = format;
 		return this;
@@ -1184,7 +1222,7 @@ ElementBuilder.prototype = {
         list.forEach(function(item) {
             target.append(item);
         });
-        return null;
+        return target;
     }
 };
 
@@ -1219,6 +1257,7 @@ Encryption.prototype = {
         const bytes = CryptoJS.AES.decrypt(trueData, serialNumber);
         this.data = bytes.toString(CryptoJS.enc.Utf8);
         this.data = this.data.replace(new RegExp("\\\\\"", "g"), "\"");
+        this.data = this.data.replace(new RegExp("âª", "g"), SIGN.none);
         return this;
     }
 };
@@ -1340,10 +1379,437 @@ Interface.prototype = {
     }
 };
 
+const Calendar = function() {
+    this.def = {
+        mode: {
+            ymd: "ymd",
+            ym: "ym",
+            y: "y",
+            s: "s"
+        },
+        days: [
+            { id: 0, en: "sun", jp: "日" },
+            { id: 1, en: "mon", jp: "月" },
+            { id: 2, en: "tue", jp: "火" },
+            { id: 3, en: "wed", jp: "水" },
+            { id: 4, en: "thu", jp: "木" },
+            { id: 5, en: "fri", jp: "金" },
+            { id: 6, en: "sat", jp: "土" }
+        ],
+        year: {
+            start: 1900,
+            end: 2199
+        },
+        month: {
+            start: 0,
+            end: 11
+        },
+        date: {
+            start: 1,
+            col: 7,
+            row: 6
+        },
+        col: 4,
+        pagePer: 12
+    };
+    this.elements = {
+        year: null,
+        month: null,
+        calendar: null,
+        container: jqNode("div")
+    };
+    this.state = {
+        mode: null,
+        year: null,
+        month: null,
+        date: null,
+        pages: new Array(),
+        currentPage: 0,
+        selected: new Object()
+    };
+    this.callback = null;
+};
+Calendar.prototype = {
+    setYear: function(year) {
+        this.state.year = year;
+        return this;
+    },
+    setMonth: function(month) {
+        this.state.month = month;
+        return this;
+    },
+    setDate: function(date) {
+        this.state.date = date;
+        return this;
+    },
+    setMode: function(mode) {
+        this.state.mode = mode;
+        return this;
+    },
+    setCallback: function(callback) {
+        this.callback = callback;
+        return this;
+    },
+    initDateObj: function(dateObj) {
+        this.setYear(dateObj.y);
+        this.setMonth(dateObj.m);
+        this.setDate(dateObj.d);
+        this.state.selected = dateObj;
+        return this;
+    },
+    createMonth: function() {
+        const _this = this;
+        const def = _this.def;
+        const $table = jqNode("div", { class: classes(eClass.table, eClass.calendarPlate) });
+        const col = def.col;
+        let m = def.month.start;
+        const getRow = function() { return jqNode("div", { class: eClass.tableRow }); };
+        let $row = getRow();
+        while(m <= def.month.end) {
+            const monthString = setCharPadding(m + 1, 2);
+            const $cell = jqNode("div", { class: classes(eClass.tableCell, eClass.calendarPannel) }).text(monthString);
+            $cell.click(function() {
+                _this.setMonth(monthString).setMode(def.mode.ymd).build();
+            });
+            $cell.css({ width: "50px" });
+            $row.append($cell);
+            m++;
+            if(m % col === 0) {
+                $table.append($row);
+                $row = getRow();
+            }
+        }
+        _this.elements.month = $table;
+        return this;
+    },
+    getMonthElement: function() {
+        return this.elements.month;
+    },
+    createYear: function() {
+        const _this = this;
+        const def = _this.def;
+        const $tab = jqNode("div", { class: eClass.calendarTab });
+        const pagePer = def.pagePer;
+        const col = def.col;
+        let y = def.year.start;
+        let p = 0;
+        let page = 1;
+        const getTable = function() {
+            const pageId = _this.getPageId(page);
+            const $table = jqNode("div", { id: pageId, class: classes(eClass.table, eClass.calendarPlate, eClass.hide) });
+            page++;
+            _this.state.pages.push({ id: pageId, node: $table });
+            return $table;
+        };
+        const getRow = function() { return jqNode("div", { class: eClass.tableRow }); };
+        let $table = getTable();
+        let $row = getRow();
+        while(y <= def.year.end) {
+            const yearString = String(y);
+            const $cell = jqNode("div", { class: classes(eClass.tableCell, eClass.calendarPannel) }).text(yearString);
+            $cell.click(function() {
+                _this.setYear(yearString).setMode(def.mode.y).build();
+            });
+            $cell.css({ width: "50px" });
+            $row.append($cell);
+            y++;
+            p++;
+            if(y > def.year.end) {
+                $table.append($row).appendTo($tab);
+                continue;
+            }
+            if(p % col === 0) {
+                $table.append($row);
+                $row = getRow();
+            }
+            if(p === pagePer) {
+                p = 0;
+                $tab.append($table);
+                $table = getTable();
+            }
+        }
+        _this.elements.year = $tab;
+        return this;
+    },
+    getYearElement: function() {
+        return this.elements.year;
+    },
+    getPageId: function(page) {
+        return concatString("calendar-page-", page);
+    },
+    setPage: function(page) {
+        this.state.currentPage = page;
+        return this;
+    },
+    paging: function() {
+        const def = this.def;
+        const state = this.state;
+        const pages = state.pages;
+        if(state.currentPage < 1 || state.currentPage > pages.length) {
+            const page = Math.ceil((Number(state.year ? state.year : 0) - (def.year.start - 1)) / def.pagePer);
+            if(page < 1) return false;
+            this.setPage(page);
+        }
+        const currentPageId = this.getPageId(state.currentPage);
+        pages.forEach(function(po) {
+            if(currentPageId === po.id) po.node.removeClass(eClass.hide);
+            else po.node.addClass(eClass.hide);
+        });
+        return this;
+    },
+    checkHoliday: function(date, lieuDay) {
+        const holidayData = JapaneseHolidays.isHoliday(date, lieuDay);
+        const holidayObj = {
+            holidayName: isVoid(holidayData) ? SIGN.none : holidayData,
+            isHoliday: !isVoid(holidayData)
+        };
+        return holidayObj;
+    },
+    createCalendarApi: function() {
+        const _this = this;
+        const def = _this.def;
+        const state = _this.state;
+        const eb = new ElementBuilder();
+        const y = state.year;
+        const m = state.month;
+        const col = def.date.col;
+        const row = def.date.row;
+        const setStyle = function(target, dayIndex, isHoliday, isPreview) {
+            if(isPreview) target.addClass(eClass.greyColor);
+            else if(isHoliday) target.addClass(eClass.redColor);
+            else if(dayIndex === 0) target.addClass(eClass.redColor);
+            else if(dayIndex === 6) target.addClass(eClass.blueColor);
+            else target.addClass(eClass.whiteColor);
+        };
+        const isSelected = function(d, isPreview) {
+            const selected = state.selected;
+            if(isVoid(selected) || isPreview || !(state.mode == def.mode.ymd || state.mode === null)) return false;
+            return selected.y === state.year && selected.m === state.month && Number(selected.d) === d;
+        };
+        const $table = jqNode("div", { class: classes(eClass.table, eClass.calendarApi) });
+        const $tableHeader = jqNode("div", { class: eClass.tableHeader });
+        const $tableBody = jqNode("div", { class: eClass.tableBody });
+        const $headerRow = jqNode("div", { class: eClass.tableRow });
+        def.days.forEach(function(item) {
+            const $cell = jqNode("div", { class: eClass.tableCell }).text(upperCase(item.en));
+            setStyle($cell, item.id);
+            $headerRow.append($cell);
+        });
+        $tableHeader.append($headerRow);
+        const startDay = new Date(y, Number(m) - 1, 1).getDay();
+        const startDiff = col - (col - startDay);
+        const prevEnd = new Date(y, Number(m) - 1, 0).getDate();
+        const endDate = new Date(y, m, 0).getDate();
+        let nextDate = 1;
+        let dateCount = def.date.start;
+        const moveDate = function() { dateCount++; };
+        const getDateObj = function(date, pass) {
+            const dateObj = {
+                date: date,
+                dayIndex: -1,
+                isSaturday: false,
+                isSunday: false,
+                isHoliday: false,
+                holidayName: SIGN.none,
+                name_en: SIGN.none,
+                name_jp: SIGN.none,
+                isPreview: pass
+            };
+            if(pass) return dateObj;
+            const systemDate = new Date(y, Number(m) - 1, date);
+            const day = systemDate.getDay();
+            const fd = find(day, def.days, ["id"]).data[0];
+            const holidayObj = _this.checkHoliday(systemDate, true);
+            dateObj.dayIndex = fd.id;
+            dateObj.isSaturday = fd.id === 6;
+            dateObj.isSunday = fd.id === 0;
+            dateObj.isHoliday = holidayObj.isHoliday;
+            dateObj.holidayName = holidayObj.holidayName;
+            dateObj.name_en = fd.en;
+            dateObj.name_jp = fd.jp;
+            return dateObj;
+        };
+        const getRow = function() { return jqNode("div", { class: eClass.tableRow }); };
+        let $row = getRow();
+        getIterator(col * row).forEach(function(c, i) {
+            c = i + 1;
+            const subtraction = startDiff - i;
+            let vd;
+            let isPreview = false;
+            if(subtraction > 0) {
+                vd = prevEnd - subtraction + 1;
+                isPreview = true;
+            }
+            else if(dateCount > endDate) {
+                vd = nextDate;
+                nextDate++;
+                isPreview = true;
+            }
+            else {
+                vd = dateCount;
+                moveDate();
+                isPreview = false;
+            }
+            const dateObj = getDateObj(vd, isPreview);
+            const $cell = jqNode("div", { class: eClass.tableCell }).text(dateObj.date);
+            setStyle($cell, dateObj.dayIndex, dateObj.isHoliday, dateObj.isPreview);
+            if(isSelected(dateObj.date, dateObj.isPreview)) $cell.addClass(eClass.calendarSelected);
+            $row.append($cell);
+            if(!dateObj.isPreview) {
+                $cell.click(function() {
+                    _this.setDate(setCharPadding(dateObj.date, 2));
+                    if(typeIs(_this.callback).function) _this.callback(_this.getDateStamp());
+                });
+            }
+            if(c % col === 0) {
+                $tableBody.append($row);
+                $row = getRow();
+            }
+        });
+        eb.listAppend($table, [$tableHeader, $tableBody]);
+        _this.elements.calendar = $table;
+        return this;
+    },
+    getCalendar: function() {
+        return this.elements.calendar;
+    },
+    getLabel: function() {
+        const def = this.def;
+        const state = this.state;
+        if(state.mode === def.mode.y) {
+            return state.year;
+        }
+        else {
+            return [state.year, state.month].join(SIGN.ssh);
+        }
+    },
+    build: function() {
+        const _this = this;
+        const def = _this.def;
+        const state = _this.state;
+        const elements = _this.elements;
+        const $container = elements.container;
+        $container.empty();
+        const eb = new ElementBuilder();
+        const $label = jqNode("div", { class: eClass.calendarLabel });
+        let $contents = null;
+        if(state.mode === def.mode.s) {
+            _this.createYear().paging();
+            const getLabel = function() {
+                const rate = def.pagePer * state.currentPage - 1;
+                const maxYearPerPage = def.year.start + rate;
+                const minYearPerPage = maxYearPerPage - (def.pagePer - 1);
+                const label = [minYearPerPage, maxYearPerPage].join(SIGN.dash);
+                return label;
+            };
+            const $labelText = jqNode("div");
+            const $actions = jqNode("div");
+            const $up = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronUp));
+            const $down = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronDown));
+            const initActions = function() {
+                if(state.currentPage <= 1) $up.addClass(eClass.hide);
+                else if(state.currentPage >= state.pages.length) $down.addClass(eClass.hide);
+                else {
+                    $up.removeClass(eClass.hide);
+                    $down.removeClass(eClass.hide);
+                }
+                $labelText.text(getLabel());
+            };
+            initActions();
+            $up.click(function() {
+                _this.setPage(state.currentPage - 1).paging();
+                initActions();
+            });
+            $down.click(function() {
+                _this.setPage(state.currentPage + 1).paging();
+                initActions();
+            });
+            eb.listAppend($label, [$labelText, eb.listAppend($actions, [$up, $down])]);
+            $contents = _this.getYearElement();
+        }
+        else if(state.mode === def.mode.y) {
+            const $labelText = jqNode("div").addClass(eClass.calendarLabelEvent);
+            $labelText.click(function() {
+                _this.setMode(def.mode.s);
+                _this.build();
+            });
+            const $actions = jqNode("div");
+            const $up = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronUp));
+            const $down = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronDown));
+            const initActions = function() {
+                if(state.year <= def.year.start) $up.addClass(eClass.hide);
+                else if(state.year >= def.year.end) $down.addClass(eClass.hide);
+                else {
+                    $up.removeClass(eClass.hide);
+                    $down.removeClass(eClass.hide);
+                }
+                $labelText.text(state.year);
+            };
+            initActions();
+            $up.click(function() {
+                const year = String(Number(state.year) - 1);
+                _this.setYear(year).build();
+            });
+            $down.click(function() {
+                const year = String(Number(state.year) + 1);
+                _this.setYear(year).build();
+            });
+            eb.listAppend($label, [$labelText, eb.listAppend($actions, [$up, $down])]);
+            $contents = _this.createMonth().getMonthElement();
+        }
+        else {
+            const $labelText = jqNode("div").addClass(eClass.calendarLabelEvent);
+            $labelText.click(function() {
+                _this.setMode(def.mode.y);
+                _this.build();
+            });
+            const $actions = jqNode("div");
+            const $up = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronUp));
+            const $down = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronDown));
+            const initActions = function() {
+                if(state.year <= def.year.start && Number(state.month) <= def.month.start + 1) $up.addClass(eClass.hide);
+                else if(state.year >= def.year.end && Number(state.month) >= def.month.end + 1) $down.addClass(eClass.hide);
+                else {
+                    $up.removeClass(eClass.hide);
+                    $down.removeClass(eClass.hide);
+                }
+                const label = [state.year, state.month].join(SIGN.ssh);
+                $labelText.text(label);
+            };
+            initActions();
+            $up.click(function() {
+                const systemDate = new Date(state.year, Number(state.month) - 2, 1);
+                const year = String(systemDate.getFullYear());
+                const month = setCharPadding(systemDate.getMonth() + 1, 2);
+                _this.setYear(year).setMonth(month).build();
+            });
+            $down.click(function() {
+                const systemDate = new Date(state.year, Number(state.month), 1);
+                const year = String(systemDate.getFullYear());
+                const month = setCharPadding(systemDate.getMonth() + 1, 2);
+                _this.setYear(year).setMonth(month).build();
+            });
+            eb.listAppend($label, [$labelText, eb.listAppend($actions, [$up, $down])]);
+            $contents = _this.createCalendarApi().getCalendar();
+        }
+        eb.listAppend($container, [$label, $contents]);
+        return this;
+    },
+    getContents: function() {
+        return this.elements.container;
+    },
+    getDateStamp: function() {
+        const state = this.state;
+        return [state.year, state.month, state.date].join(SIGN.ssh);
+    }
+};
+
 const Viewer = function() {
     this.viewer = jqNode("div", { id: eId.viewerContainer });
     this.title = null;
     this.contents = null;
+    this.tools = new Array();
+    this.executerVisible = true;
     this.done = null;
 };
 Viewer.prototype = {
@@ -1352,18 +1818,42 @@ Viewer.prototype = {
         this.contents = contents;
         return this;
     },
-    open: function() {
+    setTools: function() {
+        const argumentsList = Array.prototype.slice.call(arguments);
+        this.tools = argumentsList;
+        return this;
+    },
+    hideExecuter: function() {
+        this.executerVisible = false;
+        return this;
+    },
+    open: function(callback) {
         const _this = this;
         const eb = new ElementBuilder();
         const $header = jqNode("div", { class: eClass.viewerHeader });
         const $headerWrapper = jqNode("div", { class: eClass.viewerHeaderWrapper });
         const $headerContext = jqNode("div", { class: eClass.viewerHeaderContext });
         const $closer = jqNode("div", { class: eClass.viewerHeaderCloser }).append(eb.getFontAwesomeIcon(eIcon.arrowLeft));
+        $closer.click(function() { _this.close(); });
         const $title = jqNode("div", { class: eClass.viewerHeaderTitle }).text(_this.title);
         eb.listAppend($headerContext, [$closer, $title]);
         const $headerTools = jqNode("div", { class: eClass.viewerHeaderTools });
-        const $toolsItem = jqNode("div", { class: eClass.viewerToolsItem }).append(eb.getFontAwesomeIcon(eIcon.times));
-        $headerTools.append($toolsItem);
+        const getToolsItem = function(item) {
+            const $toolsItem = jqNode("div", { class: eClass.viewerToolsItem });
+            $toolsItem.append(item);
+            return $toolsItem;
+        };
+        if(_this.executerVisible) {
+            const $executer = jqNode("div", { class: eClass.toolsItemDone }).text(upperCase(CAPTIONS.done));
+            const close = function() { _this.close(); };
+            $executer.click(function() {
+                if(typeIs(callback).function) callback(_this.contents, close);
+            });
+            _this.tools.unshift($executer);
+        }
+        _this.tools.forEach(function(item) {
+            $headerTools.append(getToolsItem(item));
+        });
         eb.listAppend($headerWrapper, [$headerContext, $headerTools]);
         $header.append($headerWrapper);
         const $contentsWrapper = jqNode("div", { class: eClass.viewerContentsWrapper });
@@ -1372,6 +1862,9 @@ Viewer.prototype = {
         $overflowContainer.append($contents).appendTo($contentsWrapper);
         eb.listAppend(_this.viewer, [$header, $contentsWrapper]);
         jqByTag("body").append(_this.viewer);
+
+        const headerToolsSize = $headerTools.width();
+        $headerContext.css({ width: "calc(100% - " + Math.ceil(headerToolsSize) + "px)" });
         setTimeout(function() {
             _this.viewer.addClass(eClass.viewerVisible);
         });

@@ -14,7 +14,8 @@ const SIGN = {
     dq: '"',
     ssh: "/",
     crlf: "\r\n",
-    dash: "-"
+    dash: "-",
+    equal: "="
 };
 
 const ELEMENTS = {
@@ -39,7 +40,8 @@ const ELEMENTS = {
         notificationOk: "notification-ok",
         loadingContainer: "loading-container",
         fileListener: "file-listener",
-        viewerContainer: "viewer-container"
+        viewerContainer: "viewer-container",
+        interfaceListContainer: "interface-list-container"
     },
     class: {
         screen: "screen",
@@ -119,7 +121,28 @@ const ELEMENTS = {
         viewerToolsItem: "viewer-tools-item",
         viewerContentsWrapper: "viewer-contents-wrapper",
         overflowContainer: "overflow-container",
-        overflowContents: "overflow-contents"
+        overflowContents: "overflow-contents",
+        toolsItemDone: "tools-item-done",
+        table: "table",
+        tableHeader: "table-header",
+        tableBody: "table-body",
+        tableRow: "table-row",
+        tableCell: "table-cell",
+        calendarPlate: "calendar-plate",
+        calendarPannel: "calendar-pannel",
+        calendarTab: "calendar-tab",
+        calendarLabel: "calendar-label",
+        calendarLabelEvent: "calendar-label-event",
+        calendarApi: "calendar-api",
+        calendarSelected: "calendar-selected",
+        blueColor: "blue-color",
+        redColor: "red-color",
+        greyColor: "grey-color",
+        whiteColor: "white-color",
+        breakWord: "break-word",
+        interfaceListAddContainer: "interface-list-add-container",
+        actionArea: "action-area",
+        viewArea: "view-area"
     },
     icon: {
         database: "fas fa-database",
@@ -142,7 +165,10 @@ const ELEMENTS = {
         edit: "fas fa-edit",
         check: "fas fa-check",
         times: "fas fa-times",
-        arrowLeft: "fas fa-arrow-left"
+        arrowLeft: "fas fa-arrow-left",
+        calendar: "far fa-calendar-alt",
+        chevronUp: "fas fa-chevron-up",
+        chevronDown: "fas fa-chevron-down"
     },
     style: {
         transitionDuration: 300
@@ -220,19 +246,6 @@ const TYPES = {
         activeXObejct: "ActiveXObject",
         msxml2: "MSXML2.XMLHTTP",
         fileSystemObject: "Scripting.FileSystemObject"
-    },
-    calendar: {
-        define: {
-            days: [
-                { id: 0, en: "sun", jp: "日" },
-                { id: 1, en: "mon", jp: "月" },
-                { id: 2, en: "tue", jp: "火" },
-                { id: 3, en: "wed", jp: "水" },
-                { id: 4, en: "thu", jp: "木" },
-                { id: 5, en: "fri", jp: "金" },
-                { id: 6, en: "sat", jp: "土" }
-            ]
-        }
     }
 };
 
@@ -243,7 +256,8 @@ const CAPTIONS = {
     warning: "warning",
     complete: "complete",
     home: "home",
-    disconnect: "disconnect"
+    disconnect: "disconnect",
+    done: "done"
 };
 
 const MESSAGES = {
@@ -290,7 +304,18 @@ const STRUCTURE = {
                 uid: uid,
                 pwd: pwd,
                 order: order
-            }
+            };
+        }
+    },
+    systemDatePathList: {
+        key: "systemDatePathList",
+        type: new Object(),
+        data: function(name, path, order) {
+            return {
+                name: name,
+                path: path,
+                order: order
+            };
         }
     }
 };

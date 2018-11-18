@@ -34,8 +34,7 @@ const SqlModule = function() {
                 queryTimer: "query-timer",
                 lincPolicyNumber: "linc-policy-number",
                 exportButtonQueryCommand: "export-button__query-command",
-                exportContainerQueryCommand: "export-container__query-command",
-                accessListContainer: "access-list-container"
+                exportContainerQueryCommand: "export-container__query-command"
             },
             class: {
                 commandLine: "command-line",
@@ -55,12 +54,7 @@ const SqlModule = function() {
                 optionTemplateContainer: "option-template-container",
                 optionTemplatePannel: "option-template-pannel",
                 optionTemplateClose: "option-template-close",
-                optionTemplateTab: "option-template-tab",
-                accessListAddContainer: "access-list-add-container",
-                nameCell: "name-cell",
-                infoLabelCell: "info-label-cell",
-                infoMiddleCell: "info-middle-cell",
-                accessListFlatButton: "access-list-flat-button"
+                optionTemplateTab: "option-template-tab"
             },
             src: {
                 cloudgs_dbaas: "assets/cloudgs_dbaas.png"
@@ -504,8 +498,6 @@ SqlModule.prototype = {
     openAccessTemplate: function(elementInjector) {
         const store = new Store(storage);
         const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
         const messages = _this.Define.MESSAGES;
         const title = captions.accessList;
@@ -513,7 +505,7 @@ SqlModule.prototype = {
         const eb = new ElementBuilder();
         const itf = new Interface(sAccessList).setRoot(store.init());
         const dialog = new Dialog();
-        const $container = jqNode("div", { id: seId.accessListContainer });
+        const $container = jqNode("div", { id: eId.interfaceListContainer });
         const buildContents = function() {
             const dAL = store.init()[itf.getKey()];
             const apply = function(info) {
@@ -537,14 +529,13 @@ SqlModule.prototype = {
             if(!isVoid(dAL)) {
                 const $ul = jqNode("ul");
                 getObjectOrderList(dAL).forEach(function(key) {
-                    console.log(key);
                     const info = dAL[key];
                     const $li = jqNode("li");
                     $li.click(function(e) {
                         e.stopPropagation();
                         apply(info);
                     });
-                    const $viewArea = jqNode("div", { class: seClass.viewArea });
+                    const $viewArea = jqNode("div", { class: eClass.viewArea });
                     const $viewTable = jqNode("table");
                     const $colgroup = jqNode("colgroup");
                     const $viewHeader = jqNode("thead");
@@ -552,27 +543,29 @@ SqlModule.prototype = {
                     const $nameRow = jqNode("tr");
                     const $nameCell = jqNode("th", { colspan: "3" }).text(info.name);
                     $nameRow.append($nameCell).appendTo($viewHeader);
+                    const colgroupSizeStack = [100, 10, null];
+                    colgroupSizeStack.forEach(function(size) {
+                        $col = jqNode("col");
+                        if(size) $col.attr({ width: size });
+                        $colgroup.append($col);
+                    });
                     const infoObj = {
-                        0: { label: captions.sid, size: 100 },
-                        1: { label: captions.uid, size: 10 },
-                        2: { label: captions.pwd, size: null }
+                        0: { label: captions.sid },
+                        1: { label: captions.uid },
+                        2: { label: captions.pwd }
                     };
                     [info.sid, info.uid, info.pwd].forEach(function(item, i) {
                         const label = infoObj[i].label;
-                        const size = infoObj[i].size;
                         const $infoRow = jqNode("tr");
                         const $labelCell = jqNode("td").text(upperCase(label));
                         const $middleCell = jqNode("td").text(SIGN.gc);
                         const $valueCell = jqNode("td").text(item);
                         eb.listAppend($infoRow, [$labelCell, $middleCell, $valueCell]);
                         $viewBody.append($infoRow);
-                        $col = jqNode("col");
-                        if(size) $col.attr({ width: size });
-                        $colgroup.append($col);
                     });
                     eb.listAppend($viewTable, [$colgroup, $viewHeader, $viewBody]);
                     $viewArea.append($viewTable);
-                    const $actionArea = jqNode("div", { class: seClass.actionArea });
+                    const $actionArea = jqNode("div", { class: eClass.actionArea });
                     const $editIcon = eb.getFontAwesomeIcon(eIcon.edit);
                     const $removeIcon = eb.getFontAwesomeIcon(eIcon.trash);
                     const $actionTable = jqNode("table");
@@ -612,7 +605,7 @@ SqlModule.prototype = {
             const title = isEditMode ? upperCase(captions.edit, 0) : upperCase(captions.add, 0);
             const eventInjector = new Object();
             const buildSubContents = function() {
-                const $container = jqNode("div", { class: seClass.accessListAddContainer });
+                const $container = jqNode("div", { class: eClass.interfaceListAddContainer });
                 const $table = jqNode("table");
                 const itemList = [
                     { key: "name", label: upperCase(captions.name), value: info.name ? info.name : SIGN.none },
@@ -1048,7 +1041,7 @@ SqlModule.prototype = {
         const eb = new ElementBuilder();
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $loadButton = jqNode("button", { class: classes(eClass.flatButton, seClass.accessListFlatButton) }).append(eb.getFontAwesomeIcon(eIcon.listAlt));
+        const $loadButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.listAlt));
         const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
         const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
         const $importButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase(captions.import));
