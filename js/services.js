@@ -100,6 +100,12 @@ function toNumber(value) {
     return Number(value);
 };
 
+function toFullWidth(str) {
+    return str.replace(/[A-Za-z0-9]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) + 65248);
+    });
+};
+
 function repetitive(char, size) {
     let setChar = "";
     for (let i = 0; i < size; i++) {
@@ -619,7 +625,6 @@ Dialog.prototype = {
         _this.dialogContainer.addClass(classes(eClass.dialogBackdrop, eClass.subTop));
         _this.dialogContainer.removeClass(eClass.hide);
         _this.dialogContainer.append(_this.dialog);
-        // jqById(eId.container).addClass(eClass.overflowHidden);
         return this;
     },
     close: function () {
@@ -628,7 +633,6 @@ Dialog.prototype = {
             _this.dialogContainer.removeClass(classes(eClass.dialogBackdrop, eClass.subTop));
             _this.dialogContainer.addClass(eClass.hide);
             _this.dialogContainer.empty();
-            // jqById(eId.container).removeClass(eClass.overflowHidden);
         }
         return null;
     },
@@ -758,13 +762,14 @@ FileController.prototype = {
                 const files = e.target.files;
                 if (files && files.length >= 1) {
                     const file = files[0];
-                    $listener.val(SIGN.none);
                     if (isNotAllowed(allowed, file.type)) {
                         new Notification().error().open(MESSAGES.not_allowed_extension);
                         return false;
                     }
                     _this.loadFile(file, func);
                 }
+                $listener.val(SIGN.none);
+                return false;
             });
             $listener.click();
         }
@@ -1847,7 +1852,7 @@ Viewer.prototype = {
             const $executer = jqNode("div", { class: eClass.toolsItemDone }).text(upperCase(CAPTIONS.done));
             const close = function() { _this.close(); };
             $executer.click(function() {
-                if(typeIs(callback).function) callback(_this.contents, close);
+                if(typeIs(callback).function) callback(close);
             });
             _this.tools.unshift($executer);
         }
@@ -1868,6 +1873,7 @@ Viewer.prototype = {
         setTimeout(function() {
             _this.viewer.addClass(eClass.viewerVisible);
         });
+        jqByTag("body").addClass(eClass.overflowHidden);
         return null;
     },
     close: function() {
@@ -1876,6 +1882,7 @@ Viewer.prototype = {
         setTimeout(function() {
             _this.viewer.remove();
         }, 500);
+        jqByTag("body").removeClass(eClass.overflowHidden);
         return null;
     }
 };

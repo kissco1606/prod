@@ -5,6 +5,7 @@ const SIGN = {
     be: ")",
     nl: "\n",
     ws: " ",
+    fwws: "　",
     none: "",
     es: "	",
     br: "<br />",

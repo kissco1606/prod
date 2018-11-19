@@ -29,6 +29,7 @@ const CommonModule = function() {
             title: "Common Tools",
             fileTree: "File Tree",
             exec: "exec",
+            clear: "clear",
             download: "download",
             path: "path",
             targetPath: "Target Path",
@@ -54,7 +55,8 @@ const CommonModule = function() {
         },
 		MESSAGES: {
             invalid_format: "Invalid format",
-            already_exits_name: "Already exists name"
+            already_exits_name: "Already exists name",
+            systemdate_modified_complete: "System date modified successfully"
 		}
 	};
 	this.state = {
@@ -259,7 +261,8 @@ CommonModule.prototype = {
         const $loadButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.listAlt));
         const $calendarButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.calendar));
         const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
-        $container.append(eb.listAppend($actionArea, [$loadButton, $calendarButton, $execButton]));
+        const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
+        $container.append(eb.listAppend($actionArea, [$loadButton, $calendarButton, $execButton, $clearButton]));
         const itemList = [
             {
                 label: captions.targetPath,
@@ -277,6 +280,7 @@ CommonModule.prototype = {
             }
         ];
         const injector = new Object();
+        const elementStack = new Array();
         itemList.forEach(function(item) {
             const $commandArea = jqNode("div", { class: seClass.commandArea });
             const $label = jqNode("label").text(item.label);
@@ -285,12 +289,16 @@ CommonModule.prototype = {
             $commandArea.append($label).append($input);
             $container.append($commandArea);
             if(item.injectId) injector[item.injectId] = $input;
+            elementStack.push($input);
         });
         $loadButton.click(function() {
             _this.openSystemDateTemplate(injector);
         });
         $calendarButton.click(function() { _this.openCalendarApi(); });
         $execButton.click(function() { _this.editSystemDate(); });
+        $clearButton.click(function() {
+            elementStack.forEach(function(item) { item.val(SIGN.none); });
+        });
         return $container;
     },
     dateFormatValidate: function(dateString) {
@@ -387,7 +395,7 @@ CommonModule.prototype = {
                         elementInjector[key].val(filePath);
                     }
                     else {
-                        elementInjector[key].val(info[key]);
+                        elementInjector[key].val(data);
                     }
                 });
                 dialog.close();
@@ -542,9 +550,9 @@ CommonModule.prototype = {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
+        const messages = _this.Define.MESSAGES;
         const calendar = new Calendar();
         const mode = calendar.def.mode;
-        const messages = _this.Define.MESSAGES;
         const targetPath = _this.getCheckObject(jqById(seId.dateTargetPath).val(), captions.targetPath);
         const systemDate = _this.getCheckObject(jqById(seId.dateInput).val(), captions.systemDate);
         const result = _this.validation(targetPath, systemDate);
@@ -554,32 +562,39 @@ CommonModule.prototype = {
         }
         const validate = _this.dateFormatValidate(systemDate.value);
         if(validate === mode.ymd) {
-            const today = getToday();
-            const valueArray = systemDate.value.split(SIGN.ssh);
-            const year = valueArray[0];
-            const month = valueArray[1];
-            const date = valueArray[2];
-            const yearDiff = Number(year) - Number(today.year);
-            const monthDiff = Number(month) - Number(today.month);
-            const dateDiff = Number(date) - Number(today.date);
-            const path = targetPath.value;
-            const fs = new FileSystem(path);
-            const structure = {
-                UseSetting: true,
-                Year: yearDiff,
-                Month: monthDiff,
-                Date: dateDiff,
-                Hour: 0,
-                Minute: 0,
-                Second: 0
-            };
-            const data = new Array();
-            Object.keys(structure).forEach(function(key) {
-                const line = concatString(key, SIGN.equal, structure[key]);
-                data.push(line);
-            });
-            const dataString = data.join(SIGN.crlf);
-            fs.write(dataString);
+            try {
+                const today = getToday();
+                const valueArray = systemDate.value.split(SIGN.ssh);
+                const year = valueArray[0];
+                const month = valueArray[1];
+                const date = valueArray[2];
+                const yearDiff = Number(year) - Number(today.year);
+                const monthDiff = Number(month) - Number(today.month);
+                const dateDiff = Number(date) - Number(today.date);
+                const path = targetPath.value;
+                const fs = new FileSystem(path);
+                UseSetting=true
+                const structure = {
+                    UseSetting: true,
+                    Year: yearDiff,
+                    Month: monthDiff,
+                    Day: dateDiff,
+                    Hour: 0,
+                    Minute: 0,
+                    Second: 0
+                };
+                const data = new Array();
+                Object.keys(structure).forEach(function(key) {
+                    const line = concatString(key, SIGN.equal, structure[key]);
+                    data.push(line);
+                });
+                const dataString = data.join(SIGN.crlf) + SIGN.crlf;
+                fs.write(dataString);
+                new Notification().complete().open(messages.systemdate_modified_complete);
+            }
+            catch(e) {
+                new Notification().error().open(e.message);
+            }
         }
         else {
             new Notification().error().open(messages.invalid_format);

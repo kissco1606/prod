@@ -361,3 +361,8 @@
 .option-template-container > .option-template-pannel > .option-template-close > i {
 	cursor: pointer;
 }
+
+#option-template__nb {
+	position: relative;
+	padding: 20px;
+}

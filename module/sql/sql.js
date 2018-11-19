@@ -34,7 +34,8 @@ const SqlModule = function() {
                 queryTimer: "query-timer",
                 lincPolicyNumber: "linc-policy-number",
                 exportButtonQueryCommand: "export-button__query-command",
-                exportContainerQueryCommand: "export-container__query-command"
+                exportContainerQueryCommand: "export-container__query-command",
+                optionTemplateNB: "option-template__nb"
             },
             class: {
                 commandLine: "command-line",
@@ -370,7 +371,7 @@ SqlModule.prototype = {
                 uid: uid,
                 pwd: pwd
             }
-            new DBUtils().connect(info).close();
+            // new DBUtils().connect(info).close();
             _this.state.isConnecting = true;
             _this.state.info = info;
             _this.transition(pageType.application);
@@ -1311,6 +1312,8 @@ SqlModule.prototype = {
         $closeButton.append($closeIcon);
         $pannel.append($closeButton);
         const applyTemplate = function(menu) {
+            const flag = _this.optionTemplateAction(menu);
+            if(!flag) return false;
             const $optionContainer = jqById(seId.optionContainerDataCopy);
             const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
             const option = new Array();
@@ -1358,6 +1361,49 @@ SqlModule.prototype = {
         $templateContainer.append($pannel);
         jqByTag("body").append($templateContainer);
         return null;
+    },
+    optionTemplateAction: function(menu) {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const template = _this.export.dataCopy.template;
+        const templateRules = _this.export.dataCopy.templateRules;
+        const dataCopyState = _this.state.dataCopy;
+        const extractedData = dataCopyState.extractedData;
+        const eb = new ElementBuilder();
+        const $templateContainer = jqNode("div", { class: seClass.optionTemplateContainer });
+        let continueFlag = true;
+        switch(menu) {
+            case "Name_Birth": {
+                continueFlag = false;
+                const rules = templateRules[menu];
+                const ownKey = Object.getOwnPropertyNames(extractedData)[0];
+                const fromData = extractedData[ownKey];
+                const toList = dataCopyState.toList;
+                const tables = rules.tables;
+                const base = rules.base;
+                const count = fromData[base].count;
+                const isContractorAvailable = count >= 2;
+                const buildContents = function() {
+                    const $container = jqNode("div", { id: seId.optionTemplateNB });
+                    const $block = jqNode("div");
+                    const $title = jqNode("div").text("Insured");
+                    const $checkbox = jqNode("div").text("checkboxk");
+                    $container.append(eb.listAppend($block, [$title, $checkbox]));
+                    return $container;
+                };
+                const callback = function(viewerClose) {
+                    viewerClose();
+                };
+                new Viewer().setContents(menu, buildContents()).open(callback);
+                break;
+            }
+            default: {
+                continueFlag = true;
+                break;
+            }
+        }
+        return continueFlag;
     },
     checkDataCopy: function() {
         const _this = this;
@@ -1474,119 +1520,123 @@ SqlModule.prototype = {
         const dataCopyState = _this.state.dataCopy;
         const loading = new Loading();
         loading.on().then(function() {
-            dataCopyState.dataKey = { from: null, to: new Object() };
-            let pnf, pnt;
-            let extractedData = new Object();
-            if(!dataCopyState.extractedData) {
-                const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
-                const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
-                const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
-                const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
-                const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-                const result = _this.validation(subSid, subUid, subPwd, policyNumberFrom, policyNumberTo);
-                if(result.error) {
-                    new Notification().error().open(result.message);
-                    loading.off();
-                    return false;
-                }
-                else {
-                    const numericCheckResult = {
-                        error: false,
-                        message: new Array()
-                    };
-                    if(!policyNumberFrom.value.match(REG_EXP.numeric)) {
-                        numericCheckResult.error = true;
-                        numericCheckResult.message.push([captions.policyNumberFrom, MESSAGES.allowedOnlyNumeric].join(" : "));
-                    }
-                    if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
-                        numericCheckResult.error = true;
-                        numericCheckResult.message.push([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
-                    }
-                    if(numericCheckResult.error) {
-                        new Notification().error().open(numericCheckResult.message.join(SIGN.br));
-                        loading.off();
-                        return false;
-                    }
-                }
-                const actionStatus = {
-                    extractError: false,
-                    insertError: false,
-                    message: null
-                };
-                pnf = policyNumberFrom.value;
-                pnt = policyNumberTo.value;
-                const info = {
-                    sid: subSid,
-                    uid: subUid,
-                    pwd: subPwd
-                };
-                const subDB = new DBUtils().connect(info);
-                extractedData[pnf] = new Object();
-                dataCopyExport.tableList.some(function(table, i, a) {
-                    const query = _this.getDataCopySelectQuery(table, pnf);
-                    const dataSet = subDB.executeSelect(query).onEnd((a.length === i + 1)).dataSet;
-                    extractedData[pnf][table] = dataSet;
-                    if(dataSet.error) {
-                        actionStatus.extractError = true;
-                        actionStatus.message = "Extract failed";
-                    }
-                    return dataSet.error;
-                });
-                if(actionStatus.extractError) throw new Error(actionStatus.message);
-            }
-            else {
-                extractedData = dataCopyState.extractedData;
-                pnf = Object.keys(extractedData)[0];
-                pnt = jqById(seId.policyNumberTo).val();
-            }
-            const db = new DBUtils().connect(_this.state.info);
-            const rules = dataCopyExport.rules;
-            const defaultKey = dataCopyExport.keySet.defaultKey;
-            const insertData = new Object();
-            const pntList = pnt.split(SIGN.nl).filter(function(item) { return item });
-            const countStack = new Array();
-            Object.keys(extractedData[pnf]).forEach(function(table) {
-                const dataSet = extractedData[pnf][table];
-                const count = dataSet.count;
-                countStack.push(count);
-                if(count >= 1) {
-                    dataCopyState.keys = new Array();
-                    const name = dataSet.name;
-                    const data = dataSet.data;
-                    const applyData = new Array();
-                    dataCopyState.dataKey.to[table] = new Array();
-                    pntList.forEach(function(to) {
-                        const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
-                        data.forEach(function(record) {
-                            const applyRecord = cloneJS(record);
-                            if(keyIndex >= 0) {
-                                applyRecord[keyIndex] = to;
-                            }
-                            applyData.push(applyRecord);
-                            dataCopyState.keys.push(to);
-                            dataCopyState.dataKey.to[table].push(to);
-                        });
-                    });
-                    if(rules[table]) {
-                        Object.keys(rules[table]).forEach(function(column) {
-                            const applyType = rules[table][column];
-                            const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
-                            dataCopyState.applyIndex = applyIndex;
-                            _this.applyRulesDataCopy(applyType, applyData, table, db);
-                        });
-                    }
-                    insertData[table] = {
-                        name: name,
-                        data: applyData
-                    };
-                }
-            });
-            if(countStack.reduce(function(a, b) { return a + b; }) <= 0) throw new Error("Nothing extracted data");
-            db.close();
-            dataCopyState.extractedData = extractedData;
-            dataCopyState.insertData = insertData;
-            dataCopyState.insertDataStatic = cloneJS(insertData);
-            dataCopyState.dataKey.from = pnf;
+            // dataCopyState.dataKey = { from: null, to: new Object() };
+            // let pnf, pnt;
+            // let extractedData = new Object();
+            // if(!dataCopyState.extractedData) {
+            //     const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
+            //     const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
+            //     const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
+            //     const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
+            //     const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
+            //     const result = _this.validation(subSid, subUid, subPwd, policyNumberFrom, policyNumberTo);
+            //     if(result.error) {
+            //         new Notification().error().open(result.message);
+            //         loading.off();
+            //         return false;
+            //     }
+            //     else {
+            //         const numericCheckResult = {
+            //             error: false,
+            //             message: new Array()
+            //         };
+            //         if(!policyNumberFrom.value.match(REG_EXP.numeric)) {
+            //             numericCheckResult.error = true;
+            //             numericCheckResult.message.push([captions.policyNumberFrom, MESSAGES.allowedOnlyNumeric].join(" : "));
+            //         }
+            //         if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
+            //             numericCheckResult.error = true;
+            //             numericCheckResult.message.push([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
+            //         }
+            //         if(numericCheckResult.error) {
+            //             new Notification().error().open(numericCheckResult.message.join(SIGN.br));
+            //             loading.off();
+            //             return false;
+            //         }
+            //     }
+            //     const actionStatus = {
+            //         extractError: false,
+            //         insertError: false,
+            //         message: null
+            //     };
+            //     pnf = policyNumberFrom.value;
+            //     pnt = policyNumberTo.value;
+            //     const info = {
+            //         sid: subSid,
+            //         uid: subUid,
+            //         pwd: subPwd
+            //     };
+            //     const subDB = new DBUtils().connect(info);
+            //     extractedData[pnf] = new Object();
+            //     dataCopyExport.tableList.some(function(table, i, a) {
+            //         const query = _this.getDataCopySelectQuery(table, pnf);
+            //         const dataSet = subDB.executeSelect(query).onEnd((a.length === i + 1)).dataSet;
+            //         extractedData[pnf][table] = dataSet;
+            //         if(dataSet.error) {
+            //             actionStatus.extractError = true;
+            //             actionStatus.message = "Extract failed";
+            //         }
+            //         return dataSet.error;
+            //     });
+            //     if(actionStatus.extractError) throw new Error(actionStatus.message);
+            // }
+            // else {
+            //     extractedData = dataCopyState.extractedData;
+            //     pnf = Object.keys(extractedData)[0];
+            //     pnt = jqById(seId.policyNumberTo).val();
+            // }
+            // const db = new DBUtils().connect(_this.state.info);
+            // const rules = dataCopyExport.rules;
+            // const defaultKey = dataCopyExport.keySet.defaultKey;
+            // const insertData = new Object();
+            // const pntList = pnt.split(SIGN.nl).filter(function(item) { return item });
+            // dataCopyState.toList = pntList;
+            // const countStack = new Array();
+            // Object.keys(extractedData[pnf]).forEach(function(table) {
+            //     const dataSet = extractedData[pnf][table];
+            //     const count = dataSet.count;
+            //     countStack.push(count);
+            //     if(count >= 1) {
+            //         dataCopyState.keys = new Array();
+            //         const name = dataSet.name;
+            //         const data = dataSet.data;
+            //         const applyData = new Array();
+            //         dataCopyState.dataKey.to[table] = new Array();
+            //         pntList.forEach(function(to) {
+            //             const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
+            //             data.forEach(function(record) {
+            //                 const applyRecord = cloneJS(record);
+            //                 if(keyIndex >= 0) {
+            //                     applyRecord[keyIndex] = to;
+            //                 }
+            //                 applyData.push(applyRecord);
+            //                 dataCopyState.keys.push(to);
+            //                 dataCopyState.dataKey.to[table].push(to);
+            //             });
+            //         });
+            //         if(rules[table]) {
+            //             Object.keys(rules[table]).forEach(function(column) {
+            //                 const applyType = rules[table][column];
+            //                 const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
+            //                 dataCopyState.applyIndex = applyIndex;
+            //                 _this.applyRulesDataCopy(applyType, applyData, table, db);
+            //             });
+            //         }
+            //         insertData[table] = {
+            //             name: name,
+            //             data: applyData
+            //         };
+            //     }
+            // });
+            // if(countStack.reduce(function(a, b) { return a + b; }) <= 0) throw new Error("Nothing extracted data");
+            // db.close();
+            // dataCopyState.extractedData = extractedData;
+            // dataCopyState.insertData = insertData;
+            // dataCopyState.insertDataStatic = cloneJS(insertData);
+            // dataCopyState.dataKey.from = pnf;
+            // test_s
+            _this.state.dataCopy = JSON.parse(testData);
+            // test_e
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
         }).catch(function(e) {
