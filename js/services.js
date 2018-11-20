@@ -1152,71 +1152,77 @@ FileSystem.prototype = {
 };
 
 const ElementBuilder = function() {
-	this.elements = new Array();
-	this.vertical = false;
+    this.elements = new Array();
+    this.vertical = false;
 };
 ElementBuilder.prototype = {
-	setVertical: function() {
-		this.vertical = true;
-		return this;
-	},
-	setHorizontal: function() {
-		this.vertical = false;
-		return this;
-	},
-	getItem: function() {
-		const _this = this;
-		const arrayStack = new Array();
-		_this.elements.forEach(function(itemUnit) {
-			if(_this.vertical) {
-				const $div = jqNode("div");
-				itemUnit.forEach(function(item) { $div.append(item); });
-				arrayStack.push($div);
-			}
-			else {
-				itemUnit.forEach(function(item) {
-					arrayStack.push(item);
-				});
-			}
-		});
-		return arrayStack;
-	},
-	setItem: function($container) {
-		const elements = this.getItem();
-		elements.forEach(function(item) {
-			$container.append(item);
-		});
-		return null;
-	},
-	createRadio: function(itemList) {
-		const _this = this;
-		const builder = function(label, attributes, isChecked, optionClass) {
-			optionClass = optionClass ? optionsClass : eClass.rcColorDefault;
-			const $input = jqNode("input", { type: "radio", name: attributes.name, id: attributes.id, value: attributes.value });
-			if(isChecked) $input.prop({ checked: true });
-			const $label = jqNode("label", { for: attributes.id, class: classes(eClass.radio, optionClass) }).text(label);
-			return [$input, $label];
-		}
-		itemList.forEach(function(item) {
-			const elm = builder(item.label, item.attributes, item.isChecked, item.optionClass);
-			_this.elements.push(elm);
-		});
-		return this;
-	},
-	createCheckbox: function(itemList) {
-		const _this = this;
-		const builder = function(label, attributes, isChecked, optionClass) {
-			optionClass = optionClass ? optionsClass : eClass.rcColorDefault;
-			const $input = jqNode("input", { type: "checkbox", name: attributes.name, id: attributes.id, value: attributes.value });
-			if(isChecked) $input.prop({ checked: true });
-			const $label = jqNode("label", { for: attributes.id, class: classes(eClass.checkbox, optionClass) }).text(label);
-			return [$input, $label];
-		}
-		itemList.forEach(function(item) {
-			const elm = builder(item.label, item.attributes, item.isChecked, item.optionClass);
-			_this.elements.push(elm);
-		});
-		return this;
+    setVertical: function() {
+        this.vertical = true;
+        return this;
+    },
+    setHorizontal: function() {
+        this.vertical = false;
+        return this;
+    },
+    getItem: function() {
+        const _this = this;
+        const arrayStack = new Array();
+        _this.elements.forEach(function(itemUnit) {
+            if(_this.vertical) {
+                const $div = jqNode("div");
+                itemUnit.forEach(function(item) { $div.append(item); });
+                arrayStack.push($div);
+            }
+            else {
+                itemUnit.forEach(function(item) {
+                    arrayStack.push(item);
+                });
+            }
+        });
+        return arrayStack;
+    },
+    setItem: function($container) {
+        const elements = this.getItem();
+        elements.forEach(function(item) {
+            $container.append(item);
+        });
+        return null;
+    },
+    createRadio: function(itemList) {
+        const _this = this;
+        _this.elements = new Array();
+        const builder = function(label, attributes, isChecked, optionClass) {
+            optionClass = optionClass ? optionsClass : eClass.rcColorDefault;
+            const $input = jqNode("input", { type: "radio", name: attributes.name, id: attributes.id, value: attributes.value });
+            if(isChecked) $input.prop({ checked: true });
+            const $label = jqNode("label", { for: attributes.id, class: classes(eClass.radio, optionClass) }).text(label);
+            return [$input, $label];
+        }
+        itemList.forEach(function(item) {
+            const elm = builder(item.label, item.attributes, item.isChecked, item.optionClass);
+            _this.elements.push(elm);
+        });
+        return this;
+    },
+    createCheckbox: function(itemList) {
+        const _this = this;
+        _this.elements = new Array();
+        const builder = function(label, attributes, isChecked, optionClass) {
+            optionClass = optionClass ? optionsClass : eClass.rcColorDefault;
+            const $input = jqNode("input", { type: "checkbox", name: attributes.name, id: attributes.id, value: attributes.value });
+            if(isChecked) $input.prop({ checked: true });
+            const $label = jqNode("label", { for: attributes.id, class: classes(eClass.checkbox, optionClass) }).text(label);
+            return [$input, $label];
+        }
+        itemList.forEach(function(item) {
+            const elm = builder(item.label, item.attributes, item.isChecked, item.optionClass);
+            _this.elements.push(elm);
+        });
+        return this;
+    },
+    addEvent: function(element, eventType, callback) {
+        jqByTag(element).on(eventType, callback);
+        return this;
     },
     getFontAwesomeIcon: function(icon, classOption) {
         const $icon = jqNode("i", { class: icon });
@@ -1874,7 +1880,7 @@ Viewer.prototype = {
             _this.viewer.addClass(eClass.viewerVisible);
         });
         jqByTag("body").addClass(eClass.overflowHidden);
-        return null;
+        return this;
     },
     close: function() {
         const _this = this;
@@ -1883,6 +1889,10 @@ Viewer.prototype = {
             _this.viewer.remove();
         }, 500);
         jqByTag("body").removeClass(eClass.overflowHidden);
+        return null;
+    },
+    onLoad: function(func) {
+        func();
         return null;
     }
 };

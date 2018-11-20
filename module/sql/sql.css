@@ -366,3 +366,53 @@
 	position: relative;
 	padding: 20px;
 }
+#option-template__nb > .viewer-section {
+	padding-bottom: 30px;
+}
+#option-template__nb > .viewer-section:last-child {
+	padding-bottom: 0;
+}
+#option-template__nb > .viewer-section > .section-title {
+	font-weight: 600;
+	font-size: 20px;
+}
+#option-template__nb > .viewer-section > .command-line {
+	padding: 10px 0;
+}
+#option-template__nb > .viewer-section > .command-line .name-input {
+	display: flex;
+	flex-direction: row;
+	padding-top: 10px;
+}
+#option-template__nb > .viewer-section > .command-line .name-input > label {
+	width: 120px;
+}
+#option-template__nb > .viewer-section > .command-line .name-input > input {
+	width: 100px;
+	margin-right: 5px;
+}
+#option-template__nb > .viewer-section > .command-line .name-input > input:last-child {
+	margin-right: 0;
+}
+#option-template__nb > .viewer-section > .command-line .name-textarea {
+	display: flex;
+	flex-direction: row;
+}
+#option-template__nb > .viewer-section > .command-line .name-textarea > label {
+	width: 120px;
+	line-height: 15px;
+}
+#option-template__nb > .viewer-section > .command-line .name-textarea > textarea {
+	width: 310px;
+	height: 86px;
+}
+#option-template__nb > .viewer-section > .command-line.birth-input {
+	display: flex;
+	flex-direction: row;
+}
+#option-template__nb > .viewer-section > .command-line.birth-input > label {
+	width: 120px;
+}
+#option-template__nb > .viewer-section > .command-line.birth-input > input {
+	width: 310px;
+}

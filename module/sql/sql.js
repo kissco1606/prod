@@ -107,7 +107,8 @@ const SqlModule = function() {
             add: "add",
             edit: "edit",
             name: "name",
-            load: "load"
+            load: "load",
+            birthday: "birthday"
         },
         TYPES: {
             toolId: {
@@ -1366,6 +1367,7 @@ SqlModule.prototype = {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
         const template = _this.export.dataCopy.template;
         const templateRules = _this.export.dataCopy.templateRules;
         const dataCopyState = _this.state.dataCopy;
@@ -1384,18 +1386,188 @@ SqlModule.prototype = {
                 const base = rules.base;
                 const count = fromData[base].count;
                 const isContractorAvailable = count >= 2;
+                const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
+                const def = {
+                    insured: { id: "insured", name: "insured" },
+                    contractor: { id: "contractor", name: "contractor" }
+                };
+                const setting = {
+                    inputSelection: {
+                        name: "inputSelection",
+                        ids: { system: "system-input", user: "user-input" },
+                        captions: { system: "system input", user: "user input" }
+                    },
+                    increamentCheck: {
+                        name: "increamentCheck",
+                        id: "auto-increament",
+                        caption: "auto increament"
+                    },
+                    input: {
+                        name: {
+                            system: {
+                                ids: { identifier: "input-identifier", number: "input-number", name: "input-name" },
+                                captions: { identifier: "identifier", number: "number", name: "name" },
+                                class: "name-input"
+                            },
+                            user: {
+                                id: "text-name",
+                                caption: "name",
+                                class: "name-textarea"
+                            }
+                        },
+                        birth: {
+                            id: "input-birth",
+                            caption: "birthday",
+                            class: "birth-input"
+                        }
+                    }
+                };
+                const inputSelectionSetting = setting.inputSelection;
+                const increamentCheckSetting = setting.increamentCheck;
+                const inputSetting = setting.input;
+                const state = {
+                    insured: {
+                        inputSelection: getAuth(def.insured.id, inputSelectionSetting.ids.system),
+                        autoIncreament: false,
+                        injector: {
+                            name: {
+                                container: { system: null, user: null },
+                                input: { system: null, user: null }
+                            },
+                            birth: null
+                        }
+                    },
+                    contractor: {
+                        inputSelection: getAuth(def.contractor.id, inputSelectionSetting.ids.system),
+                        autoIncreament: false,
+                        injector: {
+                            name: {
+                                container: { system: null, user: null },
+                                input: { system: null, user: null }
+                            },
+                            birth: null
+                        }
+                    }
+                };
+                const executeList = isContractorAvailable ? [def.insured, def.contractor] : [def.insured];
+                const initInput = function(info) {
+                    const s = state[info.id];
+                    const containerInjector = s.injector.name.container;
+                    switch(s.inputSelection) {
+                        case getAuth(info.id, inputSelectionSetting.ids.system): {
+                            containerInjector.system.removeClass(eClass.hide);
+                            containerInjector.user.addClass(eClass.hide);
+                            break;
+                        }
+                        case getAuth(info.id, inputSelectionSetting.ids.user): {
+                            containerInjector.system.addClass(eClass.hide);
+                            containerInjector.user.removeClass(eClass.hide);
+                            break;
+                        }
+                    }
+                };
+                const buildSection = function(info) {
+                    const s = state[info.id];
+                    const title = upperCase(info.name, 0);
+                    const $section = jqNode("div", { class: eClass.viewerSection });
+                    const $title = jqNode("div", { class: eClass.sectionTitle }).text(title);
+                    const systemInputCaption = upperCase(inputSelectionSetting.captions.system, 0);
+                    const userInputCaption = upperCase(inputSelectionSetting.captions.user, 0);
+                    const inputSelectionRadioItemList = [
+                        {
+                            label: systemInputCaption,
+                            attributes: {
+                                id: getAuth(info.id, inputSelectionSetting.ids.system),
+                                name: getAuth(info.id, inputSelectionSetting.name),
+                                value: SIGN.none
+                            },
+                            isChecked: true,
+                            optionClass: SIGN.none
+                        },
+                        {
+                            label: userInputCaption,
+                            attributes: {
+                                id: getAuth(info.id, inputSelectionSetting.ids.user),
+                                name: getAuth(info.id, inputSelectionSetting.name),
+                                value: SIGN.none
+                            },
+                            isChecked: false,
+                            optionClass: SIGN.none
+                        }
+                    ];
+                    const $radioItem = eb.createRadio(inputSelectionRadioItemList).getItem();
+                    const $selectionLine = jqNode("div", { class: seClass.commandLine });
+                    $selectionLine.append($radioItem);
+                    const $inputLine = jqNode("div", { class: seClass.commandLine });
+                    const inputLabel = upperCase(captions.name, 0);
+                    const systemInputName = inputSetting.name.system;
+                    const userInputName = inputSetting.name.user;
+                    const $systemInputNameContainer = jqNode("div");
+                    const $nameContainer = jqNode("div", { class: systemInputName.class });
+                    const $systemInputNameLabel = jqNode("label").text(inputLabel);
+                    const $idetifier = jqNode("input", { id: getAuth(info.id, systemInputName.ids.identifier), class: eClass.applicationInput });
+                    const $number = jqNode("input", { id: getAuth(info.id, systemInputName.ids.number), class: eClass.applicationInput });
+                    const $name = jqNode("input", { id: getAuth(info.id, systemInputName.ids.name), class: eClass.applicationInput });
+                    eb.listAppend($nameContainer, [$systemInputNameLabel, $idetifier, $number, $name]);
+                    const autoIncreamentItemList = [
+                        {
+                            label: upperCase(increamentCheckSetting.caption, 0),
+                            attributes: {
+                                id: getAuth(info.id, increamentCheckSetting.id),
+                                name: getAuth(info.id, increamentCheckSetting.name),
+                                value: SIGN.none
+                            },
+                            isChecked: false,
+                            optionClass: SIGN.none
+                        }
+                    ];
+                    const $autoIncreamentContainer = jqNode("div").append(eb.createCheckbox(autoIncreamentItemList).getItem());
+                    eb.listAppend($systemInputNameContainer, [$autoIncreamentContainer, $nameContainer]);
+                    const $userInputNameContainer = jqNode("div", { class: userInputName.class });
+                    const $userInputNameLabel = jqNode("label").text(inputLabel);
+                    const $nameTextarea = jqNode("textarea", { id: getAuth(info.id, userInputName.id), class: eClass.applicationTextarea });
+                    eb.listAppend($userInputNameContainer, [$userInputNameLabel, $nameTextarea]);
+                    eb.listAppend($inputLine, [$systemInputNameContainer, $userInputNameContainer]);
+                    const inputBirth = inputSetting.birth;
+                    const birthInputLabel = upperCase(captions.birthday, 0);
+                    const $birthLine = jqNode("div", { class: classes(seClass.commandLine, inputBirth.class) });
+                    const $birthInputLabel = jqNode("label").text(birthInputLabel);
+                    const $birthInput = jqNode("input", { id: getAuth(info.id, inputBirth.id), class: eClass.applicationInput });
+                    eb.listAppend($birthLine, [$birthInputLabel, $birthInput]);
+                    eb.listAppend($section, [$title, $selectionLine, $inputLine, $birthLine]);
+                    s.injector = {
+                        name: {
+                            container: { system: $systemInputNameContainer, user: $userInputNameContainer },
+                            input: { system: [$idetifier, $number, $name], user: $nameTextarea  }
+                        },
+                        birth: $birthInput
+                    };
+                    initInput(info);
+                    return $section;
+                };
                 const buildContents = function() {
                     const $container = jqNode("div", { id: seId.optionTemplateNB });
-                    const $block = jqNode("div");
-                    const $title = jqNode("div").text("Insured");
-                    const $checkbox = jqNode("div").text("checkboxk");
-                    $container.append(eb.listAppend($block, [$title, $checkbox]));
+                    executeList.forEach(function(info) {
+                        $container.append(buildSection(info));
+                    });
                     return $container;
+                };
+                const eventHandler = function() {
+                    executeList.forEach(function(info) {
+                        const handlerName = getAuth(info.id, inputSelectionSetting.name);
+                        const handler = concatString("input[name=", handlerName, "]");
+                        eb.addEvent(handler, "change", function(e) {
+                            const target = e.target;
+                            state[info.id][inputSelectionSetting.name] = target.id;
+                            console.log(state);
+                            initInput(info);
+                        });
+                    });
                 };
                 const callback = function(viewerClose) {
                     viewerClose();
                 };
-                new Viewer().setContents(menu, buildContents()).open(callback);
+                new Viewer().setContents(menu, buildContents()).open(callback).onLoad(eventHandler);
                 break;
             }
             default: {

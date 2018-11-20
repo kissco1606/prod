@@ -16,6 +16,7 @@ const SIGN = {
     ssh: "/",
     crlf: "\r\n",
     dash: "-",
+    ub: "_",
     equal: "="
 };
 
@@ -124,6 +125,8 @@ const ELEMENTS = {
         overflowContainer: "overflow-container",
         overflowContents: "overflow-contents",
         toolsItemDone: "tools-item-done",
+        viewerSection: "viewer-section",
+        sectionTitle: "section-title",
         table: "table",
         tableHeader: "table-header",
         tableBody: "table-body",
