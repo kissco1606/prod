@@ -185,6 +185,7 @@ const TYPES = {
         undefined: "Undefined",
         string: "String",
         number: "Number",
+        boolean: "Boolean",
         array: "Array",
         object: "Object",
         function: "Function",

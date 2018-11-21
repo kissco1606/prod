@@ -258,9 +258,14 @@ function isVoid(val) {
 };
 
 function accessObject(obj, keys) {
-    return keys.reduce(function(prev, curr) {
-        return prev[curr];
-    }, obj);
+    try {
+        return keys.reduce(function(prev, curr) {
+            return prev[curr];
+        }, obj);
+    }
+    catch(e) {
+        return null;
+    }
 };
 
 function setObject(obj, keys, value) {
@@ -1164,6 +1169,10 @@ ElementBuilder.prototype = {
         this.vertical = false;
         return this;
     },
+    setListener: function(listener) {
+        this.listener = listener;
+        return this;
+    },
     getItem: function() {
         const _this = this;
         const arrayStack = new Array();
@@ -1220,10 +1229,6 @@ ElementBuilder.prototype = {
         });
         return this;
     },
-    addEvent: function(element, eventType, callback) {
-        jqByTag(element).on(eventType, callback);
-        return this;
-    },
     getFontAwesomeIcon: function(icon, classOption) {
         const $icon = jqNode("i", { class: icon });
         if(classes) $icon.addClass(classOption);
@@ -1235,6 +1240,29 @@ ElementBuilder.prototype = {
         });
         return target;
     }
+};
+
+const EventHandler = function(listener) {
+    this.listener = listener;
+    this.stateValue = "";
+};
+EventHandler.prototype = {
+    addEvent: function(eventType, callback) {
+        this.listener.on(eventType, callback);
+        return this;
+    },
+    addInputEvent: function(callback) {
+        const _this = this;
+        this.listener.on("input", function(e) {
+            const result = callback(e, this.value);
+            if(typeIs(result).boolean && result === false) {
+                this.value = _this.stateValue;
+            }
+            else {
+                _this.stateValue = this.value;
+            }
+        });
+    },
 };
 
 const Encryption = function() {
@@ -1894,5 +1922,21 @@ Viewer.prototype = {
     onLoad: function(func) {
         func();
         return null;
+    }
+};
+
+const KeyRegExp = function(value) {
+    this.value = value;
+};
+KeyRegExp.prototype = {
+    isNumber: function() {
+        const regExp = /^\d*$/;
+        return regExp.test(this.value);
+    },
+    isOverflow: function(size) {
+        return this.value.length > size;
+    },
+    isNot: function(regExp) {
+        return !regExp.test(this.value);
     }
 };

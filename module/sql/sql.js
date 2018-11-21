@@ -108,7 +108,8 @@ const SqlModule = function() {
             edit: "edit",
             name: "name",
             load: "load",
-            birthday: "birthday"
+            birthday: "birthday",
+            id: "id"
         },
         TYPES: {
             toolId: {
@@ -1375,6 +1376,7 @@ SqlModule.prototype = {
         const eb = new ElementBuilder();
         const $templateContainer = jqNode("div", { class: seClass.optionTemplateContainer });
         let continueFlag = true;
+        if(isVoid(dataCopyState.template)) dataCopyState.template = new Object();
         switch(menu) {
             case "Name_Birth": {
                 continueFlag = false;
@@ -1386,7 +1388,6 @@ SqlModule.prototype = {
                 const base = rules.base;
                 const count = fromData[base].count;
                 const isContractorAvailable = count >= 2;
-                const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
                 const def = {
                     insured: { id: "insured", name: "insured" },
                     contractor: { id: "contractor", name: "contractor" }
@@ -1405,53 +1406,107 @@ SqlModule.prototype = {
                     input: {
                         name: {
                             system: {
-                                ids: { identifier: "input-identifier", number: "input-number", name: "input-name" },
-                                captions: { identifier: "identifier", number: "number", name: "name" },
-                                class: "name-input"
+                                ids: {
+                                    identifier: "system-identifier",
+                                    number: "system-number",
+                                    name: {
+                                        kana: { lastName: "system-name-kana-lastName", firstName: "system-name-kana-firstName" },
+                                        kanji: { lastName: "system-name-kanji-lastName", firstName: "system-name-kanji-firstName" }
+                                    }
+                                },
+                                captions: {
+                                    identifier: "identifier",
+                                    number: "number",
+                                    name: {
+                                        kana: { lastName: "last name kana", firstName: "first name kana" },
+                                        kanji: { lastName: "last name kanji", firstName: "first name kanji" }
+                                    }
+                                },
+                                class: "system-name"
                             },
                             user: {
-                                id: "text-name",
-                                caption: "name",
-                                class: "name-textarea"
+                                ids: {
+                                    name: {
+                                        kana: { lastName: "user-name-kana-lastName", firstName: "user-name-kana-firstName" },
+                                        kanji: { lastName: "user-name-kanji-lastName", firstName: "user-name-kanji-firstName" }
+                                    }
+                                },
+                                captions: {
+                                    name: {
+                                        kana: { lastName: "last name kana", firstName: "first name kana" },
+                                        kanji: { lastName: "last name kanji", firstName: "first name kanji" }
+                                    }
+                                },
+                                class: "user-name"
                             }
                         },
                         birth: {
-                            id: "input-birth",
+                            id: "birth",
                             caption: "birthday",
-                            class: "birth-input"
-                        }
-                    }
-                };
-                const inputSelectionSetting = setting.inputSelection;
-                const increamentCheckSetting = setting.increamentCheck;
-                const inputSetting = setting.input;
-                const state = {
-                    insured: {
-                        inputSelection: getAuth(def.insured.id, inputSelectionSetting.ids.system),
-                        autoIncreament: false,
-                        injector: {
-                            name: {
-                                container: { system: null, user: null },
-                                input: { system: null, user: null }
-                            },
-                            birth: null
-                        }
-                    },
-                    contractor: {
-                        inputSelection: getAuth(def.contractor.id, inputSelectionSetting.ids.system),
-                        autoIncreament: false,
-                        injector: {
-                            name: {
-                                container: { system: null, user: null },
-                                input: { system: null, user: null }
-                            },
-                            birth: null
+                            class: "input-birth"
                         }
                     }
                 };
                 const executeList = isContractorAvailable ? [def.insured, def.contractor] : [def.insured];
+                const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
+                const inputSelectionSetting = setting.inputSelection;
+                const increamentCheckSetting = setting.increamentCheck;
+                const inputSetting = setting.input;
+                const initState = function() {
+                    const state = new Object();
+                    executeList.forEach(function(info) {
+                        state[info.id] = {
+                            inputSelection: getAuth(info.id, inputSelectionSetting.ids.system),
+                            autoIncreament: false,
+                            values: {
+                                system: {
+                                    identifier: SIGN.none,
+                                    number: SIGN.none,
+                                    name: {
+                                        kana: { lastName: SIGN.none, firstName: SIGN.none },
+                                        kanji: { lastName: SIGN.none, firstName: SIGN.none }
+                                    }
+                                },
+                                user: {
+                                    name: {
+                                        kana: { lastName: SIGN.none, firstName: SIGN.none },
+                                        kanji: { lastName: SIGN.none, firstName: SIGN.none }
+                                    }
+                                },
+                                birth: SIGN.none
+                            },
+                            injector: {
+                                name: {
+                                    container: { system: null, user: null },
+                                    input: {
+                                        system: {
+                                            identifier: null,
+                                            number: null,
+                                            name: {
+                                                kana: { lastName: null, firstName: null },
+                                                kanji: { lastName: null, firstName: null }
+                                            }
+                                        },
+                                        user: {
+                                            name: {
+                                                kana: { lastName: null, firstName: null },
+                                                kanji: { lastName: null, firstName: null }
+                                            }
+                                        }
+                                    }
+                                },
+                                birth: null
+                            }
+                        };
+                    });
+                    return state;
+                };
+                const nbState = cloneJS(!isVoid(dataCopyState.template[menu]) ? dataCopyState.template[menu] : initState());
+                const isSystemInputSelected = function(info) {
+                    return nbState[info.id].inputSelection === getAuth(info.id, inputSelectionSetting.ids.system);
+                };
                 const initInput = function(info) {
-                    const s = state[info.id];
+                    const s = nbState[info.id];
                     const containerInjector = s.injector.name.container;
                     switch(s.inputSelection) {
                         case getAuth(info.id, inputSelectionSetting.ids.system): {
@@ -1467,7 +1522,7 @@ SqlModule.prototype = {
                     }
                 };
                 const buildSection = function(info) {
-                    const s = state[info.id];
+                    const s = nbState[info.id];
                     const title = upperCase(info.name, 0);
                     const $section = jqNode("div", { class: eClass.viewerSection });
                     const $title = jqNode("div", { class: eClass.sectionTitle }).text(title);
@@ -1481,7 +1536,7 @@ SqlModule.prototype = {
                                 name: getAuth(info.id, inputSelectionSetting.name),
                                 value: SIGN.none
                             },
-                            isChecked: true,
+                            isChecked: isSystemInputSelected(info),
                             optionClass: SIGN.none
                         },
                         {
@@ -1491,7 +1546,7 @@ SqlModule.prototype = {
                                 name: getAuth(info.id, inputSelectionSetting.name),
                                 value: SIGN.none
                             },
-                            isChecked: false,
+                            isChecked: !isSystemInputSelected(info),
                             optionClass: SIGN.none
                         }
                     ];
@@ -1499,16 +1554,12 @@ SqlModule.prototype = {
                     const $selectionLine = jqNode("div", { class: seClass.commandLine });
                     $selectionLine.append($radioItem);
                     const $inputLine = jqNode("div", { class: seClass.commandLine });
-                    const inputLabel = upperCase(captions.name, 0);
+                    const idLabel = upperCase(captions.id);
+                    const kanaLabel = "Name Kana";
+                    const kanjiLabel = "Name Kanji";
                     const systemInputName = inputSetting.name.system;
                     const userInputName = inputSetting.name.user;
                     const $systemInputNameContainer = jqNode("div");
-                    const $nameContainer = jqNode("div", { class: systemInputName.class });
-                    const $systemInputNameLabel = jqNode("label").text(inputLabel);
-                    const $idetifier = jqNode("input", { id: getAuth(info.id, systemInputName.ids.identifier), class: eClass.applicationInput });
-                    const $number = jqNode("input", { id: getAuth(info.id, systemInputName.ids.number), class: eClass.applicationInput });
-                    const $name = jqNode("input", { id: getAuth(info.id, systemInputName.ids.name), class: eClass.applicationInput });
-                    eb.listAppend($nameContainer, [$systemInputNameLabel, $idetifier, $number, $name]);
                     const autoIncreamentItemList = [
                         {
                             label: upperCase(increamentCheckSetting.caption, 0),
@@ -1517,28 +1568,124 @@ SqlModule.prototype = {
                                 name: getAuth(info.id, increamentCheckSetting.name),
                                 value: SIGN.none
                             },
-                            isChecked: false,
+                            isChecked: s.autoIncreament,
                             optionClass: SIGN.none
                         }
                     ];
                     const $autoIncreamentContainer = jqNode("div").append(eb.createCheckbox(autoIncreamentItemList).getItem());
-                    eb.listAppend($systemInputNameContainer, [$autoIncreamentContainer, $nameContainer]);
-                    const $userInputNameContainer = jqNode("div", { class: userInputName.class });
-                    const $userInputNameLabel = jqNode("label").text(inputLabel);
-                    const $nameTextarea = jqNode("textarea", { id: getAuth(info.id, userInputName.id), class: eClass.applicationTextarea });
-                    eb.listAppend($userInputNameContainer, [$userInputNameLabel, $nameTextarea]);
+                    const $nameIdContainer = jqNode("div", { class: systemInputName.class });
+                    const $systemInputNameIdLabel = jqNode("label").text(idLabel);
+                    const $identifier = jqNode("input", {
+                        id: getAuth(info.id, systemInputName.ids.identifier),
+                        class: eClass.applicationInput,
+                        value: s.values.system.identifier,
+                        placeholder: upperCase(systemInputName.captions.identifier, 0)
+                    });
+                    const $number = jqNode("input", {
+                        id: getAuth(info.id, systemInputName.ids.number),
+                        class: eClass.applicationInput,
+                        value: s.values.system.number,
+                        placeholder: upperCase(systemInputName.captions.number, 0)
+                    });
+                    new EventHandler($number).addInputEvent(function(e, value) {
+                        const kre = new KeyRegExp(value);
+                        if(!kre.isNumber() || kre.isOverflow(3)) return false;
+                    });
+                    eb.listAppend($nameIdContainer, [$systemInputNameIdLabel, $identifier, $number]);
+                    const $nameKanaContainer = jqNode("div", { class: systemInputName.class });
+                    const $systemInputNameKanaLabel = jqNode("label").text(kanaLabel);
+                    const $lastNameKana = jqNode("input", {
+                        id: getAuth(info.id, systemInputName.ids.name.kana.lastName),
+                        class: eClass.applicationInput,
+                        value: s.values.system.name.kana.lastName,
+                        placeholder: upperCase(systemInputName.captions.name.kana.lastName, 0)
+                    });
+                    const $firstNameKana = jqNode("input", {
+                        id: getAuth(info.id, systemInputName.ids.name.kana.firstName),
+                        class: eClass.applicationInput,
+                        value: s.values.system.name.kana.firstName,
+                        placeholder: upperCase(systemInputName.captions.name.kana.firstName, 0)
+                    });
+                    eb.listAppend($nameKanaContainer, [$systemInputNameKanaLabel, $lastNameKana, $firstNameKana]);
+                    const $nameKanjiContainer = jqNode("div", { class: systemInputName.class });
+                    const $systemInputNameKanjiLabel = jqNode("label").text(kanjiLabel);
+                    const $lastNameKanji = jqNode("input", {
+                        id: getAuth(info.id, systemInputName.ids.name.kanji.lastName),
+                        class: eClass.applicationInput,
+                        value: s.values.system.name.kanji.lastName,
+                        placeholder: upperCase(systemInputName.captions.name.kanji.lastName, 0)
+                    });
+                    const $firstNameKanji = jqNode("input", {
+                        id: getAuth(info.id, systemInputName.ids.name.kanji.firstName),
+                        class: eClass.applicationInput,
+                        value: s.values.system.name.kanji.firstName,
+                        placeholder: upperCase(systemInputName.captions.name.kanji.firstName, 0)
+                    });
+                    eb.listAppend($nameKanjiContainer, [$systemInputNameKanjiLabel, $lastNameKanji, $firstNameKanji]);
+                    eb.listAppend($systemInputNameContainer, [$autoIncreamentContainer, $nameIdContainer, $nameKanaContainer, $nameKanjiContainer]);
+                    const $userInputNameContainer = jqNode("div");
+                    const $userNameKanaContainer = jqNode("div", { class: userInputName.class });
+                    const $userInputNameKanaLabel = jqNode("label").text(kanaLabel);
+                    const $lastNameTextareaKana = jqNode("textarea", {
+                        id: getAuth(info.id, userInputName.ids.name.kana.lastName),
+                        class: eClass.applicationTextarea,
+                        value: s.values.user.name.kana.lastName,
+                        placeholder: upperCase(userInputName.captions.name.kana.lastName, 0)
+                    });
+                    const $firstNameTextareaKana = jqNode("textarea", {
+                        id: getAuth(info.id, userInputName.ids.name.kana.firstName),
+                        class: eClass.applicationTextarea,
+                        value: s.values.user.name.kana.firstName,
+                        placeholder: upperCase(userInputName.captions.name.kana.firstName, 0)
+                    });
+                    eb.listAppend($userNameKanaContainer, [$userInputNameKanaLabel, $lastNameTextareaKana, $firstNameTextareaKana]);
+                    const $userNameKanjiContainer = jqNode("div", { class: userInputName.class });
+                    const $userInputNameKanjiLabel = jqNode("label").text(kanjiLabel);
+                    const $lastNameTextareaKanji = jqNode("textarea", {
+                        id: getAuth(info.id, userInputName.ids.name.kanji.lastName),
+                        class: eClass.applicationTextarea,
+                        value: s.values.user.name.kanji.lastName,
+                        placeholder: upperCase(userInputName.captions.name.kanji.lastName, 0)
+                    });
+                    const $firstNameTextareaKanji = jqNode("textarea", {
+                        id: getAuth(info.id, userInputName.ids.name.kanji.firstName),
+                        class: eClass.applicationTextarea,
+                        value: s.values.user.name.kanji.firstName,
+                        placeholder: upperCase(userInputName.captions.name.kanji.firstName, 0)
+                    });
+                    eb.listAppend($userNameKanjiContainer, [$userInputNameKanjiLabel, $lastNameTextareaKanji, $firstNameTextareaKanji]);
+                    eb.listAppend($userInputNameContainer, [$userNameKanaContainer, $userNameKanjiContainer]);
                     eb.listAppend($inputLine, [$systemInputNameContainer, $userInputNameContainer]);
                     const inputBirth = inputSetting.birth;
                     const birthInputLabel = upperCase(captions.birthday, 0);
                     const $birthLine = jqNode("div", { class: classes(seClass.commandLine, inputBirth.class) });
                     const $birthInputLabel = jqNode("label").text(birthInputLabel);
-                    const $birthInput = jqNode("input", { id: getAuth(info.id, inputBirth.id), class: eClass.applicationInput });
+                    const $birthInput = jqNode("input", { id: getAuth(info.id, inputBirth.id), class: eClass.applicationInput, value: s.values.birth });
+                    new EventHandler($birthInput).addInputEvent(function(e, value) {
+                        const kre = new KeyRegExp(value);
+                        if(!kre.isNumber() || kre.isOverflow(8)) return false;
+                    });
                     eb.listAppend($birthLine, [$birthInputLabel, $birthInput]);
                     eb.listAppend($section, [$title, $selectionLine, $inputLine, $birthLine]);
                     s.injector = {
                         name: {
                             container: { system: $systemInputNameContainer, user: $userInputNameContainer },
-                            input: { system: [$idetifier, $number, $name], user: $nameTextarea  }
+                            input: {
+                                system: {
+                                    identifier: $identifier,
+                                    number: $number,
+                                    name: {
+                                        kana: { lastName: $lastNameKana, firstName: $firstNameKana },
+                                        kanji: { lastName: $lastNameKanji, firstName: $firstNameKanji }
+                                    }
+                                },
+                                user: {
+                                    name: {
+                                        kana: { lastName: $lastNameTextareaKana, firstName: $firstNameTextareaKana },
+                                        kanji: { lastName: $lastNameTextareaKanji, firstName: $firstNameTextareaKanji }
+                                    }
+                                }
+                            }
                         },
                         birth: $birthInput
                     };
@@ -1554,18 +1701,60 @@ SqlModule.prototype = {
                 };
                 const eventHandler = function() {
                     executeList.forEach(function(info) {
-                        const handlerName = getAuth(info.id, inputSelectionSetting.name);
-                        const handler = concatString("input[name=", handlerName, "]");
-                        eb.addEvent(handler, "change", function(e) {
+                        const inputSelectionName = getAuth(info.id, inputSelectionSetting.name);
+                        const autoIncreamentName = getAuth(info.id, increamentCheckSetting.name);
+                        const isHandler = concatString("input[name=", inputSelectionName, "]");
+                        const aiHandler = concatString("input[name=", autoIncreamentName, "]");
+                        new EventHandler($(isHandler)).addEvent("change", function(e) {
                             const target = e.target;
-                            state[info.id][inputSelectionSetting.name] = target.id;
-                            console.log(state);
+                            nbState[info.id][inputSelectionSetting.name] = target.id;
                             initInput(info);
+                        });
+                        new EventHandler($(aiHandler)).addEvent("change", function(e) {
+                            const target = e.target;
+                            nbState[info.id].autoIncreament = target.checked;
                         });
                     });
                 };
                 const callback = function(viewerClose) {
-                    viewerClose();
+                    const dataObj = new Object();
+                    executeList.forEach(function(info) {
+                        const injector = nbState[info.id].injector;
+                        const $nameInput = injector.name.input;
+                        const $birthInput = injector.birth;
+                        dataObj[info.id] = {
+                            system: {
+                                identifier: $nameInput.system.identifier.val(),
+                                number: $nameInput.system.number.val(),
+                                name: {
+                                    kana: {
+                                        lastName: $nameInput.system.name.kana.lastName.val(),
+                                        firstName: $nameInput.system.name.kana.firstName.val()
+                                    },
+                                    kanji: {
+                                        lastName: $nameInput.system.name.kanji.lastName.val(),
+                                        firstName: $nameInput.system.name.kanji.firstName.val()
+                                    }
+                                }
+                            },
+                            user: {
+                                name: {
+                                    kana: {
+                                        lastName: $nameInput.user.name.kana.lastName.val(),
+                                        firstName: $nameInput.user.name.kana.firstName.val()
+                                    },
+                                    kanji: {
+                                        lastName: $nameInput.user.name.kanji.lastName.val(),
+                                        firstName: $nameInput.user.name.kanji.firstName.val()
+                                    }
+                                }
+                            },
+                            birth: $birthInput.val()
+                        };
+                    });
+                    console.log(dataObj);
+                    // dataCopyState.template[menu] = cloneJS(nbState);
+                    // viewerClose();
                 };
                 new Viewer().setContents(menu, buildContents()).open(callback).onLoad(eventHandler);
                 break;
