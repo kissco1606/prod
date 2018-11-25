@@ -105,6 +105,11 @@ function toFullWidth(str) {
         return String.fromCharCode(s.charCodeAt(0) + 65248);
     });
 };
+function toHalfWidth(str) {
+    return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 65248);
+    });
+};
 
 function repetitive(char, size) {
     let setChar = "";
@@ -1925,12 +1930,20 @@ Viewer.prototype = {
     }
 };
 
-const KeyRegExp = function(value) {
+const RegExpUtil = function(value) {
     this.value = value;
 };
-KeyRegExp.prototype = {
+RegExpUtil.prototype = {
+    isEnter: function() {
+        const regExp = /(\r\n|\n)*$/;
+        return regExp.test(this.value);
+    },
     isNumber: function() {
         const regExp = /^\d*$/;
+        return regExp.test(this.value);
+    },
+    isNumberWithFullWidth: function() {
+        const regExp = /^[0-9０-９]*$/;
         return regExp.test(this.value);
     },
     isOverflow: function(size) {

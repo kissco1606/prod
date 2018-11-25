@@ -369,6 +369,9 @@
 #option-template__nb > .viewer-section {
 	padding-bottom: 30px;
 }
+#option-template__nb > .viewer-section:first-child {
+	padding-bottom: 10px;
+}
 #option-template__nb > .viewer-section:last-child {
 	padding-bottom: 0;
 }
@@ -376,48 +379,59 @@
 	font-weight: 600;
 	font-size: 20px;
 }
-#option-template__nb > .viewer-section > .command-line {
+#option-template__nb .command-line {
 	padding: 10px 0;
 }
-#option-template__nb > .viewer-section > .command-line .system-name {
+#option-template__nb > .viewer-section .command-line.system-name {
 	display: flex;
 	flex-direction: row;
 	padding-top: 10px;
 }
-#option-template__nb > .viewer-section > .command-line .system-name > label {
-	width: 120px;
+#option-template__nb > .viewer-section .command-line.system-name > label {
+	width: 150px;
 }
-#option-template__nb > .viewer-section > .command-line .system-name > input {
+#option-template__nb > .viewer-section .command-line.system-name > input {
 	width: 170px;
 	margin-right: 10px;
 }
-#option-template__nb > .viewer-section > .command-line .system-name > input:last-child {
+#option-template__nb > .viewer-section .command-line.system-name > input:last-child {
 	margin-right: 0;
 }
-#option-template__nb > .viewer-section > .command-line .user-name {
+#option-template__nb > .viewer-section .command-line.user-name {
 	display: flex;
 	flex-direction: row;
 	padding-top: 10px;
 }
-#option-template__nb > .viewer-section > .command-line .user-name > label {
-	width: 120px;
+#option-template__nb > .viewer-section .command-line.user-name > label {
+	width: 150px;
 	line-height: 17px;
 }
-#option-template__nb > .viewer-section > .command-line .user-name > textarea {
+#option-template__nb > .viewer-section .command-line.user-name > textarea {
 	width: 170px;
-	height: 50px;
+	height: 70px;
 	margin-right: 10px;
 }
-#option-template__nb > .viewer-section > .command-line .user-name > textarea:last-child {
+#option-template__nb > .viewer-section .command-line.user-name > textarea:last-child {
 	margin-right: 0;
 }
-#option-template__nb > .viewer-section > .command-line.input-birth {
+#option-template__nb > .viewer-section .command-line.system-birth {
 	display: flex;
 	flex-direction: row;
 }
-#option-template__nb > .viewer-section > .command-line.input-birth > label {
-	width: 120px;
+#option-template__nb > .viewer-section .command-line.system-birth > label {
+	width: 150px;
 }
-#option-template__nb > .viewer-section > .command-line.input-birth > input {
+#option-template__nb > .viewer-section .command-line.system-birth > input {
 	width: 350px;
+}
+#option-template__nb > .viewer-section .command-line.user-birth {
+	display: flex;
+	flex-direction: row;
+}
+#option-template__nb > .viewer-section .command-line.user-birth > label {
+	width: 150px;
+}
+#option-template__nb > .viewer-section .command-line.user-birth > textarea {
+	width: 350px;
+	height: 70px;
 }

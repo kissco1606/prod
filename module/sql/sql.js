@@ -1387,376 +1387,275 @@ SqlModule.prototype = {
                 const tables = rules.tables;
                 const base = rules.base;
                 const count = fromData[base].count;
+                const rs = rules.submissionDate;
+                const submissionDate = new DBUtils().getColumnData(fromData, rs.table, rs.column);
                 const isContractorAvailable = count >= 2;
                 const def = {
-                    insured: { id: "insured", name: "insured" },
-                    contractor: { id: "contractor", name: "contractor" }
-                };
-                const setting = {
-                    inputSelection: {
-                        name: "inputSelection",
-                        ids: { system: "system-input", user: "user-input" },
-                        captions: { system: "system input", user: "user input" }
-                    },
-                    increamentCheck: {
-                        name: "increamentCheck",
-                        id: "auto-increament",
-                        caption: "auto increament"
-                    },
-                    input: {
+                    target: { insured: "insured", contractor: "contractor" },
+                    inputType: { system: "system", user: "user" },
+                    elements: {
+                        inputType: {
+                            name: "input-type-radiobox",
+                            labels: { system: "system input", user: "user input" },
+                            ids: { system: "input-type-system_id", user: "input-type-user_id" }
+                        },
+                        increament: {
+                            name: "increament-checkbox",
+                            label: "auto increament",
+                            id: "auto-increament_id"
+                        },
                         name: {
                             system: {
-                                ids: {
-                                    identifier: "system-identifier",
-                                    number: "system-number",
-                                    name: {
-                                        kana: { lastName: "system-name-kana-lastName", firstName: "system-name-kana-firstName" },
-                                        kanji: { lastName: "system-name-kanji-lastName", firstName: "system-name-kanji-firstName" }
-                                    }
+                                labels: {
+                                    identifier: "Identifier",
+                                    id: "ID",
+                                    number: "Number",
+                                    nameKana: "Name Kana",
+                                    nameKanji: "Name Kanji",
+                                    lastNameKana: "Last Name Kana",
+                                    firstNameKana: "First Name Kana",
+                                    lastNameKanji: "Last Name Kanji",
+                                    firstNameKanji: "First Name kanji"
                                 },
-                                captions: {
-                                    identifier: "identifier",
-                                    number: "number",
-                                    name: {
-                                        kana: { lastName: "last name kana", firstName: "first name kana" },
-                                        kanji: { lastName: "last name kanji", firstName: "first name kanji" }
-                                    }
+                                ids: {
+                                    id: "system-name-id",
+                                    number: "system-name-number",
+                                    lastNameKana: "system-name-lastNameKana",
+                                    firstNameKana: "system-name-firstNameKana",
+                                    lastNameKanji: "system-name-lastNameKanji",
+                                    firstNameKanji: "system-name-firstNameKanji"
                                 },
                                 class: "system-name"
                             },
                             user: {
-                                ids: {
-                                    name: {
-                                        kana: { lastName: "user-name-kana-lastName", firstName: "user-name-kana-firstName" },
-                                        kanji: { lastName: "user-name-kanji-lastName", firstName: "user-name-kanji-firstName" }
-                                    }
+                                labels: {
+                                    identifier: "Identifier",
+                                    id: "ID",
+                                    number: "Number",
+                                    nameKana: "Name Kana",
+                                    nameKanji: "Name Kanji",
+                                    lastNameKana: "Last Name Kana",
+                                    firstNameKana: "First Name Kana",
+                                    lastNameKanji: "Last Name Kanji",
+                                    firstNameKanji: "First Name kanji"
                                 },
-                                captions: {
-                                    name: {
-                                        kana: { lastName: "last name kana", firstName: "first name kana" },
-                                        kanji: { lastName: "last name kanji", firstName: "first name kanji" }
-                                    }
+                                ids: {
+                                    id: "user-name-id",
+                                    number: "user-name-number",
+                                    lastNameKana: "user-name-lastNameKana",
+                                    firstNameKana: "user-name-firstNameKana",
+                                    lastNameKanji: "user-name-lastNameKanji",
+                                    firstNameKanji: "user-name-firstNameKanji"
                                 },
                                 class: "user-name"
                             }
                         },
-                        birth: {
-                            id: "birth",
-                            caption: "birthday",
-                            class: "input-birth"
+                        birthday: {
+                            system: {
+                                label: "Birthday",
+                                id: "system-birthday",
+                                class: "system-birth",
+                                format: "YYYYMMDD"
+                            },
+                            user: {
+                                label: "Birthday",
+                                id: "user-birthday",
+                                class: "user-birth",
+                                format: "YYYYMMDD"
+                            }
                         }
                     }
                 };
-                const executeList = isContractorAvailable ? [def.insured, def.contractor] : [def.insured];
-                const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
-                const inputSelectionSetting = setting.inputSelection;
-                const increamentCheckSetting = setting.increamentCheck;
-                const inputSetting = setting.input;
                 const initState = function() {
-                    const state = new Object();
-                    executeList.forEach(function(info) {
-                        state[info.id] = {
-                            inputSelection: getAuth(info.id, inputSelectionSetting.ids.system),
+                    return {
+                        inputType: def.inputType.system,
+                        insured: {
                             autoIncreament: false,
-                            values: {
+                            name: {
                                 system: {
                                     identifier: SIGN.none,
                                     number: SIGN.none,
-                                    name: {
-                                        kana: { lastName: SIGN.none, firstName: SIGN.none },
-                                        kanji: { lastName: SIGN.none, firstName: SIGN.none }
-                                    }
+                                    kana: { lastName: "ヒセイ", firstName: "ヒメイ" },
+                                    kanji: { lastName: "被姓", firstName: "被名" }
                                 },
                                 user: {
-                                    name: {
-                                        kana: { lastName: SIGN.none, firstName: SIGN.none },
-                                        kanji: { lastName: SIGN.none, firstName: SIGN.none }
-                                    }
-                                },
-                                birth: SIGN.none
+                                    kana: { lastName: "Ａ００１ヒセイ", firstName: "Ａ００１ヒメイ" },
+                                    kanji: { lastName: "Ａ００１被姓", firstName: "Ａ００１被名" }
+                                }
                             },
-                            injector: {
-                                name: {
-                                    container: { system: null, user: null },
-                                    input: {
-                                        system: {
-                                            identifier: null,
-                                            number: null,
-                                            name: {
-                                                kana: { lastName: null, firstName: null },
-                                                kanji: { lastName: null, firstName: null }
-                                            }
-                                        },
-                                        user: {
-                                            name: {
-                                                kana: { lastName: null, firstName: null },
-                                                kanji: { lastName: null, firstName: null }
-                                            }
-                                        }
-                                    }
+                            birthday: { system: SIGN.none, user: SIGN.none }
+                        },
+                        contractor: {
+                            autoIncreament: false,
+                            name: {
+                                system: {
+                                    id: SIGN.none,
+                                    number: SIGN.none,
+                                    kana: { lastName: "ケイセイ", firstName: "ケイメイ" },
+                                    kanji: { lastName: "契姓", firstName: "契名" }
                                 },
-                                birth: null
-                            }
-                        };
-                    });
-                    return state;
+                                user: {
+                                    kana: { lastName: "Ａ００１ケイセイ", firstName: "Ａ００１ケイメイ" },
+                                    kanji: { lastName: "Ａ００１契姓", firstName: "Ａ００１契名" }
+                                }
+                            },
+                            birthday: { system: SIGN.none, user: SIGN.none }
+                        }
+                    };
                 };
                 const nbState = cloneJS(!isVoid(dataCopyState.template[menu]) ? dataCopyState.template[menu] : initState());
-                const isSystemInputSelected = function(info) {
-                    return nbState[info.id].inputSelection === getAuth(info.id, inputSelectionSetting.ids.system);
+                const isSystemInput = function() {
+                    return nbState.inputType === def.inputType.system;
                 };
-                const initInput = function(info) {
-                    const s = nbState[info.id];
-                    const containerInjector = s.injector.name.container;
-                    switch(s.inputSelection) {
-                        case getAuth(info.id, inputSelectionSetting.ids.system): {
-                            containerInjector.system.removeClass(eClass.hide);
-                            containerInjector.user.addClass(eClass.hide);
-                            break;
-                        }
-                        case getAuth(info.id, inputSelectionSetting.ids.user): {
-                            containerInjector.system.addClass(eClass.hide);
-                            containerInjector.user.removeClass(eClass.hide);
-                            break;
-                        }
+                const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
+                const executeList = isContractorAvailable ? [def.target.insured, def.target.contractor] : [def.target.insured];
+                const $container = jqNode("div", { id: seId.optionTemplateNB });
+                const $inputTypeSection = jqNode("div", { class: eClass.viewerSection });
+                const $inputTypeLine = jqNode("div", { class: seClass.commandLine }).css({ "padding-top": 0 });
+                const inputTypeRadioItemList = [
+                    {
+                        label: upperCase(def.elements.inputType.labels.system, 0),
+                        attributes: {
+                            id: def.elements.inputType.ids.system,
+                            name: def.elements.inputType.name,
+                            value: def.inputType.system
+                        },
+                        isChecked: isSystemInput(),
+                        optionClass: SIGN.none
+                    },
+                    {
+                        label:  upperCase(def.elements.inputType.labels.user, 0),
+                        attributes: {
+                            id: def.elements.inputType.ids.user,
+                            name: def.elements.inputType.name,
+                            value: def.inputType.user
+                        },
+                        isChecked: !isSystemInput(),
+                        optionClass: SIGN.none
                     }
-                };
-                const buildSection = function(info) {
-                    const s = nbState[info.id];
-                    const title = upperCase(info.name, 0);
-                    const $section = jqNode("div", { class: eClass.viewerSection });
-                    const $title = jqNode("div", { class: eClass.sectionTitle }).text(title);
-                    const systemInputCaption = upperCase(inputSelectionSetting.captions.system, 0);
-                    const userInputCaption = upperCase(inputSelectionSetting.captions.user, 0);
-                    const inputSelectionRadioItemList = [
-                        {
-                            label: systemInputCaption,
-                            attributes: {
-                                id: getAuth(info.id, inputSelectionSetting.ids.system),
-                                name: getAuth(info.id, inputSelectionSetting.name),
-                                value: SIGN.none
-                            },
-                            isChecked: isSystemInputSelected(info),
-                            optionClass: SIGN.none
-                        },
-                        {
-                            label: userInputCaption,
-                            attributes: {
-                                id: getAuth(info.id, inputSelectionSetting.ids.user),
-                                name: getAuth(info.id, inputSelectionSetting.name),
-                                value: SIGN.none
-                            },
-                            isChecked: !isSystemInputSelected(info),
-                            optionClass: SIGN.none
-                        }
-                    ];
-                    const $radioItem = eb.createRadio(inputSelectionRadioItemList).getItem();
-                    const $selectionLine = jqNode("div", { class: seClass.commandLine });
-                    $selectionLine.append($radioItem);
-                    const $inputLine = jqNode("div", { class: seClass.commandLine });
-                    const idLabel = upperCase(captions.id);
-                    const kanaLabel = "Name Kana";
-                    const kanjiLabel = "Name Kanji";
-                    const systemInputName = inputSetting.name.system;
-                    const userInputName = inputSetting.name.user;
-                    const $systemInputNameContainer = jqNode("div");
-                    const autoIncreamentItemList = [
-                        {
-                            label: upperCase(increamentCheckSetting.caption, 0),
-                            attributes: {
-                                id: getAuth(info.id, increamentCheckSetting.id),
-                                name: getAuth(info.id, increamentCheckSetting.name),
-                                value: SIGN.none
-                            },
-                            isChecked: s.autoIncreament,
-                            optionClass: SIGN.none
-                        }
-                    ];
-                    const $autoIncreamentContainer = jqNode("div").append(eb.createCheckbox(autoIncreamentItemList).getItem());
-                    const $nameIdContainer = jqNode("div", { class: systemInputName.class });
-                    const $systemInputNameIdLabel = jqNode("label").text(idLabel);
-                    const $identifier = jqNode("input", {
-                        id: getAuth(info.id, systemInputName.ids.identifier),
-                        class: eClass.applicationInput,
-                        value: s.values.system.identifier,
-                        placeholder: upperCase(systemInputName.captions.identifier, 0)
-                    });
-                    const $number = jqNode("input", {
-                        id: getAuth(info.id, systemInputName.ids.number),
-                        class: eClass.applicationInput,
-                        value: s.values.system.number,
-                        placeholder: upperCase(systemInputName.captions.number, 0)
-                    });
-                    new EventHandler($number).addInputEvent(function(e, value) {
-                        const kre = new KeyRegExp(value);
-                        if(!kre.isNumber() || kre.isOverflow(3)) return false;
-                    });
-                    eb.listAppend($nameIdContainer, [$systemInputNameIdLabel, $identifier, $number]);
-                    const $nameKanaContainer = jqNode("div", { class: systemInputName.class });
-                    const $systemInputNameKanaLabel = jqNode("label").text(kanaLabel);
-                    const $lastNameKana = jqNode("input", {
-                        id: getAuth(info.id, systemInputName.ids.name.kana.lastName),
-                        class: eClass.applicationInput,
-                        value: s.values.system.name.kana.lastName,
-                        placeholder: upperCase(systemInputName.captions.name.kana.lastName, 0)
-                    });
-                    const $firstNameKana = jqNode("input", {
-                        id: getAuth(info.id, systemInputName.ids.name.kana.firstName),
-                        class: eClass.applicationInput,
-                        value: s.values.system.name.kana.firstName,
-                        placeholder: upperCase(systemInputName.captions.name.kana.firstName, 0)
-                    });
-                    eb.listAppend($nameKanaContainer, [$systemInputNameKanaLabel, $lastNameKana, $firstNameKana]);
-                    const $nameKanjiContainer = jqNode("div", { class: systemInputName.class });
-                    const $systemInputNameKanjiLabel = jqNode("label").text(kanjiLabel);
-                    const $lastNameKanji = jqNode("input", {
-                        id: getAuth(info.id, systemInputName.ids.name.kanji.lastName),
-                        class: eClass.applicationInput,
-                        value: s.values.system.name.kanji.lastName,
-                        placeholder: upperCase(systemInputName.captions.name.kanji.lastName, 0)
-                    });
-                    const $firstNameKanji = jqNode("input", {
-                        id: getAuth(info.id, systemInputName.ids.name.kanji.firstName),
-                        class: eClass.applicationInput,
-                        value: s.values.system.name.kanji.firstName,
-                        placeholder: upperCase(systemInputName.captions.name.kanji.firstName, 0)
-                    });
-                    eb.listAppend($nameKanjiContainer, [$systemInputNameKanjiLabel, $lastNameKanji, $firstNameKanji]);
-                    eb.listAppend($systemInputNameContainer, [$autoIncreamentContainer, $nameIdContainer, $nameKanaContainer, $nameKanjiContainer]);
-                    const $userInputNameContainer = jqNode("div");
-                    const $userNameKanaContainer = jqNode("div", { class: userInputName.class });
-                    const $userInputNameKanaLabel = jqNode("label").text(kanaLabel);
-                    const $lastNameTextareaKana = jqNode("textarea", {
-                        id: getAuth(info.id, userInputName.ids.name.kana.lastName),
-                        class: eClass.applicationTextarea,
-                        value: s.values.user.name.kana.lastName,
-                        placeholder: upperCase(userInputName.captions.name.kana.lastName, 0)
-                    });
-                    const $firstNameTextareaKana = jqNode("textarea", {
-                        id: getAuth(info.id, userInputName.ids.name.kana.firstName),
-                        class: eClass.applicationTextarea,
-                        value: s.values.user.name.kana.firstName,
-                        placeholder: upperCase(userInputName.captions.name.kana.firstName, 0)
-                    });
-                    eb.listAppend($userNameKanaContainer, [$userInputNameKanaLabel, $lastNameTextareaKana, $firstNameTextareaKana]);
-                    const $userNameKanjiContainer = jqNode("div", { class: userInputName.class });
-                    const $userInputNameKanjiLabel = jqNode("label").text(kanjiLabel);
-                    const $lastNameTextareaKanji = jqNode("textarea", {
-                        id: getAuth(info.id, userInputName.ids.name.kanji.lastName),
-                        class: eClass.applicationTextarea,
-                        value: s.values.user.name.kanji.lastName,
-                        placeholder: upperCase(userInputName.captions.name.kanji.lastName, 0)
-                    });
-                    const $firstNameTextareaKanji = jqNode("textarea", {
-                        id: getAuth(info.id, userInputName.ids.name.kanji.firstName),
-                        class: eClass.applicationTextarea,
-                        value: s.values.user.name.kanji.firstName,
-                        placeholder: upperCase(userInputName.captions.name.kanji.firstName, 0)
-                    });
-                    eb.listAppend($userNameKanjiContainer, [$userInputNameKanjiLabel, $lastNameTextareaKanji, $firstNameTextareaKanji]);
-                    eb.listAppend($userInputNameContainer, [$userNameKanaContainer, $userNameKanjiContainer]);
-                    eb.listAppend($inputLine, [$systemInputNameContainer, $userInputNameContainer]);
-                    const inputBirth = inputSetting.birth;
-                    const birthInputLabel = upperCase(captions.birthday, 0);
-                    const $birthLine = jqNode("div", { class: classes(seClass.commandLine, inputBirth.class) });
-                    const $birthInputLabel = jqNode("label").text(birthInputLabel);
-                    const $birthInput = jqNode("input", { id: getAuth(info.id, inputBirth.id), class: eClass.applicationInput, value: s.values.birth });
-                    new EventHandler($birthInput).addInputEvent(function(e, value) {
-                        const kre = new KeyRegExp(value);
-                        if(!kre.isNumber() || kre.isOverflow(8)) return false;
-                    });
-                    eb.listAppend($birthLine, [$birthInputLabel, $birthInput]);
-                    eb.listAppend($section, [$title, $selectionLine, $inputLine, $birthLine]);
-                    s.injector = {
-                        name: {
-                            container: { system: $systemInputNameContainer, user: $userInputNameContainer },
-                            input: {
-                                system: {
-                                    identifier: $identifier,
-                                    number: $number,
-                                    name: {
-                                        kana: { lastName: $lastNameKana, firstName: $firstNameKana },
-                                        kanji: { lastName: $lastNameKanji, firstName: $firstNameKanji }
-                                    }
-                                },
-                                user: {
-                                    name: {
-                                        kana: { lastName: $lastNameTextareaKana, firstName: $firstNameTextareaKana },
-                                        kanji: { lastName: $lastNameTextareaKanji, firstName: $firstNameTextareaKanji }
-                                    }
-                                }
-                            }
-                        },
-                        birth: $birthInput
-                    };
-                    initInput(info);
-                    return $section;
-                };
+                ];
+                const $inputTypeRadioItem = eb.createRadio(inputTypeRadioItemList).getItem();
+                $inputTypeLine.append($inputTypeRadioItem).appendTo($inputTypeSection);
+                $container.append($inputTypeSection);
+                const elementInjector = new Object();
+                const systemNameDef = def.elements.name.system;
+                const systemBirthDef = def.elements.birthday.system;
+                const userNameDef = def.elements.name.user;
+                const userBirthDef = def.elements.birthday.user;
                 const buildContents = function() {
-                    const $container = jqNode("div", { id: seId.optionTemplateNB });
-                    executeList.forEach(function(info) {
-                        $container.append(buildSection(info));
-                    });
-                    return $container;
-                };
-                const eventHandler = function() {
-                    executeList.forEach(function(info) {
-                        const inputSelectionName = getAuth(info.id, inputSelectionSetting.name);
-                        const autoIncreamentName = getAuth(info.id, increamentCheckSetting.name);
-                        const isHandler = concatString("input[name=", inputSelectionName, "]");
-                        const aiHandler = concatString("input[name=", autoIncreamentName, "]");
-                        new EventHandler($(isHandler)).addEvent("change", function(e) {
-                            const target = e.target;
-                            nbState[info.id][inputSelectionSetting.name] = target.id;
-                            initInput(info);
+                    executeList.forEach(function(targetId) {
+                        const state = nbState[targetId];
+                        const $section = jqNode("div", { class: eClass.viewerSection });
+                        const $title = jqNode("div", { class: eClass.sectionTitle }).text(upperCase(targetId, 0));
+                        const $systemContainer = jqNode("div").css({ "padding-top": "10px" });
+                        const $increamentLine = jqNode("div", { class: seClass.commandLine });
+                        const increamentCheckboxItemList = [
+                            {
+                                label: upperCase(def.elements.increament.label, 0),
+                                attributes: {
+                                    id: getAuth(targetId, def.elements.increament.id),
+                                    name: getAuth(targetId, def.elements.increament.name),
+                                    value: SIGN.none
+                                },
+                                isChecked: state.autoIncreament,
+                                optionClass: SIGN.none
+                            }
+                        ];
+                        const $increamentCheckboxItem = eb.createCheckbox(increamentCheckboxItemList).getItem();
+                        $increamentLine.append($increamentCheckboxItem);
+                        const $systemNameIdentifierLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
+                        const $systemNameIdentifierLabel = jqNode("label").text(systemNameDef.labels.identifier);
+                        const $systemNameIdInput = jqNode("input", { id: systemNameDef.ids.id, class: eClass.applicationInput, placeholder: systemNameDef.labels.id, value: state.name.system.id });
+                        const $systemNameNumberInput = jqNode("input", { id: systemNameDef.ids.number, class: eClass.applicationInput, placeholder: systemNameDef.labels.number, value: state.name.system.number });
+                        new EventHandler($systemNameNumberInput).addInputEvent(function(e, value) {
+                            const exp = new RegExpUtil(value);
+                            if(!exp.isNumberWithFullWidth() || exp.isOverflow(3)) return false;
                         });
-                        new EventHandler($(aiHandler)).addEvent("change", function(e) {
+                        eb.listAppend($systemNameIdentifierLine, [$systemNameIdentifierLabel, $systemNameIdInput, $systemNameNumberInput]);
+                        const $systemNameKanaLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
+                        const $systemNameKanaLabel = jqNode("label").text(systemNameDef.labels.nameKana);
+                        const $systemNameKanaLastNameInput = jqNode("input", { id: systemNameDef.ids.lastNameKana, class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKana, value: state.name.system.kana.lastName });
+                        const $systemNameKanaFirstNameInput = jqNode("input", { id: systemNameDef.ids.firstNameKana, class: eClass.applicationInput, placeholder: systemNameDef.labels.firstNameKana, value: state.name.system.kana.firstName });
+                        eb.listAppend($systemNameKanaLine, [$systemNameKanaLabel, $systemNameKanaLastNameInput, $systemNameKanaFirstNameInput]);
+                        const $systemNameKanjiLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
+                        const $systemNameKanjiLabel = jqNode("label").text(systemNameDef.labels.nameKanji);
+                        const $systemNameKanjiLastNameInput = jqNode("input", { id: systemNameDef.ids.lastNameKanji, class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKanji, value: state.name.system.kanji.lastName });
+                        const $systemNameKanjiFirstNameInput = jqNode("input", { id: systemNameDef.ids.firstNameKanji, class: eClass.applicationInput, placeholder: systemNameDef.labels.firstNameKanji, value: state.name.system.kanji.firstName });
+                        eb.listAppend($systemNameKanjiLine, [$systemNameKanjiLabel, $systemNameKanjiLastNameInput, $systemNameKanjiFirstNameInput]);
+                        const $systemBirthLine = jqNode("div", { class: classes(seClass.commandLine, systemBirthDef.class) });
+                        const $systemBirthLabel = jqNode("label").text(systemBirthDef.label);
+                        const $systemBirthInput = jqNode("input", { id: systemBirthDef.id, class: eClass.applicationInput, placeholder: systemBirthDef.format, value: state.birthday.system });
+                        eb.listAppend($systemBirthLine, [$systemBirthLabel, $systemBirthInput]);
+                        eb.listAppend($systemContainer, [$increamentLine, $systemNameIdentifierLine, $systemNameKanaLine, $systemNameKanjiLine, $systemBirthLine]);
+                        const $userContainer = jqNode("div").css({ "padding-top": "10px" });;
+                        const $userNameKanaLine = jqNode("div", { class: classes(seClass.commandLine, userNameDef.class) });
+                        const $userNameKanaLabel = jqNode("label").text(userNameDef.labels.nameKana);
+                        const $userNameKanaLastNameInput = jqNode("textarea", { id: userNameDef.ids.lastNameKana, class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKana, value: state.name.user.kana.lastName });
+                        const $userNameKanaFirstNameInput = jqNode("textarea", { id: userNameDef.ids.firstNameKana, class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKana, value: state.name.user.kana.firstName });
+                        eb.listAppend($userNameKanaLine, [$userNameKanaLabel, $userNameKanaLastNameInput, $userNameKanaFirstNameInput]);
+                        const $userNameKanjiLine = jqNode("div", { class: classes(seClass.commandLine, userNameDef.class) });
+                        const $userNameKanjiLabel = jqNode("label").text(userNameDef.labels.nameKanji);
+                        const $userNameKanjiLastNameInput = jqNode("textarea", { id: userNameDef.ids.lastNameKanji, class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKanji, value: state.name.user.kanji.lastName });
+                        const $userNameKanjiFirstNameInput = jqNode("textarea", { id: userNameDef.ids.firstNameKanji, class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKanji, value: state.name.user.kanji.firstName });
+                        eb.listAppend($userNameKanjiLine, [$userNameKanjiLabel, $userNameKanjiLastNameInput, $userNameKanjiFirstNameInput]);
+                        const $userBirthLine = jqNode("div", { class: classes(seClass.commandLine, userBirthDef.class) });
+                        const $userBirthLabel = jqNode("label").text(userBirthDef.label);
+                        const $userBirthInput = jqNode("textarea", { id: userBirthDef.id, class: eClass.applicationTextarea, placeholder: userBirthDef.format, value: state.birthday.user });
+                        eb.listAppend($userBirthLine, [$userBirthLabel, $userBirthInput]);
+                        eb.listAppend($userContainer, [$userNameKanaLine, $userNameKanjiLine, $userBirthLine]);
+                        elementInjector[targetId] = { system: $systemContainer, user: $userContainer };
+                        $container.append(eb.listAppend($section, [$title, $systemContainer, $userContainer]));
+                    });
+                };
+                const initInputType = function() {
+                    executeList.forEach(function(targetId) {
+                        const injector = elementInjector[targetId];
+                        if(isSystemInput()) {
+                            injector.system.removeClass(eClass.hide);
+                            injector.user.addClass(eClass.hide);
+                        }
+                        else {
+                            injector.system.addClass(eClass.hide);
+                            injector.user.removeClass(eClass.hide);
+                        }
+                    });
+                };
+                const setEvent = function() {
+                    const inputTypeElement = concatString("input[name=", def.elements.inputType.name, "]");
+                    new EventHandler($(inputTypeElement)).addEvent("change", function(e) {
+                        const target = e.target;
+                        nbState.inputType = target.value;
+                        initInputType();
+                    });
+                    executeList.forEach(function(targetId) {
+                        const increamentElement = concatString("input[name=", getAuth(targetId, def.elements.increament.name), "]");
+                        new EventHandler($(increamentElement)).addEvent("change", function(e) {
                             const target = e.target;
-                            nbState[info.id].autoIncreament = target.checked;
+                            nbState[targetId].autoIncreament = target.checked;
                         });
                     });
                 };
-                const callback = function(viewerClose) {
-                    const dataObj = new Object();
-                    executeList.forEach(function(info) {
-                        const injector = nbState[info.id].injector;
-                        const $nameInput = injector.name.input;
-                        const $birthInput = injector.birth;
-                        dataObj[info.id] = {
-                            system: {
-                                identifier: $nameInput.system.identifier.val(),
-                                number: $nameInput.system.number.val(),
-                                name: {
-                                    kana: {
-                                        lastName: $nameInput.system.name.kana.lastName.val(),
-                                        firstName: $nameInput.system.name.kana.firstName.val()
-                                    },
-                                    kanji: {
-                                        lastName: $nameInput.system.name.kanji.lastName.val(),
-                                        firstName: $nameInput.system.name.kanji.firstName.val()
-                                    }
-                                }
-                            },
-                            user: {
-                                name: {
-                                    kana: {
-                                        lastName: $nameInput.user.name.kana.lastName.val(),
-                                        firstName: $nameInput.user.name.kana.firstName.val()
-                                    },
-                                    kanji: {
-                                        lastName: $nameInput.user.name.kanji.lastName.val(),
-                                        firstName: $nameInput.user.name.kanji.firstName.val()
-                                    }
-                                }
-                            },
-                            birth: $birthInput.val()
-                        };
-                    });
+                const callback = function(viewerClaose) {
+                    // const isSystemType = isSystemInput();
+                    const dataObj = {
+                        systemInputId: jqById(systemNameDef.ids.id).val(),
+                        systemInputNumber: jqById(systemNameDef.ids.number).val(),
+                        systemInputKanaLastName: jqById(systemNameDef.ids.lastNameKana).val(),
+                        systemInputKanaFirstname: jqById(systemNameDef.ids.firstNameKana).val(),
+                        systemInputKanjiLastName: jqById(systemNameDef.ids.lastNameKanji).val(),
+                        systemInputKanjiFirstname: jqById(systemNameDef.ids.firstNameKanji).val(),
+                        systemInputBirthday: jqById(systemBirthDef.id).val(),
+                        userInputKanaLastName: jqById(userNameDef.ids.lastNameKana).val(),
+                        userInputKanaFirstname: jqById(userNameDef.ids.firstNameKana).val(),
+                        userInputKanjiLastName: jqById(userNameDef.ids.lastNameKanji).val(),
+                        userInputKanjiFirstname: jqById(userNameDef.ids.firstNameKanji).val(),
+                        userInputBirthday: jqById(userBirthDef.id).val()
+                    };
                     console.log(dataObj);
-                    // dataCopyState.template[menu] = cloneJS(nbState);
-                    // viewerClose();
                 };
-                new Viewer().setContents(menu, buildContents()).open(callback).onLoad(eventHandler);
+                buildContents();
+                initInputType();
+                new Viewer().setContents(menu, $container).open(callback).onLoad(setEvent);
                 break;
             }
             default: {
@@ -2972,5 +2871,11 @@ DBUtils.prototype = {
             command.Parameters.Append(command.CreateParameter("?", commandType.adVarWChar, commandType.adParamInput, 100, item));
         });
         return this;
+    },
+    getColumnData: function(data, table, column) {
+        const tableData = data[table];
+        if(!tableData) return null;
+        const index = tableData.name.indexOf(column);
+        return tableData.data[0][index];
     }
 };
