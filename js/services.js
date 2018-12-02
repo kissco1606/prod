@@ -1949,6 +1949,10 @@ RegExpUtil.prototype = {
     isOverflow: function(size) {
         return this.value.length > size;
     },
+    isYYYYMMDD: function() {
+        const regExp = new RegExp("^((19|20|21)[0-9]{2})((0[1-9])|(1[0-2]))((0[1-9])|([1-2][0-9])|([3][0-1]))$", "g");
+        return regExp.test(this.value);
+    },
     isNot: function(regExp) {
         return !regExp.test(this.value);
     }

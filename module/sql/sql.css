@@ -382,6 +382,11 @@
 #option-template__nb .command-line {
 	padding: 10px 0;
 }
+#option-template__nb > .viewer-section .command-line.system-increment {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
 #option-template__nb > .viewer-section .command-line.system-name {
 	display: flex;
 	flex-direction: row;

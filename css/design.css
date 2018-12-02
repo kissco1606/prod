@@ -142,9 +142,14 @@ input[type=checkbox]:checked + .checkbox:before { opacity: 1; }
 .rc-color__default.checkbox:hover:after
 { border-color: #53b300; }
 
-.button-disable {
+.disable {
     background-color: #ccc !important;
-    cursor: default !important;    
+    cursor: default !important;
+}
+.readonly {
+    background-color: #eee !important;
+    cursor: default !important;
+    pointer-events: none;
 }
 
 .button--colored:hover, .button--colored:focus { opacity: .8; }

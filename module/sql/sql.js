@@ -316,7 +316,7 @@ SqlModule.prototype = {
         const msgTypes = _this.Define.TYPES.message;
         const result = {
             error: false,
-            message: null
+            message: SIGN.none
         };
         const argumentsList = Array.prototype.slice.call(arguments);
         const errorMsg = new Array();
@@ -676,7 +676,7 @@ SqlModule.prototype = {
         const $timer = jqNode("div", { id: seId.queryTimer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
         const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
-        const $cancelButton = jqNode("button", { class: classes(eClass.buttonColorOrange, eClass.buttonDisable) }).text(upperCase(captions.cancel));
+        const $cancelButton = jqNode("button", { class: classes(eClass.buttonColorOrange, eClass.disable) }).text(upperCase(captions.cancel));
         $cancelButton.prop("disabled", true);
         [$execButton].forEach(function(item) { $actionArea.append(item); });
         const $queryEditor = jqNode("div", { id: seId.queryEditor });
@@ -736,7 +736,6 @@ SqlModule.prototype = {
         const captions = _this.Define.CAPTIONS;
         const qcState = _this.state.queryCommand;
         const $card = jqById(seId.queryCommandCard);
-        const $cardContents = $card.find(concatString(".", eClass.cardContents));
         const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
         const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
         const $timer = jqById(seId.queryTimer);
@@ -745,7 +744,7 @@ SqlModule.prototype = {
                 const getTimerView = function(time) {
                     return concatString("Elapsed time : ", time, "sec");
                 };
-                qcState.element.removeClass(eClass.buttonDisable);
+                qcState.element.removeClass(eClass.disable);
                 qcState.element.prop("disabled", false);
                 qcState.phase = phase;
                 let queryTimeCounter = 0;
@@ -788,7 +787,7 @@ SqlModule.prototype = {
             }
             default: {
                 setTimeout(function() {
-                    qcState.element.addClass(eClass.buttonDisable);
+                    qcState.element.addClass(eClass.disable);
                     qcState.element.prop("disabled", true);
                     qcState.phase = null;
                     clearInterval(qcState.timer);
@@ -1399,10 +1398,18 @@ SqlModule.prototype = {
                             labels: { system: "system input", user: "user input" },
                             ids: { system: "input-type-system_id", user: "input-type-user_id" }
                         },
-                        increament: {
-                            name: "increament-checkbox",
-                            label: "auto increament",
-                            id: "auto-increament_id"
+                        increment: {
+                            checkbox: {
+                                name: "increment-checkbox",
+                                label: "Auto increment",
+                                id: "auto-increment-checkbox_id"
+                            },
+                            count: {
+                                name: "increment-count",
+                                label: "Count",
+                                id: "auto-increment-count_id"
+                            },
+                            class: "system-increment"
                         },
                         name: {
                             system: {
@@ -1429,9 +1436,6 @@ SqlModule.prototype = {
                             },
                             user: {
                                 labels: {
-                                    identifier: "Identifier",
-                                    id: "ID",
-                                    number: "Number",
                                     nameKana: "Name Kana",
                                     nameKanji: "Name Kanji",
                                     lastNameKana: "Last Name Kana",
@@ -1440,8 +1444,6 @@ SqlModule.prototype = {
                                     firstNameKanji: "First Name kanji"
                                 },
                                 ids: {
-                                    id: "user-name-id",
-                                    number: "user-name-number",
                                     lastNameKana: "user-name-lastNameKana",
                                     firstNameKana: "user-name-firstNameKana",
                                     lastNameKanji: "user-name-lastNameKanji",
@@ -1470,7 +1472,10 @@ SqlModule.prototype = {
                     return {
                         inputType: def.inputType.system,
                         insured: {
-                            autoIncreament: false,
+                            increment: {
+                                available: true,
+                                count: SIGN.none
+                            },
                             name: {
                                 system: {
                                     identifier: SIGN.none,
@@ -1486,7 +1491,10 @@ SqlModule.prototype = {
                             birthday: { system: SIGN.none, user: SIGN.none }
                         },
                         contractor: {
-                            autoIncreament: false,
+                            increment: {
+                                available: true,
+                                count: SIGN.none
+                            },
                             name: {
                                 system: {
                                     id: SIGN.none,
@@ -1538,6 +1546,7 @@ SqlModule.prototype = {
                 $inputTypeLine.append($inputTypeRadioItem).appendTo($inputTypeSection);
                 $container.append($inputTypeSection);
                 const elementInjector = new Object();
+                const incrementDef = def.elements.increment;
                 const systemNameDef = def.elements.name.system;
                 const systemBirthDef = def.elements.birthday.system;
                 const userNameDef = def.elements.name.user;
@@ -1548,25 +1557,32 @@ SqlModule.prototype = {
                         const $section = jqNode("div", { class: eClass.viewerSection });
                         const $title = jqNode("div", { class: eClass.sectionTitle }).text(upperCase(targetId, 0));
                         const $systemContainer = jqNode("div").css({ "padding-top": "10px" });
-                        const $increamentLine = jqNode("div", { class: seClass.commandLine });
-                        const increamentCheckboxItemList = [
+                        const $incrementLine = jqNode("div", { class: classes(seClass.commandLine, incrementDef.class) });
+                        const incrementCheckboxItemList = [
                             {
-                                label: upperCase(def.elements.increament.label, 0),
+                                label: incrementDef.checkbox.label,
                                 attributes: {
-                                    id: getAuth(targetId, def.elements.increament.id),
-                                    name: getAuth(targetId, def.elements.increament.name),
+                                    id: getAuth(targetId, incrementDef.checkbox.id),
+                                    name: getAuth(targetId, incrementDef.checkbox.name),
                                     value: SIGN.none
                                 },
-                                isChecked: state.autoIncreament,
+                                isChecked: state.increment.available,
                                 optionClass: SIGN.none
                             }
                         ];
-                        const $increamentCheckboxItem = eb.createCheckbox(increamentCheckboxItemList).getItem();
-                        $increamentLine.append($increamentCheckboxItem);
+                        const $incrementCheckboxItem = eb.createCheckbox(incrementCheckboxItemList).getItem();
+                        const $incrementCountInput = jqNode("input", { id: getAuth(targetId, incrementDef.count.id), class: eClass.applicationInput, placeholder: incrementDef.count.label, value: state.increment.count });
+                        $incrementCountInput.css({ "width": "50px", "margin-left": "10px", "margin-bottom": "5px" });
+                        new EventHandler($incrementCountInput).addInputEvent(function(e, value) {
+                            const exp = new RegExpUtil(value);
+                            if(!exp.isNumber() || exp.isOverflow(3)) return false;
+                        });
+                        initIncrementCount(targetId, $incrementCountInput);
+                        eb.listAppend($incrementLine, [$incrementCheckboxItem, $incrementCountInput]);
                         const $systemNameIdentifierLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
                         const $systemNameIdentifierLabel = jqNode("label").text(systemNameDef.labels.identifier);
-                        const $systemNameIdInput = jqNode("input", { id: systemNameDef.ids.id, class: eClass.applicationInput, placeholder: systemNameDef.labels.id, value: state.name.system.id });
-                        const $systemNameNumberInput = jqNode("input", { id: systemNameDef.ids.number, class: eClass.applicationInput, placeholder: systemNameDef.labels.number, value: state.name.system.number });
+                        const $systemNameIdInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.id), class: eClass.applicationInput, placeholder: systemNameDef.labels.id, value: state.name.system.id });
+                        const $systemNameNumberInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.number), class: eClass.applicationInput, placeholder: systemNameDef.labels.number, value: state.name.system.number });
                         new EventHandler($systemNameNumberInput).addInputEvent(function(e, value) {
                             const exp = new RegExpUtil(value);
                             if(!exp.isNumberWithFullWidth() || exp.isOverflow(3)) return false;
@@ -1574,33 +1590,33 @@ SqlModule.prototype = {
                         eb.listAppend($systemNameIdentifierLine, [$systemNameIdentifierLabel, $systemNameIdInput, $systemNameNumberInput]);
                         const $systemNameKanaLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
                         const $systemNameKanaLabel = jqNode("label").text(systemNameDef.labels.nameKana);
-                        const $systemNameKanaLastNameInput = jqNode("input", { id: systemNameDef.ids.lastNameKana, class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKana, value: state.name.system.kana.lastName });
-                        const $systemNameKanaFirstNameInput = jqNode("input", { id: systemNameDef.ids.firstNameKana, class: eClass.applicationInput, placeholder: systemNameDef.labels.firstNameKana, value: state.name.system.kana.firstName });
+                        const $systemNameKanaLastNameInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.lastNameKana), class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKana, value: state.name.system.kana.lastName });
+                        const $systemNameKanaFirstNameInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.firstNameKana), class: eClass.applicationInput, placeholder: systemNameDef.labels.firstNameKana, value: state.name.system.kana.firstName });
                         eb.listAppend($systemNameKanaLine, [$systemNameKanaLabel, $systemNameKanaLastNameInput, $systemNameKanaFirstNameInput]);
                         const $systemNameKanjiLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
                         const $systemNameKanjiLabel = jqNode("label").text(systemNameDef.labels.nameKanji);
-                        const $systemNameKanjiLastNameInput = jqNode("input", { id: systemNameDef.ids.lastNameKanji, class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKanji, value: state.name.system.kanji.lastName });
-                        const $systemNameKanjiFirstNameInput = jqNode("input", { id: systemNameDef.ids.firstNameKanji, class: eClass.applicationInput, placeholder: systemNameDef.labels.firstNameKanji, value: state.name.system.kanji.firstName });
+                        const $systemNameKanjiLastNameInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.lastNameKanji), class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKanji, value: state.name.system.kanji.lastName });
+                        const $systemNameKanjiFirstNameInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.firstNameKanji), class: eClass.applicationInput, placeholder: systemNameDef.labels.firstNameKanji, value: state.name.system.kanji.firstName });
                         eb.listAppend($systemNameKanjiLine, [$systemNameKanjiLabel, $systemNameKanjiLastNameInput, $systemNameKanjiFirstNameInput]);
                         const $systemBirthLine = jqNode("div", { class: classes(seClass.commandLine, systemBirthDef.class) });
                         const $systemBirthLabel = jqNode("label").text(systemBirthDef.label);
-                        const $systemBirthInput = jqNode("input", { id: systemBirthDef.id, class: eClass.applicationInput, placeholder: systemBirthDef.format, value: state.birthday.system });
+                        const $systemBirthInput = jqNode("input", { id: getAuth(targetId, systemBirthDef.id), class: eClass.applicationInput, placeholder: systemBirthDef.format, value: state.birthday.system });
                         eb.listAppend($systemBirthLine, [$systemBirthLabel, $systemBirthInput]);
-                        eb.listAppend($systemContainer, [$increamentLine, $systemNameIdentifierLine, $systemNameKanaLine, $systemNameKanjiLine, $systemBirthLine]);
+                        eb.listAppend($systemContainer, [$incrementLine, $systemNameIdentifierLine, $systemNameKanaLine, $systemNameKanjiLine, $systemBirthLine]);
                         const $userContainer = jqNode("div").css({ "padding-top": "10px" });;
                         const $userNameKanaLine = jqNode("div", { class: classes(seClass.commandLine, userNameDef.class) });
                         const $userNameKanaLabel = jqNode("label").text(userNameDef.labels.nameKana);
-                        const $userNameKanaLastNameInput = jqNode("textarea", { id: userNameDef.ids.lastNameKana, class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKana, value: state.name.user.kana.lastName });
-                        const $userNameKanaFirstNameInput = jqNode("textarea", { id: userNameDef.ids.firstNameKana, class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKana, value: state.name.user.kana.firstName });
+                        const $userNameKanaLastNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.lastNameKana), class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKana, value: state.name.user.kana.lastName });
+                        const $userNameKanaFirstNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.firstNameKana), class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKana, value: state.name.user.kana.firstName });
                         eb.listAppend($userNameKanaLine, [$userNameKanaLabel, $userNameKanaLastNameInput, $userNameKanaFirstNameInput]);
                         const $userNameKanjiLine = jqNode("div", { class: classes(seClass.commandLine, userNameDef.class) });
                         const $userNameKanjiLabel = jqNode("label").text(userNameDef.labels.nameKanji);
-                        const $userNameKanjiLastNameInput = jqNode("textarea", { id: userNameDef.ids.lastNameKanji, class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKanji, value: state.name.user.kanji.lastName });
-                        const $userNameKanjiFirstNameInput = jqNode("textarea", { id: userNameDef.ids.firstNameKanji, class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKanji, value: state.name.user.kanji.firstName });
+                        const $userNameKanjiLastNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.lastNameKanji), class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKanji, value: state.name.user.kanji.lastName });
+                        const $userNameKanjiFirstNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.firstNameKanji), class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKanji, value: state.name.user.kanji.firstName });
                         eb.listAppend($userNameKanjiLine, [$userNameKanjiLabel, $userNameKanjiLastNameInput, $userNameKanjiFirstNameInput]);
                         const $userBirthLine = jqNode("div", { class: classes(seClass.commandLine, userBirthDef.class) });
                         const $userBirthLabel = jqNode("label").text(userBirthDef.label);
-                        const $userBirthInput = jqNode("textarea", { id: userBirthDef.id, class: eClass.applicationTextarea, placeholder: userBirthDef.format, value: state.birthday.user });
+                        const $userBirthInput = jqNode("textarea", { id: getAuth(targetId, userBirthDef.id), class: eClass.applicationTextarea, placeholder: userBirthDef.format, value: state.birthday.user });
                         eb.listAppend($userBirthLine, [$userBirthLabel, $userBirthInput]);
                         eb.listAppend($userContainer, [$userNameKanaLine, $userNameKanjiLine, $userBirthLine]);
                         elementInjector[targetId] = { system: $systemContainer, user: $userContainer };
@@ -1620,6 +1636,12 @@ SqlModule.prototype = {
                         }
                     });
                 };
+                const initIncrementCount = function(targetId, $element) {
+                    if(!$element) return false;
+                    const available = nbState[targetId].increment.available;
+                    if(available) $element.addClass(eClass.readonly).prop("readonly", true);
+                    else $element.removeClass(eClass.readonly).prop("readonly", false);
+                };
                 const setEvent = function() {
                     const inputTypeElement = concatString("input[name=", def.elements.inputType.name, "]");
                     new EventHandler($(inputTypeElement)).addEvent("change", function(e) {
@@ -1628,30 +1650,180 @@ SqlModule.prototype = {
                         initInputType();
                     });
                     executeList.forEach(function(targetId) {
-                        const increamentElement = concatString("input[name=", getAuth(targetId, def.elements.increament.name), "]");
-                        new EventHandler($(increamentElement)).addEvent("change", function(e) {
+                        const incrementCheckboxElement = concatString("input[name=", getAuth(targetId, incrementDef.checkbox.name), "]");
+                        new EventHandler($(incrementCheckboxElement)).addEvent("change", function(e) {
                             const target = e.target;
-                            nbState[targetId].autoIncreament = target.checked;
+                            const available = target.checked;
+                            nbState[targetId].increment.available = available;
+                            const $incrementCountInput = jqById(getAuth(targetId, incrementDef.count.id));
+                            initIncrementCount(targetId, $incrementCountInput);
                         });
                     });
                 };
-                const callback = function(viewerClaose) {
-                    // const isSystemType = isSystemInput();
-                    const dataObj = {
-                        systemInputId: jqById(systemNameDef.ids.id).val(),
-                        systemInputNumber: jqById(systemNameDef.ids.number).val(),
-                        systemInputKanaLastName: jqById(systemNameDef.ids.lastNameKana).val(),
-                        systemInputKanaFirstname: jqById(systemNameDef.ids.firstNameKana).val(),
-                        systemInputKanjiLastName: jqById(systemNameDef.ids.lastNameKanji).val(),
-                        systemInputKanjiFirstname: jqById(systemNameDef.ids.firstNameKanji).val(),
-                        systemInputBirthday: jqById(systemBirthDef.id).val(),
-                        userInputKanaLastName: jqById(userNameDef.ids.lastNameKana).val(),
-                        userInputKanaFirstname: jqById(userNameDef.ids.firstNameKana).val(),
-                        userInputKanjiLastName: jqById(userNameDef.ids.lastNameKanji).val(),
-                        userInputKanjiFirstname: jqById(userNameDef.ids.firstNameKanji).val(),
-                        userInputBirthday: jqById(userBirthDef.id).val()
-                    };
-                    console.log(dataObj);
+                const callback = function(viewerClose) {
+                    try {
+                        const isSystemType = isSystemInput();
+                        const dataObj = new Object();
+                        executeList.forEach(function(targetId) {
+                            dataObj[targetId] = {
+                                system: {
+                                    increment: {
+                                        available: nbState[targetId].increment.available,
+                                        count: jqById(getAuth(targetId, incrementDef.count.id)).val()
+                                    },
+                                    systemInputId: jqById(getAuth(targetId, systemNameDef.ids.id)).val(),
+                                    systemInputNumber: jqById(getAuth(targetId, systemNameDef.ids.number)).val(),
+                                    systemInputKanaLastName: jqById(getAuth(targetId, systemNameDef.ids.lastNameKana)).val(),
+                                    systemInputKanaFirstname: jqById(getAuth(targetId, systemNameDef.ids.firstNameKana)).val(),
+                                    systemInputKanjiLastName: jqById(getAuth(targetId, systemNameDef.ids.lastNameKanji)).val(),
+                                    systemInputKanjiFirstname: jqById(getAuth(targetId, systemNameDef.ids.firstNameKanji)).val(),
+                                    systemInputBirthday: jqById(getAuth(targetId, systemBirthDef.id)).val()
+                                },
+                                user: {
+                                    userInputKanaLastName: jqById(getAuth(targetId, userNameDef.ids.lastNameKana)).val(),
+                                    userInputKanaFirstname: jqById(getAuth(targetId, userNameDef.ids.firstNameKana)).val(),
+                                    userInputKanjiLastName: jqById(getAuth(targetId, userNameDef.ids.lastNameKanji)).val(),
+                                    userInputKanjiFirstname: jqById(getAuth(targetId, userNameDef.ids.firstNameKanji)).val(),
+                                    userInputBirthday: jqById(getAuth(targetId, userBirthDef.id)).val()
+                                }
+                            };
+                        });
+                        if(isSystemType) {
+                            const checkResult = {
+                                error: false,
+                                messageList: new Array()
+                            };
+                            executeList.forEach(function(targetId) {
+                                const data = dataObj[targetId].system;
+                                const checkList = new Array();
+                                const increment = data.increment;
+                                if(!increment.available) checkList.push(_this.getCheckObject(increment.count, incrementDef.count.label));
+                                const labels = [
+                                    concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.id),
+                                    concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.number),
+                                    concatString(systemNameDef.labels.nameKana, " > ", systemNameDef.labels.lastNameKana),
+                                    concatString(systemNameDef.labels.nameKana, " > ", systemNameDef.labels.firstNameKana),
+                                    concatString(systemNameDef.labels.nameKanji, " > ", systemNameDef.labels.lastNameKanji),
+                                    concatString(systemNameDef.labels.nameKanji, " > ", systemNameDef.labels.firstNameKanji),
+                                    systemBirthDef.label
+                                ];
+                                [
+                                    data.systemInputId,
+                                    data.systemInputNumber,
+                                    data.systemInputKanaLastName,
+                                    data.systemInputKanaFirstname,
+                                    data.systemInputKanjiLastName,
+                                    data.systemInputKanjiFirstname,
+                                    data.systemInputBirthday
+                                ].forEach(function(item, i) {
+                                    checkList.push(_this.getCheckObject(item, labels[i]));
+                                });
+                                let hasError = false;
+                                const result = _this.validation.apply(_this, checkList);
+                                if(result.error) hasError = true;
+                                const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
+                                let pushMessage = result.message;
+                                if(pushMessage.indexOf(systemBirthDef.label) < 0) {
+                                    const exp = new RegExpUtil(data.systemInputBirthday);
+                                    if(!exp.isYYYYMMDD()) {
+                                        const message = concatString(systemBirthDef.label, " format is not valid");
+                                        pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
+                                        hasError = true;
+                                    }
+                                }
+                                if(hasError) {
+                                    checkResult.error = true;
+                                    checkResult.messageList.push(targetLabel + pushMessage);
+                                }
+                            });
+                            if(checkResult.error) {
+                                throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
+                            }
+                            else {
+                                const templatePrintObject = new Object();
+                                const generator = function(c, tableCount) {
+                                    const type = c.type;
+                                    const target = c.target;
+                                    const separator = c.separator;
+                                    // const head = concatString("@", column);
+                                    const upFlag = target === "both" ? 2 : 1;
+                                    const iterateNum = tableCount * toList;
+                                    getIterator(iterateNum).forEach(function(v, i) {
+                                        switch(type) {
+                                            case "name_kana": {
+                                                break;
+                                            }
+                                            case "name_kanji": {
+                                                break;
+                                            }
+                                            case "birthday": {
+                                                break;
+                                            }
+                                        }
+                                    });
+                                };
+                                Object.keys(tables).forEach(function(table) {
+                                    const t = tables[table];
+                                    templatePrintObject[table] = new Object();
+                                    Object.keys(t).forEach(function(column) {
+                                        const c = t[column];
+                                        const tableCount = fromData[table].count;
+                                        templatePrintObject[table][column] = generator(c, tableCount);
+                                    });
+                                });
+                            }
+                        }
+                        else {
+                            const checkResult = {
+                                error: false,
+                                messageList: new Array()
+                            };
+                            executeList.forEach(function(targetId) {
+                                const data = dataObj[targetId].user;
+                                const checkList = new Array();
+                                const labels = [
+                                    concatString(userNameDef.labels.nameKana, " > ", userNameDef.labels.lastNameKana),
+                                    concatString(userNameDef.labels.nameKana, " > ", userNameDef.labels.firstNameKana),
+                                    concatString(userNameDef.labels.nameKanji, " > ", userNameDef.labels.lastNameKanji),
+                                    concatString(userNameDef.labels.nameKanji, " > ", userNameDef.labels.firstNameKanji),
+                                    userBirthDef.label
+                                ];
+                                [
+                                    data.userInputKanaLastName,
+                                    data.userInputKanaFirstname,
+                                    data.userInputKanjiLastName,
+                                    data.userInputKanjiFirstname,
+                                    data.userInputBirthday
+                                ].forEach(function(item, i) {
+                                    checkList.push(_this.getCheckObject(item.split(SIGN.nl).join(SIGN.none), labels[i]));
+                                });
+                                let hasError = false;
+                                const result = _this.validation.apply(_this, checkList);
+                                if(result.error) hasError = true;
+                                const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
+                                let pushMessage = result.message;
+                                if(pushMessage.indexOf(userBirthDef.label) < 0) {
+                                    data.userInputBirthday.split(SIGN.nl).some(function(bd) {
+                                        const exp = new RegExpUtil(bd);
+                                        if(!exp.isYYYYMMDD()) {
+                                            const message = concatString(userBirthDef.label, " format is not valid");
+                                            pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
+                                            hasError = true;
+                                            return true;
+                                        }
+                                    });
+                                }
+                                if(hasError) {
+                                    checkResult.error = true;
+                                    checkResult.messageList.push(targetLabel + pushMessage);
+                                }
+                            });
+                            if(checkResult.error) throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
+                        }
+                    }
+                    catch(e) {
+                        new Notification().error().open(e.message);
+                    }
                 };
                 buildContents();
                 initInputType();
