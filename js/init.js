@@ -11,7 +11,7 @@ const Module = function() {
 };
 Module.prototype = {
 	menu: function() {
-		state.module = { id: null };
+		appState.module = { id: null };
 		const _this = this;
 		fadeOut(_this.container).then(function() {
 			clearContainer();
@@ -20,7 +20,7 @@ Module.prototype = {
 		return this;
 	},
 	sql: function() {
-		state.module = { id: MI.sql };
+		appState.module = { id: MI.sql };
 		fadeOut(this.container).then(function() {
 			clearContainer();
 			new SqlModule().initSqlModule();
@@ -28,7 +28,7 @@ Module.prototype = {
 		return this;
 	},
 	batch: function() {
-		state.module = { id: MI.batch };
+		appState.module = { id: MI.batch };
 		fadeOut(this.container).then(function() {
 			clearContainer();
 			new BatchModule().initBatchModule();
@@ -36,7 +36,7 @@ Module.prototype = {
 		return this;
 	},
 	common: function() {
-		state.module = { id: MI.common };
+		appState.module = { id: MI.common };
 		fadeOut(this.container).then(function() {
 			clearContainer();
 			new CommonModule().initCommonModule();

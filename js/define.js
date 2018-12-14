@@ -147,7 +147,8 @@ const ELEMENTS = {
         breakWord: "break-word",
         interfaceListAddContainer: "interface-list-add-container",
         actionArea: "action-area",
-        viewArea: "view-area"
+        viewArea: "view-area",
+        fullWidth: "full-width"
     },
     icon: {
         database: "fas fa-database",
@@ -326,5 +327,8 @@ const STRUCTURE = {
     }
 };
 
-const state = new Object();
+const appState = {
+    module: new Object(),
+    overflow: new Array()
+};
 const storage = { data: new Object() };

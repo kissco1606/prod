@@ -1,9 +1,9 @@
 const CommonModule = function() {
-	this.Define = {
-		ELEMENTS: {
-			id: {
-				commonHeader: "common-header",
-				commonContents: "common-contents",
+    this.Define = {
+        ELEMENTS: {
+            id: {
+                commonHeader: "common-header",
+                commonContents: "common-contents",
                 commonMenuContainer: "common-menu-container",
                 headerToolsConfigIcon: "header-tools-config-icon",
                 applicationPage: "application-page",
@@ -12,20 +12,23 @@ const CommonModule = function() {
                 systemDateEditor: "system-date-editor",
                 dateTargetPath: "date-target-path",
                 dateInput: "date-input",
-                path: "path"
-			},
-			class: {
+                path: "path",
+                clipboardLinkerCard: "clipboard-linker-card",
+                clipboardLinkerCopyList: "clipboard-linker-copy-list",
+                clipboardLinkerSelectArea: "clipboard-linker-select-area"
+            },
+            class: {
                 contentsContainer: "contents-container",
                 commandArea: "command-area",
                 actionArea: "action-area"
-			},
-			style: {
+            },
+            style: {
                 backgroundColor: "#333",
                 headerHeight: "50px",
                 transitionDuration: 200
             }
-		},
-		CAPTIONS: {
+        },
+        CAPTIONS: {
             title: "Common Tools",
             fileTree: "File Tree",
             exec: "exec",
@@ -39,9 +42,15 @@ const CommonModule = function() {
             systemDatePathList: "SysDate Path List",
             edit: "edit",
             add: "add",
-            name: "name"
-		},
-		TYPES: {
+            name: "name",
+            clipboardLinker: "Clipboard Linker",
+            copy: "copy",
+            copyList: "Copy List",
+            set: "set",
+            select: "select",
+            separatorType: "Separator Type"
+        },
+        TYPES: {
             message: {
                 required: "required",
                 matchWhitespace: "match-whitespace"
@@ -52,19 +61,45 @@ const CommonModule = function() {
             path: {
                 fileTreeWorker: "module/common/actions/fileTree.js"
             },
+            phase: {
+                clipboardLinker: {
+                    init: "init",
+                    set: "set"
+                }
+            }
         },
-		MESSAGES: {
+        MESSAGES: {
             invalid_format: "Invalid format",
             already_exits_name: "Already exists name",
             systemdate_modified_complete: "System date modified successfully"
-		}
-	};
-	this.state = {
-	};
+        }
+    };
+    this.state = {
+        clipboardLinker: {
+            define: {
+                separatorTypeRadio: {
+                    name: "clipboard-linker__separator-type-radiobox",
+                    type: {
+                        lineBreak: {
+                            label: "Line Break",
+                            id: "clipboard-linker__separator-type-lineBreak",
+                            value: SIGN.crlf
+                        },
+                        commaLineBreak: {
+                            label: "Comma + Line Break",
+                            id: "clipboard-linker__separator-type-commaLineBreak",
+                            value: concatString(SIGN.c, SIGN.crlf)
+                        }
+                    }
+                }
+            },
+            injector: { commandArea: new Array() }
+        }
+    };
 };
 CommonModule.prototype = {
-	initCommonModule: function() {
-		const _this = this;
+    initCommonModule: function() {
+        const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seStyle = _this.Define.ELEMENTS.style;
         const captions = _this.Define.CAPTIONS;
@@ -97,8 +132,8 @@ CommonModule.prototype = {
         _this.setPage();
         fadeIn($container);
         return this;
-	},
-	openMenu: function() {
+    },
+    openMenu: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const $container = jqById(eId.container);
@@ -135,10 +170,10 @@ CommonModule.prototype = {
                 result.error = true;
                 errorMsg.push(_this.getMessage(msgTypes.required, name));
             }
-            else if(value.match(new RegExp(SIGN.ws, "g"))) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
-            }
+//            else if(value.match(new RegExp(SIGN.ws, "g"))) {
+//                result.error = true;
+//                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
+//            }
         });
         if(result.error) {
             result.message = errorMsg.join(SIGN.br);
@@ -178,7 +213,12 @@ CommonModule.prototype = {
                 id: seId.systemDateEditor,
                 title: captions.systemDateEditor,
                 contents: _this.buildSystemDateEditor()
-            }
+            },
+            {
+                id: seId.clipboardLinkerCard,
+                title: captions.clipboardLinker,
+                contents: _this.buildClipboardLinker()
+            },
         ];
         cardList.forEach(function(item) {
             $cardContainer.append(buildCard(item));
@@ -598,6 +638,163 @@ CommonModule.prototype = {
         }
         else {
             new Notification().error().open(messages.invalid_format);
+        }
+        return null;
+    },
+    buildClipboardLinker: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const clipboardLinkerState = _this.state.clipboardLinker;
+        const stateDef = clipboardLinkerState.define;
+        const eb = new ElementBuilder();
+        const injectorStack = new Array();
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $setButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.set));
+        $container.append(eb.listAppend($actionArea, [$setButton]));
+        const radioItemList = [
+            {
+                label: stateDef.separatorTypeRadio.type.lineBreak.label,
+                attributes: {
+                    id: stateDef.separatorTypeRadio.type.lineBreak.id,
+                    name: stateDef.separatorTypeRadio.name,
+                    value: stateDef.separatorTypeRadio.type.lineBreak.value
+                },
+                isChecked: true,
+                optionClass: SIGN.none
+            },
+            {
+                label: stateDef.separatorTypeRadio.type.commaLineBreak.label,
+                attributes: {
+                    id: stateDef.separatorTypeRadio.type.commaLineBreak.id,
+                    name: stateDef.separatorTypeRadio.name,
+                    value: stateDef.separatorTypeRadio.type.commaLineBreak.value
+                },
+                isChecked: false,
+                optionClass: SIGN.none
+             }
+        ];
+        const $separatorTypeCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $radioItem = eb.createRadio(radioItemList).getItem();
+        const $separatorTypeLabel = jqNode("label").css("line-height", "2.5").text(captions.separatorType);
+        const $separatorTypeRadio = jqNode("div", { class: eClass.fullWidth }).append($radioItem);
+        eb.listAppend($separatorTypeCommandArea, [$separatorTypeLabel, $separatorTypeRadio]);
+        $container.append($separatorTypeCommandArea);
+        injectorStack.push($separatorTypeCommandArea);
+        const itemList = [
+            {
+                label: captions.copyList,
+                inputType: "textarea",
+                inputId: seId.clipboardLinkerCopyList
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: seClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+            injectorStack.push($commandArea);
+        });
+        $setButton.click(function() {
+            _this.clipboardLinkerSet();
+        });
+        clipboardLinkerState.injector.commandArea = injectorStack;
+        return $container;
+    },
+    actionControllerClipboardLinker: function(phase) {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.clipboardLinker;
+        const $card = jqById(seId.clipboardLinkerCard);
+        const $cardContents = $card.find(concatString(".", eClass.cardContents));
+        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
+        const $setButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.set));
+        const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
+        let itemList = new Array();
+        switch(phase) {
+            case phaseType.init: {
+                itemList = [$setButton];
+                break;
+            }
+            case phaseType.set: {
+                itemList = [$clearButton];
+                break;
+            }
+        }
+        $actionArea.empty();
+        itemList.forEach(function(item) {
+            $actionArea.append(item);
+        });
+        $setButton.click(function() {
+            _this.clipboardLinkerSet();
+        });
+        $clearButton.click(function() {
+            _this.clipboardLinkerClear();
+        });
+    },
+    clipboardLinkerSet: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.clipboardLinker;
+        const captions = _this.Define.CAPTIONS;
+        const clipboardLinkerState = _this.state.clipboardLinker;
+        const stateDef = clipboardLinkerState.define;
+        const separatorTypeElement = concatString("input[name=", stateDef.separatorTypeRadio.name, "]:checked");
+        const separatorType = $(separatorTypeElement).val();
+        const $copyList = jqById(seId.clipboardLinkerCopyList);
+        const copyListValue = $copyList.val();
+        const copyList = getExistArray(copyListValue.split(separatorType));
+        if(isVoid(copyList)) {
+            new Notification().error().open("Copy List is required");
+            return false;
+        }
+        clipboardLinkerState.injector.commandArea.forEach(function(item) {
+            new ElementBuilder(item).setDisplayNone();
+        });
+        const $card = jqById(seId.clipboardLinkerCard);
+        const $cardContents = $card.find(concatString(".", eClass.cardContents));
+        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $commandArea = jqNode("div", { id: seId.clipboardLinkerSelectArea, class: seClass.commandArea });
+        copyList.forEach(function(linkText) {
+            const $button = jqNode("button").text(linkText);
+            $commandArea.append($button);
+            $button.click(function() {
+                _this.clipboardLinkerCopy(this.textContent);
+            });
+        });
+        $contentsContainer.append($commandArea);
+        _this.actionControllerClipboardLinker(phaseType.set);
+        return null;
+    },
+    clipboardLinkerClear: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.clipboardLinker;
+        const clipboardLinkerState = _this.state.clipboardLinker;
+        jqById(seId.clipboardLinkerCopyList).val(SIGN.none);
+        jqById(seId.clipboardLinkerSelectArea).remove();
+        clipboardLinkerState.injector.commandArea.forEach(function(item) {
+            new ElementBuilder(item).removeDisplayNone();
+        });
+        _this.actionControllerClipboardLinker(phaseType.init);
+        return null;
+    },
+    clipboardLinkerCopy: function(data) {
+        data = data.replace(/\n/g, SIGN.crlf);
+        const r = copyToClipboard(data);
+        if(r.error) {
+            new Notification().error().open(r.message);
+            return false;
         }
         return null;
     }

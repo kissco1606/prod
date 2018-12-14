@@ -1,18 +1,18 @@
 /* header */
 #sql-header {
-	position: fixed;
-	height: 50px;
-	top: 0;
-	left: 0;
-	right: 0;
-	background-color: #3f51b5;
-	color: #fff;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0 20px;
-	font-size: 18px;
-	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.7);
+    position: fixed;
+    height: 50px;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #3f51b5;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 18px;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.7);
     z-index: 10;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
@@ -21,8 +21,8 @@
 #sql-header > #header-title {
     display: table;
     table-layout: fixed;
-	white-space: nowrap;
-	line-height: 1.5;
+    white-space: nowrap;
+    line-height: 1.5;
     /* width: calc(100% - (${#header-tools-width} + ${header-padding})px); */
 }
 
@@ -45,84 +45,84 @@
     cursor: pointer;
 }
 #sql-header > #header-tools > .icon-button {
-	display: block;
-	padding: 2px 0;
-	width: 28px;
-	text-align: center;
+    display: block;
+    padding: 2px 0;
+    width: 28px;
+    text-align: center;
     border-radius: 100%;
-	cursor: pointer;
-	background-color: transparent;
+    cursor: pointer;
+    background-color: transparent;
     transition: background-color 0.3s ease-in-out;
 }
 #sql-header > #header-tools > .icon-button:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
 #sql-header > #header-tools > .tools-icon > #header-tools-config-icon {
-	transition: transform .4s ease-in-out;
+    transition: transform .4s ease-in-out;
 }
 #sql-header > #header-tools > .tools-icon > #header-tools-config-icon:hover {
-	transform: rotate(45deg);
+    transform: rotate(45deg);
 }
 
 /* contents */
 #sql-contents {
-	position: relative;
-	height: 100%;
-	transition: opacity 0.2s ease-in-out;
+    position: relative;
+    height: 100%;
+    transition: opacity 0.2s ease-in-out;
 }
 
 #sql-contents > #access-page {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-direction: column;
-	background-color: transparent;
-	color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: transparent;
+    color: #666;
 }
 
 #sql-contents > #access-page > div > #access-logo {
-	width: 200px;
-	height: inherit;
-	margin-bottom: 30px;
+    width: 200px;
+    height: inherit;
+    margin-bottom: 30px;
 }
 
 #sql-contents > #access-page > #access-command {
-	width: 100%;
-	max-width: 300px;
-	text-align: center;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
 }
 
 #sql-contents > #access-page > #access-command > .command-line {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 }
 
 #sql-contents > #access-page > #access-command > .command-line > input {
-	padding: 5px;
-	border: none;
-	border-radius: 0.3em;
-	width: calc(100% - 8px);
-	margin: 5px 0;
+    padding: 5px;
+    border: none;
+    border-radius: 0.3em;
+    width: calc(100% - 8px);
+    margin: 5px 0;
 }
 
 #sql-contents > #access-page > #access-command > .command-line > .access-button {
-	padding: 5px;
-	width: 100%;
-	border: none;
-	border-radius: 24px;
-	background-color: #e91e63;
-	color: #fff;
-	cursor: pointer;
-	margin-top: 10px;
+    padding: 5px;
+    width: 100%;
+    border: none;
+    border-radius: 24px;
+    background-color: #e91e63;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 10px;
 }
 #sql-contents > #access-page > #access-command > .command-line > .access-button:hover {
-	background-color: #ec407a;
+    background-color: #ec407a;
 }
 
 #sql-contents > #access-page > #access-command > .command-line > .access-load-button {
-	border: none;
+    border: none;
     border-radius: 100%;
     background-color: rgba(0, 0, 0, 0);
     color: #ddd;
@@ -133,127 +133,127 @@
     transition: background-color 0.2s ease-in-out;
 }
 #sql-contents > #access-page > #access-command > .command-line > .access-load-button:hover {
-	background-color: #555;
+    background-color: #555;
 }
 
 #data-copy-card .contents-container > .command-area,
 #create-user-card .contents-container > .command-area,
 #linc-error-resolution-card .contents-container > .command-area
 {
-	display: flex;
-	flex-direction: row;
-	padding: 10px 0;
+    display: flex;
+    flex-direction: row;
+    padding: 10px 0;
 }
 #data-copy-card .contents-container > .command-area > label,
 #create-user-card .contents-container > .command-area > label,
 #linc-error-resolution-card .contents-container > .command-area > label
 {
-	width: 200px;
-	text-align: left;
-	line-height: 1.5;
+    width: 200px;
+    text-align: left;
+    line-height: 1.5;
 }
 #data-copy-card .contents-container > .command-area > input,
 #create-user-card .contents-container > .command-area > input,
 #linc-error-resolution-card .contents-container > .command-area > input
 {
-	padding: 5px;
-	border: 1px solid rgba(0, 0, 0, 0.4);
-	border-radius: 0.3em;
-	box-sizing: border-box;
-	width: 100%;
+    padding: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 0.3em;
+    box-sizing: border-box;
+    width: 100%;
 }
 #query-command-card .contents-container > .action-area,
 #data-copy-card .contents-container > .action-area,
 #create-user-card .contents-container > .action-area,
 #linc-error-resolution-card .contents-container > .action-area
 {
-	padding: 10px 0;
-	text-align: right;
+    padding: 10px 0;
+    text-align: right;
 }
 #query-command-card .contents-container > .action-area > button,
 #data-copy-card .contents-container > .action-area > button,
 #create-user-card .contents-container > .action-area > button,
 #linc-error-resolution-card .contents-container > .action-area > button
 {
-	margin-left: 10px;
-	margin-top: 5px;
-	margin-bottom: 5px;
-	padding: 10px;
-	color: #fff;
-	border: none;
-	border-radius: 0.2em;
-	cursor: pointer;
+    margin-left: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 10px;
+    color: #fff;
+    border: none;
+    border-radius: 0.2em;
+    cursor: pointer;
 }
 
 #data-copy-card .contents-container > .command-area > textarea {
-	padding: 5px;
-	border: 1px solid rgba(0, 0, 0, 0.4);
-	border-radius: 0.3em;
-	box-sizing: border-box;
-	overflow: auto;
-	width: 100%;
-	height: 100px;
+    padding: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 0.3em;
+    box-sizing: border-box;
+    overflow: auto;
+    width: 100%;
+    height: 100px;
 }
 
 #option-container__data-copy {
-	position: relative;
-	width: 100%;
-	overflow: auto;
+    position: relative;
+    width: 100%;
+    overflow: auto;
 }
 
 #option-container__data-copy > .action-area {
-	padding: 10px 0;
-	/* text-align: right; */
+    padding: 10px 0;
+    /* text-align: right; */
 }
 #option-container__data-copy > .action-area > button {
-	padding: 10px;
-	color: #fff;
-	border: none;
-	border-radius: 0.2em;
-	background-color: #555;
-	cursor: pointer;
-	width: 100%;
+    padding: 10px;
+    color: #fff;
+    border: none;
+    border-radius: 0.2em;
+    background-color: #555;
+    cursor: pointer;
+    width: 100%;
 }
 #option-container__data-copy > .action-area > button:hover {
-	background-color: #666;
+    background-color: #666;
 }
 
 #option-container__data-copy > .option-command-area > .command-line {
-	margin: 10px 0;
-	padding: 10px;
-	border: 1px dotted rgba(0, 0, 0, 0.5);
-	border-radius: 0.2em;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px dotted rgba(0, 0, 0, 0.5);
+    border-radius: 0.2em;
 }
 
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row {
-	display: flex;
-	flex-direction: row;
-	padding: 10px 0;
+    display: flex;
+    flex-direction: row;
+    padding: 10px 0;
 }
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row.remove-row {
-	padding: 5px 0;
+    padding: 5px 0;
 }
 
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row > label {
-	width: 70px;
-	text-align: left;
-	line-height: 1.5;
+    width: 70px;
+    text-align: left;
+    line-height: 1.5;
 }
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row > input {
-	width: 100%;
-	padding: 5px;
-	border: 1px solid rgba(0, 0, 0, 0.4);
-	border-radius: 0.3em;
-	box-sizing: border-box;
+    width: 100%;
+    padding: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 0.3em;
+    box-sizing: border-box;
 }
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row > textarea {
-	padding: 5px;
-	border: 1px solid rgba(0, 0, 0, 0.4);
-	border-radius: 0.3em;
-	box-sizing: border-box;
-	overflow: auto;
-	width: 100%;
-	height: 70px;
+    padding: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 0.3em;
+    box-sizing: border-box;
+    overflow: auto;
+    width: 100%;
+    height: 100px;
 }
 
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row > .option-remove-button {
@@ -263,180 +263,180 @@
     color: #B71C1C;
     cursor: pointer;
     padding: 10px;
-	transition: background-color 0.2s ease-in-out;
-	width: 100%;
+    transition: background-color 0.2s ease-in-out;
+    width: 100%;
 }
 #option-container__data-copy > .option-command-area > .command-line > .command-line-row > .option-remove-button:hover {
     background-color: #eee;
 }
 
 #query-command-card .contents-container > #query-editor {
-	width: 100%;
-	height: 200px;
+    width: 100%;
+    height: 200px;
 }
 
 #query-command-card .contents-container > .query-grid-container {
-	padding: 10px 0;
+    padding: 10px 0;
 }
 
 #query-command-card .contents-container {
-	position: relative;
+    position: relative;
 }
 #query-command-card .contents-container > #query-timer {
-	position: absolute;
-	padding: 10px 0;
-	line-height: 2.5;
+    position: absolute;
+    padding: 10px 0;
+    line-height: 2.5;
 }
 
 #export-container__query-command {
-	padding: 10px 0;
+    padding: 10px 0;
 }
 #export-container__query-command > label {
-	width: 100%;
-	text-align: left;
-	line-height: 1.5;
-	padding-bottom: 5px;
+    width: 100%;
+    text-align: left;
+    line-height: 1.5;
+    padding-bottom: 5px;
 }
 #export-container__query-command > select {
-	width: 100%;
-	padding: 5px;
-	border: 1px solid rgba(0, 0, 0, 0.4);
-	border-radius: 0.3em;
-	box-sizing: border-box;
+    width: 100%;
+    padding: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 0.3em;
+    box-sizing: border-box;
 }
 
 .option-template-container {
-	background-color: transparent;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 999998;
+    background-color: transparent;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999998;
 }
 .option-template-container > .option-template-pannel {
-	position: relative;
-	width: 100%;
-	max-width: 400px;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
     padding: 40px 50px;
     border-radius: 8px;
     background-color: rgba(0, 0, 0, 1);
 }
 @media screen and (max-width: 400px) {
-	.option-template-container > .option-template-pannel {
+    .option-template-container > .option-template-pannel {
         max-width: 100%;
-	}
+    }
 }
 .option-template-container > .option-template-pannel > .option-template-tab {
-	position: relative;
-	word-wrap: break-word;
-	white-space: normal;
-	padding: 15px;
-	margin: 10px 0;
-	cursor: pointer;
-	text-align: center;
-	border-radius: 8px;
-	color: #fff;
-	background-color: transparent;
-	border: 2px solid #fff;
-	transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    position: relative;
+    word-wrap: break-word;
+    white-space: normal;
+    padding: 15px;
+    margin: 10px 0;
+    cursor: pointer;
+    text-align: center;
+    border-radius: 8px;
+    color: #fff;
+    background-color: transparent;
+    border: 2px solid #fff;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 .option-template-container > .option-template-pannel > .option-template-tab:hover {
-	color: #000;
-	background-color: #fff;
+    color: #000;
+    background-color: #fff;
 }
 .option-template-container > .option-template-pannel > .option-template-close {
-	position: absolute;
-	top: 10px;
-	right: 13px;
-	color: #fff;
-	transition: color 0.1s ease-in-out;
+    position: absolute;
+    top: 10px;
+    right: 13px;
+    color: #fff;
+    transition: color 0.1s ease-in-out;
 }
 .option-template-container > .option-template-pannel > .option-template-close:hover {
-	color: #aaa;
+    color: #aaa;
 }
 .option-template-container > .option-template-pannel > .option-template-close > i {
-	cursor: pointer;
+    cursor: pointer;
 }
 
 #option-template__nb {
-	position: relative;
-	padding: 20px;
+    position: relative;
+    padding: 20px;
 }
 #option-template__nb > .viewer-section {
-	padding-bottom: 30px;
+    padding-bottom: 30px;
 }
 #option-template__nb > .viewer-section:first-child {
-	padding-bottom: 10px;
+    padding-bottom: 10px;
 }
 #option-template__nb > .viewer-section:last-child {
-	padding-bottom: 0;
+    padding-bottom: 0;
 }
 #option-template__nb > .viewer-section > .section-title {
-	font-weight: 600;
-	font-size: 20px;
+    font-weight: 600;
+    font-size: 20px;
 }
 #option-template__nb .command-line {
-	padding: 10px 0;
+    padding: 10px 0;
 }
 #option-template__nb > .viewer-section .command-line.system-increment {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 #option-template__nb > .viewer-section .command-line.system-name {
-	display: flex;
-	flex-direction: row;
-	padding-top: 10px;
+    display: flex;
+    flex-direction: row;
+    padding-top: 10px;
 }
 #option-template__nb > .viewer-section .command-line.system-name > label {
-	width: 150px;
+    width: 150px;
 }
 #option-template__nb > .viewer-section .command-line.system-name > input {
-	width: 170px;
-	margin-right: 10px;
+    width: 170px;
+    margin-right: 10px;
 }
 #option-template__nb > .viewer-section .command-line.system-name > input:last-child {
-	margin-right: 0;
+    margin-right: 0;
 }
 #option-template__nb > .viewer-section .command-line.user-name {
-	display: flex;
-	flex-direction: row;
-	padding-top: 10px;
+    display: flex;
+    flex-direction: row;
+    padding-top: 10px;
 }
 #option-template__nb > .viewer-section .command-line.user-name > label {
-	width: 150px;
-	line-height: 17px;
+    width: 150px;
+    line-height: 17px;
 }
 #option-template__nb > .viewer-section .command-line.user-name > textarea {
-	width: 170px;
-	height: 70px;
-	margin-right: 10px;
+    width: 170px;
+    height: 70px;
+    margin-right: 10px;
 }
 #option-template__nb > .viewer-section .command-line.user-name > textarea:last-child {
-	margin-right: 0;
+    margin-right: 0;
 }
 #option-template__nb > .viewer-section .command-line.system-birth {
-	display: flex;
-	flex-direction: row;
+    display: flex;
+    flex-direction: row;
 }
 #option-template__nb > .viewer-section .command-line.system-birth > label {
-	width: 150px;
+    width: 150px;
 }
 #option-template__nb > .viewer-section .command-line.system-birth > input {
-	width: 350px;
+    width: 350px;
 }
 #option-template__nb > .viewer-section .command-line.user-birth {
-	display: flex;
-	flex-direction: row;
+    display: flex;
+    flex-direction: row;
 }
 #option-template__nb > .viewer-section .command-line.user-birth > label {
-	width: 150px;
+    width: 150px;
 }
 #option-template__nb > .viewer-section .command-line.user-birth > textarea {
-	width: 350px;
-	height: 70px;
+    width: 350px;
+    height: 70px;
 }

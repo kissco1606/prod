@@ -51,18 +51,31 @@ function fadeIn(element) {
 };
 
 function getHeaderId() {
-    return state.module.id + "-" + eId.header;
+    return appState.module.id + "-" + eId.header;
 };
 
 function getContentsId() {
-    return state.module.id + "-" + eId.contents;
+    return appState.module.id + "-" + eId.contents;
+};
+
+function overflowHide() {
+    appState.overflow.push(1);
+    if(appState.overflow.length <= 1) jqByTag("body").addClass(eClass.overflowHidden);
+};
+
+function overflowShow() {
+    appState.overflow.pop();
+    if(appState.overflow.length <= 0) jqByTag("body").removeClass(eClass.overflowHidden);
 };
 
 function typeIs(data) {
     const typeObject = new Object;
     const typeString = Object.prototype.toString.call(data).slice(8, -1);
     Object.keys(TYPES.variable).forEach(function(key) {
-        return typeObject[key] = (TYPES.variable[key] === typeString);
+        const variableType = TYPES.variable[key];
+        let result = variableType === typeString
+        if(variableType === TYPES.variable.number && isNaN(data)) result = false;
+        typeObject[key] = result;
     });
     return typeObject;
 };
@@ -273,6 +286,17 @@ function accessObject(obj, keys) {
     }
 };
 
+function accessObjectProperty(obj, keys) {
+    try {
+        return keys.reduce(function(prev, curr) {
+            return getProperty(prev, curr);
+        }, obj);
+    }
+    catch(e) {
+        return null;
+    }
+};
+
 function setObject(obj, keys, value) {
     return keys.reduce(function(prev, curr, i, a) {
         if(a.length === i + 1) return prev[curr] = value;
@@ -434,6 +458,22 @@ function createMenuInfo(itemList, info) {
     }
 };
 
+function copyToClipboard(data) {
+    const result = {
+        error: false,
+        message: SIGN.none
+    };
+    try {
+        window.clipboardData.setData('Text', data);
+        result.error = false;
+    }
+    catch(e) {
+        result.error = true;
+        result.message = e.message;
+    }
+    return result;
+};
+
 function buildCard(cardInfo) {
     const $card = jqNode("div", { id: cardInfo.id, class: eClass.card });
     const $cardTitle = jqNode("div", { class: eClass.cardTitle });
@@ -554,7 +594,6 @@ Notification.prototype = {
         _this.dialogContainer.addClass(eClass.mostTop);
         _this.dialogContainer.removeClass(eClass.hide);
         _this.dialogContainer.append(_this.dialog);
-        state.notification = _this;
         _this.okButton.focus();
         return this;
     },
@@ -635,6 +674,7 @@ Dialog.prototype = {
         _this.dialogContainer.addClass(classes(eClass.dialogBackdrop, eClass.subTop));
         _this.dialogContainer.removeClass(eClass.hide);
         _this.dialogContainer.append(_this.dialog);
+        overflowHide();
         return this;
     },
     close: function () {
@@ -643,6 +683,7 @@ Dialog.prototype = {
             _this.dialogContainer.removeClass(classes(eClass.dialogBackdrop, eClass.subTop));
             _this.dialogContainer.addClass(eClass.hide);
             _this.dialogContainer.empty();
+            overflowShow();
         }
         return null;
     },
@@ -848,7 +889,7 @@ function saveAsFile(parts, type, fileName) {
     }
 };
 
-function s2ab(s) { 
+function s2ab(s) {
     const buf = new ArrayBuffer(s.length);
     const view = new Uint8Array(buf);
     for (let i = 0; i < s.length; i++) {
@@ -1070,7 +1111,7 @@ FileTree.prototype = {
 	},
 	iterateFiles: function(path, folder, recursive, actionPerFileCallback) {
 		const _this = this;
-		const fso = new ActiveXObject(TYPES.client.fileSystemObject); 
+		const fso = new ActiveXObject(TYPES.client.fileSystemObject);
 		const folderObj = fso.GetFolder(path);
 		const fileEnum = new Enumerator(folderObj.Files);
 		for(; !fileEnum.atEnd(); fileEnum.moveNext()){
@@ -1161,8 +1202,9 @@ FileSystem.prototype = {
 	}
 };
 
-const ElementBuilder = function() {
+const ElementBuilder = function(element) {
     this.elements = new Array();
+    this.element = element;
     this.vertical = false;
 };
 ElementBuilder.prototype = {
@@ -1244,6 +1286,34 @@ ElementBuilder.prototype = {
             target.append(item);
         });
         return target;
+    },
+    setReadonly: function() {
+        this.element.addClass(eClass.readonly);
+        this.element.prop("readonly", true);
+        return this;
+    },
+    removeReadonly: function() {
+        this.element.removeClass(eClass.readonly);
+        this.element.prop("readonly", false);
+        return this;
+    },
+    setDisable: function() {
+        this.element.addClass(eClass.disable);
+        this.element.prop("disable", true);
+        return this;
+    },
+    removeDisable: function() {
+        this.element.removeClass(eClass.disable);
+        this.element.prop("disable", false);
+        return this;
+    },
+    setDisplayNone: function() {
+        this.element.addClass(eClass.hide);
+        return this;
+    },
+    removeDisplayNone: function() {
+        this.element.removeClass(eClass.hide);
+        return this;
     }
 };
 
@@ -1271,7 +1341,7 @@ EventHandler.prototype = {
 };
 
 const Encryption = function() {
-    this.data = null;    
+    this.data = null;
 };
 Encryption.prototype = {
     getSerialNumber: function() {
@@ -1327,7 +1397,7 @@ Store.prototype = {
                 }
                 return resolve();
             }).catch(function(e) {
-                return reject(e); 
+                return reject(e);
             });
         });
     },
@@ -1912,7 +1982,7 @@ Viewer.prototype = {
         setTimeout(function() {
             _this.viewer.addClass(eClass.viewerVisible);
         });
-        jqByTag("body").addClass(eClass.overflowHidden);
+        overflowHide();
         return this;
     },
     close: function() {
@@ -1921,7 +1991,7 @@ Viewer.prototype = {
         setTimeout(function() {
             _this.viewer.remove();
         }, 500);
-        jqByTag("body").removeClass(eClass.overflowHidden);
+        overflowShow();
         return null;
     },
     onLoad: function(func) {
@@ -1935,7 +2005,7 @@ const RegExpUtil = function(value) {
 };
 RegExpUtil.prototype = {
     isEnter: function() {
-        const regExp = /(\r\n|\n)*$/;
+        const regExp = /\r\n|\n/;
         return regExp.test(this.value);
     },
     isNumber: function() {
@@ -1956,4 +2026,14 @@ RegExpUtil.prototype = {
     isNot: function(regExp) {
         return !regExp.test(this.value);
     }
+};
+
+const Validation = function() {
+    this.types = {
+        required: "required",
+        whitespace: "whitespace"
+    };
+};
+Validation.prototype = {
+    
 };

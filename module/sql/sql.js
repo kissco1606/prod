@@ -29,7 +29,7 @@ const SqlModule = function() {
                 queryGridTabs: "query-grid-tabs",
                 queryGridContents: "query-grid-contents",
                 tab: "tab",
-                queryTabs: "query-tabs", 
+                queryTabs: "query-tabs",
                 dataGrid: "data-grid",
                 queryTimer: "query-timer",
                 lincPolicyNumber: "linc-policy-number",
@@ -777,7 +777,7 @@ SqlModule.prototype = {
                         });
                         [$label, $select].forEach(function(item) { $container.append(item); });
                         $select.change(function(e) {
-                           qcState.export.type = e.target.value; 
+                           qcState.export.type = e.target.value;
                         });
                         return $container;
                     };
@@ -1305,6 +1305,7 @@ SqlModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const template = _this.export.dataCopy.template;
+        const dataCopyState = _this.state.dataCopy;
         const $templateContainer = jqNode("div", { class: seClass.optionTemplateContainer });
         const $pannel = jqNode("div", { class: seClass.optionTemplatePannel });
         const $closeButton = jqNode("div", { class: seClass.optionTemplateClose });
@@ -1313,46 +1314,60 @@ SqlModule.prototype = {
         $closeButton.append($closeIcon);
         $pannel.append($closeButton);
         const applyTemplate = function(menu) {
-            const flag = _this.optionTemplateAction(menu);
-            if(!flag) return false;
-            const $optionContainer = jqById(seId.optionContainerDataCopy);
-            const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
-            const option = new Array();
-            $commandLines.each(function(i, item) {
-                const $input = $(item).find("input");
-                const $textarea = $(item).find("textarea");
-                const table = _this.getCheckObject($input.val());
-                const script = _this.getCheckObject($textarea.val());
-                option.push({ table: table.value, script: script.value });
-            });
-            const result = {
-                error: false,
-                message: new Array()
-            };
-            const templateStack = new Array();
-            template[menu].forEach(function(item) {
-                const obj = {
-                    table: item.table,
-                    script: item.columns.map(function(c) { return concatString("@", c); }).join(SIGN.nl)
+            const exec = function(viewerClose, data, state) {
+                const $optionContainer = jqById(seId.optionContainerDataCopy);
+                const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
+                const option = new Array();
+                $commandLines.each(function(i, item) {
+                    const $input = $(item).find("input");
+                    const $textarea = $(item).find("textarea");
+                    const table = _this.getCheckObject($input.val());
+                    const script = _this.getCheckObject($textarea.val());
+                    option.push({ table: table.value, script: script.value });
+                });
+                const result = {
+                    error: false,
+                    message: new Array()
                 };
-                templateStack.push(obj);
-                if(find(item.table, option, ["table"], upperCase).isExist) {
-                    result.error = true;
-                    result.message.push(item.table);
+                const templateStack = new Array();
+                template[menu].forEach(function(item) {
+                    if(!item.enable) return;
+                    const getTemplateData = function(c) {
+                        let cData = concatString("@", c);
+                        const prop = accessObjectProperty(data, [item.table, c]);
+                        if(isVoid(prop)) return cData;
+                        return concatString(cData, SIGN.nl, prop);
+                    }
+                    const obj = {
+                        table: item.table,
+                        script: item.columns.map(function(c) { return getTemplateData(c); }).join(SIGN.nl)
+                    };
+                    templateStack.push(obj);
+                    if(find(item.table, option, ["table"], upperCase).isExist) {
+                        result.error = true;
+                        result.message.push(item.table);
+                    }
+                });
+                if(result.error) {
+                    const aet = "Already exists table";
+                    const message = concatString(aet, SIGN.br, SIGN.br, result.message.join(SIGN.br));
+                    new Notification().error().open(message);
+                    return false;
                 }
-            });
-            if(result.error) {
-                const aet = "Already exists table";
-                const message = concatString(aet, SIGN.br, SIGN.br, result.message.join(SIGN.br));
-                new Notification().error().open(message);
-                return false;
+                const $commandArea = $optionContainer.find(concatString(".", seClass.optionCommandArea));
+                templateStack.forEach(function(item) {
+                    $commandArea.append(_this.createOptionCommandLine(item.table, item.script));
+                });
+                jqByClass(eClass.dialogContents).scrollTop(function() { return this.scrollHeight; });
+                $templateContainer.remove();
+                if(typeIs(viewerClose).function) {
+                    dataCopyState.template[menu] = state;
+                    viewerClose();
+                }
             }
-            const $commandArea = $optionContainer.find(concatString(".", seClass.optionCommandArea));
-            templateStack.forEach(function(item) {
-                $commandArea.append(_this.createOptionCommandLine(item.table, item.script));
-            });
-            jqByClass(eClass.dialogContents).scrollTop(function() { return this.scrollHeight; });
-            $templateContainer.remove();
+            const flag = _this.optionTemplateAction(menu, exec);
+            if(!flag) return false;
+            exec();
         };
         Object.keys(template).forEach(function(menu) {
             const $labelButton = jqNode("div", { class: seClass.optionTemplateTab }).text(menu);
@@ -1363,7 +1378,7 @@ SqlModule.prototype = {
         jqByTag("body").append($templateContainer);
         return null;
     },
-    optionTemplateAction: function(menu) {
+    optionTemplateAction: function(menu, sync) {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
@@ -1391,6 +1406,7 @@ SqlModule.prototype = {
                 const isContractorAvailable = count >= 2;
                 const def = {
                     target: { insured: "insured", contractor: "contractor" },
+                    injectorId: { increment: "increment" },
                     inputType: { system: "system", user: "user" },
                     elements: {
                         inputType: {
@@ -1466,19 +1482,26 @@ SqlModule.prototype = {
                                 format: "YYYYMMDD"
                             }
                         }
+                    },
+                    keys: {
+                        nameKana: "name_kana",
+                        nameKanji: "name_kanji",
+                        birthday: "birthday",
+                        age: "age",
+                        both: "both"
                     }
                 };
                 const initState = function() {
                     return {
                         inputType: def.inputType.system,
+                        increment: {
+                            available: true,
+                            count: SIGN.none
+                        },
                         insured: {
-                            increment: {
-                                available: true,
-                                count: SIGN.none
-                            },
                             name: {
                                 system: {
-                                    identifier: SIGN.none,
+                                    id: SIGN.none,
                                     number: SIGN.none,
                                     kana: { lastName: "ヒセイ", firstName: "ヒメイ" },
                                     kanji: { lastName: "被姓", firstName: "被名" }
@@ -1491,10 +1514,6 @@ SqlModule.prototype = {
                             birthday: { system: SIGN.none, user: SIGN.none }
                         },
                         contractor: {
-                            increment: {
-                                available: true,
-                                count: SIGN.none
-                            },
                             name: {
                                 system: {
                                     id: SIGN.none,
@@ -1517,6 +1536,13 @@ SqlModule.prototype = {
                 };
                 const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
                 const executeList = isContractorAvailable ? [def.target.insured, def.target.contractor] : [def.target.insured];
+                const elementInjector = new Object();
+                const inputTypeDef = def.elements.inputType;
+                const incrementDef = def.elements.increment;
+                const systemNameDef = def.elements.name.system;
+                const systemBirthDef = def.elements.birthday.system;
+                const userNameDef = def.elements.name.user;
+                const userBirthDef = def.elements.birthday.user;
                 const $container = jqNode("div", { id: seId.optionTemplateNB });
                 const $inputTypeSection = jqNode("div", { class: eClass.viewerSection });
                 const $inputTypeLine = jqNode("div", { class: seClass.commandLine }).css({ "padding-top": 0 });
@@ -1524,8 +1550,8 @@ SqlModule.prototype = {
                     {
                         label: upperCase(def.elements.inputType.labels.system, 0),
                         attributes: {
-                            id: def.elements.inputType.ids.system,
-                            name: def.elements.inputType.name,
+                            id: inputTypeDef.ids.system,
+                            name: inputTypeDef.name,
                             value: def.inputType.system
                         },
                         isChecked: isSystemInput(),
@@ -1534,8 +1560,8 @@ SqlModule.prototype = {
                     {
                         label:  upperCase(def.elements.inputType.labels.user, 0),
                         attributes: {
-                            id: def.elements.inputType.ids.user,
-                            name: def.elements.inputType.name,
+                            id: inputTypeDef.ids.user,
+                            name: inputTypeDef.name,
                             value: def.inputType.user
                         },
                         isChecked: !isSystemInput(),
@@ -1544,41 +1570,36 @@ SqlModule.prototype = {
                 ];
                 const $inputTypeRadioItem = eb.createRadio(inputTypeRadioItemList).getItem();
                 $inputTypeLine.append($inputTypeRadioItem).appendTo($inputTypeSection);
-                $container.append($inputTypeSection);
-                const elementInjector = new Object();
-                const incrementDef = def.elements.increment;
-                const systemNameDef = def.elements.name.system;
-                const systemBirthDef = def.elements.birthday.system;
-                const userNameDef = def.elements.name.user;
-                const userBirthDef = def.elements.birthday.user;
+                const $incrementSection = jqNode("div", { class: eClass.viewerSection }).css({ "padding-bottom": "20px" });
+                const $incrementLine = jqNode("div", { class: classes(seClass.commandLine, incrementDef.class) });
+                const incrementCheckboxItemList = [
+                    {
+                        label: incrementDef.checkbox.label,
+                        attributes: {
+                            id: incrementDef.checkbox.id,
+                            name: incrementDef.checkbox.name,
+                            value: SIGN.none
+                        },
+                        isChecked: nbState.increment.available,
+                        optionClass: SIGN.none
+                    }
+                ];
+                const $incrementCheckboxItem = eb.createCheckbox(incrementCheckboxItemList).getItem();
+                const $incrementCountInput = jqNode("input", { id: incrementDef.count.id, class: eClass.applicationInput, placeholder: incrementDef.count.label, value: nbState.increment.count });
+                $incrementCountInput.css({ "width": "50px", "margin-left": "10px", "margin-bottom": "5px" });
+                new EventHandler($incrementCountInput).addInputEvent(function(e, value) {
+                    const exp = new RegExpUtil(value);
+                    if(!exp.isNumber() || exp.isOverflow(3)) return false;
+                });
+                $incrementSection.append(eb.listAppend($incrementLine, [$incrementCheckboxItem, $incrementCountInput]));
+                elementInjector[def.injectorId.increment] = $incrementSection;
+                eb.listAppend($container, [$inputTypeSection, $incrementSection]);
                 const buildContents = function() {
                     executeList.forEach(function(targetId) {
                         const state = nbState[targetId];
                         const $section = jqNode("div", { class: eClass.viewerSection });
                         const $title = jqNode("div", { class: eClass.sectionTitle }).text(upperCase(targetId, 0));
                         const $systemContainer = jqNode("div").css({ "padding-top": "10px" });
-                        const $incrementLine = jqNode("div", { class: classes(seClass.commandLine, incrementDef.class) });
-                        const incrementCheckboxItemList = [
-                            {
-                                label: incrementDef.checkbox.label,
-                                attributes: {
-                                    id: getAuth(targetId, incrementDef.checkbox.id),
-                                    name: getAuth(targetId, incrementDef.checkbox.name),
-                                    value: SIGN.none
-                                },
-                                isChecked: state.increment.available,
-                                optionClass: SIGN.none
-                            }
-                        ];
-                        const $incrementCheckboxItem = eb.createCheckbox(incrementCheckboxItemList).getItem();
-                        const $incrementCountInput = jqNode("input", { id: getAuth(targetId, incrementDef.count.id), class: eClass.applicationInput, placeholder: incrementDef.count.label, value: state.increment.count });
-                        $incrementCountInput.css({ "width": "50px", "margin-left": "10px", "margin-bottom": "5px" });
-                        new EventHandler($incrementCountInput).addInputEvent(function(e, value) {
-                            const exp = new RegExpUtil(value);
-                            if(!exp.isNumber() || exp.isOverflow(3)) return false;
-                        });
-                        initIncrementCount(targetId, $incrementCountInput);
-                        eb.listAppend($incrementLine, [$incrementCheckboxItem, $incrementCountInput]);
                         const $systemNameIdentifierLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
                         const $systemNameIdentifierLabel = jqNode("label").text(systemNameDef.labels.identifier);
                         const $systemNameIdInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.id), class: eClass.applicationInput, placeholder: systemNameDef.labels.id, value: state.name.system.id });
@@ -1602,17 +1623,17 @@ SqlModule.prototype = {
                         const $systemBirthLabel = jqNode("label").text(systemBirthDef.label);
                         const $systemBirthInput = jqNode("input", { id: getAuth(targetId, systemBirthDef.id), class: eClass.applicationInput, placeholder: systemBirthDef.format, value: state.birthday.system });
                         eb.listAppend($systemBirthLine, [$systemBirthLabel, $systemBirthInput]);
-                        eb.listAppend($systemContainer, [$incrementLine, $systemNameIdentifierLine, $systemNameKanaLine, $systemNameKanjiLine, $systemBirthLine]);
+                        eb.listAppend($systemContainer, [$systemNameIdentifierLine, $systemNameKanaLine, $systemNameKanjiLine, $systemBirthLine]);
                         const $userContainer = jqNode("div").css({ "padding-top": "10px" });;
                         const $userNameKanaLine = jqNode("div", { class: classes(seClass.commandLine, userNameDef.class) });
                         const $userNameKanaLabel = jqNode("label").text(userNameDef.labels.nameKana);
-                        const $userNameKanaLastNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.lastNameKana), class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKana, value: state.name.user.kana.lastName });
-                        const $userNameKanaFirstNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.firstNameKana), class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKana, value: state.name.user.kana.firstName });
+                        const $userNameKanaLastNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.lastNameKana), class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKana }).val(state.name.user.kana.lastName);
+                        const $userNameKanaFirstNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.firstNameKana), class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKana }).val(state.name.user.kana.firstName);
                         eb.listAppend($userNameKanaLine, [$userNameKanaLabel, $userNameKanaLastNameInput, $userNameKanaFirstNameInput]);
                         const $userNameKanjiLine = jqNode("div", { class: classes(seClass.commandLine, userNameDef.class) });
                         const $userNameKanjiLabel = jqNode("label").text(userNameDef.labels.nameKanji);
-                        const $userNameKanjiLastNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.lastNameKanji), class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKanji, value: state.name.user.kanji.lastName });
-                        const $userNameKanjiFirstNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.firstNameKanji), class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKanji, value: state.name.user.kanji.firstName });
+                        const $userNameKanjiLastNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.lastNameKanji), class: eClass.applicationTextarea, placeholder: userNameDef.labels.lastNameKanji  }).val(state.name.user.kanji.lastName);
+                        const $userNameKanjiFirstNameInput = jqNode("textarea", { id: getAuth(targetId, userNameDef.ids.firstNameKanji), class: eClass.applicationTextarea, placeholder: userNameDef.labels.firstNameKanji }).val(state.name.user.kanji.firstName);
                         eb.listAppend($userNameKanjiLine, [$userNameKanjiLabel, $userNameKanjiLastNameInput, $userNameKanjiFirstNameInput]);
                         const $userBirthLine = jqNode("div", { class: classes(seClass.commandLine, userBirthDef.class) });
                         const $userBirthLabel = jqNode("label").text(userBirthDef.label);
@@ -1627,77 +1648,114 @@ SqlModule.prototype = {
                     executeList.forEach(function(targetId) {
                         const injector = elementInjector[targetId];
                         if(isSystemInput()) {
+                            elementInjector[def.injectorId.increment].removeClass(eClass.hide);
                             injector.system.removeClass(eClass.hide);
                             injector.user.addClass(eClass.hide);
                         }
                         else {
+                            elementInjector[def.injectorId.increment].addClass(eClass.hide);
                             injector.system.addClass(eClass.hide);
                             injector.user.removeClass(eClass.hide);
                         }
                     });
                 };
-                const initIncrementCount = function(targetId, $element) {
+                const initIncrementCount = function($element) {
                     if(!$element) return false;
-                    const available = nbState[targetId].increment.available;
+                    const available = nbState.increment.available;
                     if(available) $element.addClass(eClass.readonly).prop("readonly", true);
                     else $element.removeClass(eClass.readonly).prop("readonly", false);
                 };
                 const setEvent = function() {
-                    const inputTypeElement = concatString("input[name=", def.elements.inputType.name, "]");
+                    const inputTypeElement = concatString("input[name=", inputTypeDef.name, "]");
                     new EventHandler($(inputTypeElement)).addEvent("change", function(e) {
                         const target = e.target;
                         nbState.inputType = target.value;
                         initInputType();
                     });
                     executeList.forEach(function(targetId) {
-                        const incrementCheckboxElement = concatString("input[name=", getAuth(targetId, incrementDef.checkbox.name), "]");
+                        const incrementCheckboxElement = concatString("input[name=", incrementDef.checkbox.name, "]");
                         new EventHandler($(incrementCheckboxElement)).addEvent("change", function(e) {
                             const target = e.target;
                             const available = target.checked;
-                            nbState[targetId].increment.available = available;
-                            const $incrementCountInput = jqById(getAuth(targetId, incrementDef.count.id));
-                            initIncrementCount(targetId, $incrementCountInput);
+                            nbState.increment.available = available;
+                            const $incrementCountInput = jqById(incrementDef.count.id);
+                            initIncrementCount($incrementCountInput);
                         });
                     });
                 };
                 const callback = function(viewerClose) {
                     try {
-                        const isSystemType = isSystemInput();
-                        const dataObj = new Object();
+                        const keys = def.keys;
+                        const templatePrintObject = new Object();
+                        nbState.increment.count = jqById(incrementDef.count.id).val();
                         executeList.forEach(function(targetId) {
-                            dataObj[targetId] = {
-                                system: {
-                                    increment: {
-                                        available: nbState[targetId].increment.available,
-                                        count: jqById(getAuth(targetId, incrementDef.count.id)).val()
-                                    },
-                                    systemInputId: jqById(getAuth(targetId, systemNameDef.ids.id)).val(),
-                                    systemInputNumber: jqById(getAuth(targetId, systemNameDef.ids.number)).val(),
-                                    systemInputKanaLastName: jqById(getAuth(targetId, systemNameDef.ids.lastNameKana)).val(),
-                                    systemInputKanaFirstname: jqById(getAuth(targetId, systemNameDef.ids.firstNameKana)).val(),
-                                    systemInputKanjiLastName: jqById(getAuth(targetId, systemNameDef.ids.lastNameKanji)).val(),
-                                    systemInputKanjiFirstname: jqById(getAuth(targetId, systemNameDef.ids.firstNameKanji)).val(),
-                                    systemInputBirthday: jqById(getAuth(targetId, systemBirthDef.id)).val()
-                                },
-                                user: {
-                                    userInputKanaLastName: jqById(getAuth(targetId, userNameDef.ids.lastNameKana)).val(),
-                                    userInputKanaFirstname: jqById(getAuth(targetId, userNameDef.ids.firstNameKana)).val(),
-                                    userInputKanjiLastName: jqById(getAuth(targetId, userNameDef.ids.lastNameKanji)).val(),
-                                    userInputKanjiFirstname: jqById(getAuth(targetId, userNameDef.ids.firstNameKanji)).val(),
-                                    userInputBirthday: jqById(getAuth(targetId, userBirthDef.id)).val()
-                                }
-                            };
+                            nbState[targetId].name.system.id = jqById(getAuth(targetId, systemNameDef.ids.id)).val();
+                            nbState[targetId].name.system.number = jqById(getAuth(targetId, systemNameDef.ids.number)).val();
+                            nbState[targetId].name.system.kana.lastName = jqById(getAuth(targetId, systemNameDef.ids.lastNameKana)).val();
+                            nbState[targetId].name.system.kana.firstName = jqById(getAuth(targetId, systemNameDef.ids.firstNameKana)).val();
+                            nbState[targetId].name.system.kanji.lastName = jqById(getAuth(targetId, systemNameDef.ids.lastNameKanji)).val();
+                            nbState[targetId].name.system.kanji.firstName = jqById(getAuth(targetId, systemNameDef.ids.firstNameKanji)).val();
+                            nbState[targetId].name.user.kana.lastName = jqById(getAuth(targetId, userNameDef.ids.lastNameKana)).val();
+                            nbState[targetId].name.user.kana.firstName = jqById(getAuth(targetId, userNameDef.ids.firstNameKana)).val();
+                            nbState[targetId].name.user.kanji.lastName = jqById(getAuth(targetId, userNameDef.ids.lastNameKanji)).val();
+                            nbState[targetId].name.user.kanji.firstName = jqById(getAuth(targetId, userNameDef.ids.firstNameKanji)).val();
+                            nbState[targetId].birthday.system = jqById(getAuth(targetId, systemBirthDef.id)).val();
+                            nbState[targetId].birthday.user = jqById(getAuth(targetId, userBirthDef.id)).val();
                         });
+                        const calcAge = function(inputDate) {
+                            const exp = new RegExpUtil(submissionDate);
+                            if(!exp.isYYYYMMDD()) throw new Error("Submission date format is invalid");
+                            const inYear = Number(inputDate.substr(0, 4));
+                            const inMonth = Number(inputDate.substr(4, 2));
+                            const inDate = Number(inputDate.substr(6, 2));
+                            const smYear = Number(submissionDate.substr(0, 4));
+                            const smMonth = Number(submissionDate.substr(4, 2));
+                            const smDate = Number(submissionDate.substr(6, 2));
+                            const calcY = smYear - inYear;
+                            const calcM = smMonth - inMonth;
+                            const calcD = smDate - inDate;
+                            if(calcY < 0) return null;
+                            else if(calcY <= 0) {
+                                if(calcM < 0) return null;
+                                if(calcM === 0 && calcD < 0) return null;
+                            }
+                            if(calcM > 0) return String(calcY);
+                            if(calcD > 0) {
+                                if(calcY === 0) return String(calcY);
+                                return String(calcY - 1);
+                            }
+                            return String(calcY);
+                        };
+                        const isSystemType = isSystemInput();
                         if(isSystemType) {
                             const checkResult = {
                                 error: false,
                                 messageList: new Array()
                             };
+                            const increment = nbState.increment;
+                            if(!increment.available) {
+                                const incrementCount = _this.getCheckObject(increment.count, incrementDef.count.label);
+                                const result = _this.validation(incrementCount);
+                                if(result.error) {
+                                    checkResult.messageList.push(result.message);
+                                    checkResult.error = true;
+                                }
+                                else {
+                                    if(!typeIs(Number(increment.count)).number) {
+                                        const message = concatString(incrementDef.count.label, " is not a number");
+                                        checkResult.messageList.push(message);
+                                        checkResult.error = true;
+                                    }
+                                    else if(Number(increment.count) > toList.length) {
+                                        const message = concatString(incrementDef.count.label, " is out of range");
+                                        checkResult.messageList.push(message);
+                                        checkResult.error = true;
+                                    }
+                                }
+                            }
                             executeList.forEach(function(targetId) {
-                                const data = dataObj[targetId].system;
+                                const state = nbState[targetId];
                                 const checkList = new Array();
-                                const increment = data.increment;
-                                if(!increment.available) checkList.push(_this.getCheckObject(increment.count, incrementDef.count.label));
                                 const labels = [
                                     concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.id),
                                     concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.number),
@@ -1708,65 +1766,116 @@ SqlModule.prototype = {
                                     systemBirthDef.label
                                 ];
                                 [
-                                    data.systemInputId,
-                                    data.systemInputNumber,
-                                    data.systemInputKanaLastName,
-                                    data.systemInputKanaFirstname,
-                                    data.systemInputKanjiLastName,
-                                    data.systemInputKanjiFirstname,
-                                    data.systemInputBirthday
+                                    state.name.system.id,
+                                    state.name.system.number,
+                                    state.name.system.kana.lastName,
+                                    state.name.system.kana.firstName,
+                                    state.name.system.kanji.lastName,
+                                    state.name.system.kanji.firstName,
+                                    state.birthday.system
                                 ].forEach(function(item, i) {
                                     checkList.push(_this.getCheckObject(item, labels[i]));
                                 });
                                 let hasError = false;
                                 const result = _this.validation.apply(_this, checkList);
                                 if(result.error) hasError = true;
-                                const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
                                 let pushMessage = result.message;
+                                if(pushMessage.indexOf(systemNameDef.labels.number) < 0 && !typeIs(Number(state.name.system.number)).number) {
+                                    const message = concatString(labels[1], " is not a number");
+                                    pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
+                                    hasError = true;
+                                }
                                 if(pushMessage.indexOf(systemBirthDef.label) < 0) {
-                                    const exp = new RegExpUtil(data.systemInputBirthday);
+                                    const exp = new RegExpUtil(state.birthday.system);
                                     if(!exp.isYYYYMMDD()) {
                                         const message = concatString(systemBirthDef.label, " format is not valid");
                                         pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
                                         hasError = true;
                                     }
+                                    else if(typeIs(calcAge(state.birthday.system)).null) {
+                                        const message = concatString(systemBirthDef.label, " is over the submission date");
+                                        pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
+                                        hasError = true;
+                                    }
                                 }
                                 if(hasError) {
-                                    checkResult.error = true;
+                                    const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
                                     checkResult.messageList.push(targetLabel + pushMessage);
+                                    checkResult.error = true;
                                 }
                             });
                             if(checkResult.error) {
                                 throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
                             }
                             else {
-                                const templatePrintObject = new Object();
                                 const generator = function(c, tableCount) {
                                     const type = c.type;
                                     const target = c.target;
                                     const separator = c.separator;
-                                    // const head = concatString("@", column);
-                                    const upFlag = target === "both" ? 2 : 1;
-                                    const iterateNum = tableCount * toList;
+                                    const isBoth = target === keys.both;
+                                    const iterateNum = increment.available ? toList.length : Number(increment.count);
+                                    const getName = function(state, i, type) {
+                                        const num = Number(state.name.system.number);
+                                        let lastName = SIGN.none;
+                                        let firstName = SIGN.none;
+                                        if(type === keys.nameKana) {
+                                            lastName = state.name.system.kana.lastName;
+                                            firstName = state.name.system.kana.firstName;
+                                        }
+                                        else if(type === keys.nameKanji) {
+                                            lastName = state.name.system.kanji.lastName;
+                                            firstName = state.name.system.kanji.firstName;
+                                        }
+                                        const cIdentifier = concatString(state.name.system.id, setCharPadding(num + i, 3));
+                                        const cLastName = concatString(cIdentifier, lastName);
+                                        const cFirstName = concatString(cIdentifier, firstName);
+                                        const fullName = concatString(cLastName, separator, cFirstName);
+                                        return toFullWidth(fullName);
+                                    };
+                                    let dataStack = new Array();
                                     getIterator(iterateNum).forEach(function(v, i) {
-                                        switch(type) {
-                                            case "name_kana": {
-                                                break;
+                                        if(type === keys.nameKana || type === keys.nameKanji) {
+                                            if(isBoth) {
+                                                executeList.forEach(function(targetId) {
+                                                    dataStack.push(getName(nbState[targetId], i, type));
+                                                });
                                             }
-                                            case "name_kanji": {
-                                                break;
+                                            else {
+                                                dataStack.push(getName(nbState[target], i, type));
                                             }
-                                            case "birthday": {
-                                                break;
+                                        }
+                                        else if(type === keys.birthday) {
+                                            if(isBoth) {
+                                                executeList.forEach(function(targetId) {
+                                                    dataStack.push(nbState[targetId].birthday.system);
+                                                });
+                                            }
+                                            else {
+                                                dataStack.push(nbState[target].birthday.system);
+                                            }
+                                        }
+                                        else if(type === keys.age) {
+                                            if(isBoth) {
+                                                executeList.forEach(function(targetId) {
+                                                    dataStack.push(calcAge(nbState[targetId].birthday.system));
+                                                });
+                                            }
+                                            else {
+                                                dataStack.push(calcAge(nbState[target].birthday.system));
                                             }
                                         }
                                     });
+                                    const existData = getExistArray(dataStack);
+                                    return existData.length >= 1 ? existData.join(SIGN.nl) : SIGN.none;
                                 };
                                 Object.keys(tables).forEach(function(table) {
                                     const t = tables[table];
                                     templatePrintObject[table] = new Object();
                                     Object.keys(t).forEach(function(column) {
                                         const c = t[column];
+                                        const target = c.target;
+                                        const isBoth = target === keys.both;
+                                        if(!isBoth && executeList.indexOf(target) < 0) return;
                                         const tableCount = fromData[table].count;
                                         templatePrintObject[table][column] = generator(c, tableCount);
                                     });
@@ -1776,10 +1885,12 @@ SqlModule.prototype = {
                         else {
                             const checkResult = {
                                 error: false,
-                                messageList: new Array()
+                                messageList: new Array(),
+                                baseSize: null
                             };
+                            const userInputObj = new Object();
                             executeList.forEach(function(targetId) {
-                                const data = dataObj[targetId].user;
+                                const state = nbState[targetId];
                                 const checkList = new Array();
                                 const labels = [
                                     concatString(userNameDef.labels.nameKana, " > ", userNameDef.labels.lastNameKana),
@@ -1789,37 +1900,140 @@ SqlModule.prototype = {
                                     userBirthDef.label
                                 ];
                                 [
-                                    data.userInputKanaLastName,
-                                    data.userInputKanaFirstname,
-                                    data.userInputKanjiLastName,
-                                    data.userInputKanjiFirstname,
-                                    data.userInputBirthday
+                                    state.name.user.kana.lastName,
+                                    state.name.user.kana.firstName,
+                                    state.name.user.kanji.lastName,
+                                    state.name.user.kanji.firstName,
+                                    state.birthday.user
                                 ].forEach(function(item, i) {
                                     checkList.push(_this.getCheckObject(item.split(SIGN.nl).join(SIGN.none), labels[i]));
                                 });
                                 let hasError = false;
                                 const result = _this.validation.apply(_this, checkList);
                                 if(result.error) hasError = true;
-                                const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
                                 let pushMessage = result.message;
                                 if(pushMessage.indexOf(userBirthDef.label) < 0) {
-                                    data.userInputBirthday.split(SIGN.nl).some(function(bd) {
+                                    state.birthday.user.split(SIGN.nl).some(function(bd, i) {
                                         const exp = new RegExpUtil(bd);
                                         if(!exp.isYYYYMMDD()) {
-                                            const message = concatString(userBirthDef.label, " format is not valid");
+                                            const message = concatString(userBirthDef.label, " format is not valid[Line:", i + 1, "]");
                                             pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
                                             hasError = true;
                                             return true;
                                         }
+                                        else if(typeIs(calcAge(bd)).null) {
+                                            const message = concatString(userBirthDef.label, " is over the submission date[Line:", i + 1, "]");
+                                            pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
+                                            hasError = true;
+                                        }
                                     });
                                 }
                                 if(hasError) {
-                                    checkResult.error = true;
+                                    const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
                                     checkResult.messageList.push(targetLabel + pushMessage);
+                                    checkResult.error = true;
+                                }
+                                else {
+                                    const nameKanaLastName = getExistArray(state.name.user.kana.lastName.split(SIGN.nl));
+                                    const nameKanaFirstName = getExistArray(state.name.user.kana.firstName.split(SIGN.nl));
+                                    const nameKanjiLastName = getExistArray(state.name.user.kanji.lastName.split(SIGN.nl));
+                                    const nameKanjiFirstName = getExistArray(state.name.user.kanji.firstName.split(SIGN.nl));
+                                    const birthday = getExistArray(state.birthday.user.split(SIGN.nl));
+                                    if(!checkResult.baseSize) checkResult.baseSize = nameKanaLastName.length;
+                                    const instance = new Object();
+                                    instance[keys.nameKana] = { lastName: nameKanaLastName, firstName: nameKanaFirstName };
+                                    instance[keys.nameKanji] = { lastName: nameKanjiLastName, firstName: nameKanjiFirstName };
+                                    instance[keys.birthday] = birthday;
+                                    const sizeCheck = function() {
+                                        let flag = true;
+                                        [nameKanaLastName, nameKanaFirstName, nameKanjiLastName, nameKanjiFirstName, birthday].some(function(item) {
+                                            if(item.length != checkResult.baseSize) {
+                                                flag = false;
+                                                return true;
+                                            }
+                                        });
+                                        return flag;
+                                    };
+                                    if(!sizeCheck()) {
+                                        const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
+                                        const message = "Number of input value rows ​do not match";
+                                        checkResult.messageList.push(targetLabel + message);
+                                        checkResult.error = true;
+                                    }
+                                    else {
+                                        userInputObj[targetId] = instance;
+                                    }
                                 }
                             });
-                            if(checkResult.error) throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
+                            if(checkResult.error) {
+                                throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
+                            }
+                            else {
+                                const generator = function(c) {
+                                    const type = c.type;
+                                    const target = c.target;
+                                    const separator = c.separator;
+                                    const isBoth = target === keys.both;
+                                    const iterateNum = checkResult.baseSize;
+                                    const getName = function(state) {
+                                        const lastName = state.lastName;
+                                        const firstName = state.firstName;
+                                        const fullName = concatString(lastName, separator, firstName);
+                                        return toFullWidth(fullName);
+                                    };
+                                    let dataStack = new Array();
+                                    getIterator(iterateNum).forEach(function(v, i) {
+                                        if(type === keys.nameKana || type === keys.nameKanji) {
+                                            if(isBoth) {
+                                                executeList.forEach(function(targetId) {
+                                                    dataStack = dataStack.concat(getName(userInputObj[targetId][type]));
+                                                });
+                                            }
+                                            else {
+                                                dataStack = dataStack.concat(getName(userInputObj[target][type]));
+                                            }
+                                        }
+                                        else if(type === keys.birthday) {
+                                            if(isBoth) {
+                                                executeList.forEach(function(targetId) {
+                                                    dataStack = dataStack.concat(userInputObj[targetId][type]);
+                                                });
+                                            }
+                                            else {
+                                                dataStack = dataStack.concat(userInputObj[target][type]);
+                                            }
+                                        }
+                                        else if(type === keys.age) {
+                                            const calcAgeMapping = function(bdArray) {
+                                                return bdArray.map(function(bd) { return calcAge(bd); });
+                                            };
+                                            if(isBoth) {
+                                                executeList.forEach(function(targetId) {
+                                                    dataStack = dataStack.concat(calcAgeMapping(userInputObj[targetId][keys.birthday]));
+                                                });
+                                            }
+                                            else {
+                                                dataStack = dataStack.concat(calcAgeMapping(userInputObj[target][keys.birthday]));
+                                            }
+                                        }
+                                    });
+                                    const existData = getExistArray(dataStack);
+                                    return existData.length >= 1 ? existData.join(SIGN.nl) : SIGN.none;
+                                }
+                                Object.keys(tables).forEach(function(table) {
+                                    const t = tables[table];
+                                    templatePrintObject[table] = new Object();
+                                    Object.keys(t).forEach(function(column) {
+                                        const c = t[column];
+                                        const target = c.target;
+                                        const isBoth = target === keys.both;
+                                        if(!isBoth && executeList.indexOf(target) < 0) return;
+                                        templatePrintObject[table][column] = generator(c);
+                                    });
+                                });
+                            }
                         }
+                        sync(viewerClose, templatePrintObject, nbState);
                     }
                     catch(e) {
                         new Notification().error().open(e.message);
@@ -1827,6 +2041,7 @@ SqlModule.prototype = {
                 };
                 buildContents();
                 initInputType();
+                initIncrementCount($incrementCountInput);
                 new Viewer().setContents(menu, $container).open(callback).onLoad(setEvent);
                 break;
             }
@@ -2304,10 +2519,8 @@ SqlModule.prototype = {
             msg: new Array(),
             backup: null
         };
-        if(option.length <= 0) {
-            dataCopyState.insertData = cloneJS(dataCopyState.insertDataStatic);
-        }
-        else {
+        dataCopyState.insertData = cloneJS(dataCopyState.insertDataStatic);
+        if(option.length >= 1) {
             actionState.backup = cloneJS(dataCopyState.insertData);
             const convertScript = function(script) {
                 const scriptObj = new Object();
@@ -2341,11 +2554,11 @@ SqlModule.prototype = {
                     });
                 }
             });
-        }
-        if(actionState.msg.length >= 1) {
-            dataCopyState.insertData = actionState.backup;
-            new Notification().error().open(actionState.msg.join(SIGN.br));
-            return false;
+            if(actionState.msg.length >= 1) {
+                dataCopyState.insertData = actionState.backup;
+                new Notification().error().open(actionState.msg.join(SIGN.br));
+                return false;
+            }
         }
         dataCopyState.option = option;
         dialogClose();
@@ -2506,7 +2719,8 @@ SqlModule.prototype = {
         loading.on().then(function() {
             const userCode = _this.getCheckObject(jqById(seId.userCode).val(), captions.userCode);
             const userName = _this.getCheckObject(jqById(seId.userName).val(), captions.userName);
-            const result = _this.validation(userCode, userName);
+            const checkList = createUserState.actionType === types.action.delete ? [userCode] : [userCode, userName];
+            const result = _this.validation.apply(_this, checkList);
             if(result.error) {
                 new Notification().error().open(result.message);
                 loading.off();
@@ -2535,12 +2749,20 @@ SqlModule.prototype = {
             const keySet = createUserExport.keySet;
             const querySet = createUserExport.querySet;
             const rules = createUserExport.rules;
+            const resultFlag = { insert: true, delete: true };
             const getInsertQuery = function(table) {
                 const insertQueryStack = new Array();
                 const qs = querySet[table];
                 switch(tableCode[table]) {
                     case "1": {
                         const base = rules.base[table];
+                        const spec = rules.spec;
+                        let specPw = SIGN.none;
+                        if(info.sid.value === spec.specPassword.sid) {
+                            const db = new DBUtils().connect(info);
+                            const dataSet = db.executeSelect(spec.specPassword.query).onEnd(true).dataSet;
+                            specPw = db.getColumnData(dataSet, spec.specPassword.table, spec.specPassword.column);
+                        }
                         const iterator = qs[base].length;
                         for(let i = 0; i < iterator; i++) {
                             const columnStack = new Array();
@@ -2548,12 +2770,17 @@ SqlModule.prototype = {
                             Object.keys(qs).forEach(function(column) {
                                 let value = qs[column];
                                 if(typeIs(qs[column]).array) {
-                                	value = qs[column][i];
+                                    value = qs[column][i];
                                 }
                                 else if(typeIs(qs[column]).object) {
-                                	const prop = getProperty(qs[column], info.sid.value);
-                                	if(prop) value = prop;
-                                	else value = "1";
+                                    const prop = getProperty(qs[column], info.sid.value);
+                                    if(prop) {
+                                        if(info.sid.value === spec.specPassword.sid) value = specPw;
+                                        else value = prop;
+                                    }
+                                    else {
+                                        value = "1";
+                                    }
                                 }
                                 if(rules.combine.code.indexOf(column) >= 0) {
                                     value = concatString(uc, value);
@@ -2629,6 +2856,13 @@ SqlModule.prototype = {
                 const deleteQuery = concatString("DELETE FROM ", table, " WHERE ", condition);
                 return deleteQuery;
             };
+            const getSelectQuery = function(table) {
+                const ks = keySet[table];
+                const code = concatString(SIGN.sq, uc, "%", SIGN.sq);
+                const condition = concatString(ks, " LIKE ", code);
+                const selectQuery = concatString("SELECT * FROM ", table, " WHERE ", condition);
+                return selectQuery;
+            };
             const onTransaction = _this.transaction(transactionId);
             if(onTransaction.error) throw new Error(onTransaction.message);
             const db = onTransaction.db;
@@ -2645,6 +2879,13 @@ SqlModule.prototype = {
                             break;
                         }
                         case types.action.delete: {
+                            if(!resultFlag.delete) return;
+                            const selectQuery = getSelectQuery(table);
+                            const selectData = db.executeSelect(selectQuery).dataSet;
+                            if(selectData.count <= 0) {
+                                resultFlag.delete = false;
+                                return;
+                            }
                             const query = getDeleteQuery(table);
                             db.execute(query);
                             _this.pushQueryLog(createUserState.log, query);
@@ -2652,6 +2893,7 @@ SqlModule.prototype = {
                         }
                     }
                 });
+                if(!resultFlag.delete) throw new Error("Not exists user");
                 _this.actionControllerCreateUser(phaseType.commit);
             }
             catch(e) {
@@ -3045,9 +3287,10 @@ DBUtils.prototype = {
         return this;
     },
     getColumnData: function(data, table, column) {
-        const tableData = data[table];
+        const prop = getProperty(data, table);
+        const tableData = prop ? prop : data;
         if(!tableData) return null;
-        const index = tableData.name.indexOf(column);
+        const index = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
         return tableData.data[0][index];
     }
 };
