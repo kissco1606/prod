@@ -2025,15 +2025,129 @@ RegExpUtil.prototype = {
     },
     isNot: function(regExp) {
         return !regExp.test(this.value);
+    },
+    includeSpace: function() {
+        const regExp = new RegExp(" |　", "g");
+        return regExp.test(this.value);
     }
 };
 
 const Validation = function() {
     this.types = {
         required: "required",
-        whitespace: "whitespace"
+        notSpace: "notSpace"
+    };
+    
+    this.checkList = new Array();
+    this.state = {
+        error: false,
+        message: new Array()
     };
 };
 Validation.prototype = {
-    
+    getTypes: function() {
+        return this.types;
+    },
+    initLayout: function(value, label) {
+        const layout = {
+            value: value,
+            label: label,
+            types: new Array(),
+            actions: new Object()
+        };
+        return layout;
+    },
+    getLayout: function(initData, types, actions) {
+        const layout = initData;
+        layout.types = types;
+        if(actions) layout.actions = actions;
+        return layout;
+    },
+    getActionLayout: function() {
+        const layout = {
+            error: false,
+            message: SIGN.none
+        };
+        return layout;
+    },
+    getMessage: function(type, label) {
+        const types = this.types;
+        let message = SIGN.none;
+        switch(type) {
+            case types.required: {
+                message = concatString(label, " is required");
+                break;
+            }
+            case types.notSpace: {
+                message = concatString(label, " : Space is not allowed")
+                break;
+            }
+        }
+        return message;
+    },
+    check: function(type, value) {
+        const types = this.types;
+        let result = true;
+        switch(type) {
+            case types.required: {
+                if(!value) {
+                    result = false;
+                }
+                break;
+            }
+            case types.notSpace: {
+                if(new RegExpUtil(value).includeSpace()) {
+                    result = false;
+                }
+                break;
+            }
+        }
+        return result;
+    },
+    reset: function() {
+        this.checkList = new Array();
+        return this;
+    },
+    append: function(layoutData) {
+        this.checkList.push(layoutData);
+        return this;
+    },
+    appendList: function(list) {
+        this.checkList = this.checkList.concat(list);
+        return this;
+    },
+    exec: function() {
+        const _this = this;
+        const state = _this.state;
+        state.error = false;
+        state.message = new Array();
+        _this.checkList.forEach(function(layout) {
+            const value = layout.value;
+            const label = layout.label;
+            const types = layout.types;
+            const actions = layout.actions;
+            types.some(function(type) {
+                const action = getProperty(actions, type);
+                if(action && typeIs(action).function) {
+                    const result = action();
+                    if(result.error) {
+                        state.error = true;
+                        state.message.push(result.message);
+                        return true;
+                    }
+                }
+                else {
+                    const result = _this.check(type, value);
+                    if(!result) {
+                        const message = _this.getMessage(type, label);
+                        state.error = true;
+                        state.message.push(message);
+                        return true;
+                    }
+                }
+            });
+        });
+        if(state.error) state.message = state.message.join(SIGN.br);
+        return state;
+    }
 };

@@ -93,53 +93,6 @@ BatchModule.prototype = {
         setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
         return null;
     },
-    getCheckObject: function(value, name) {
-        return {
-            value: value,
-            name: name
-        };
-    },
-    validation: function() {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        const result = {
-            error: false,
-            message: null
-        };
-        const argumentsList = Array.prototype.slice.call(arguments);
-        const errorMsg = new Array();
-        argumentsList.forEach(function(arg) {
-            const value = arg.value;
-            const name = arg.name;
-            if(!value) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.required, name));
-            }
-            else if(value.match(new RegExp(SIGN.ws, "g"))) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
-            }
-        });
-        if(result.error) {
-            result.message = errorMsg.join(SIGN.br);
-        }
-        return result;
-    },
-    getMessage: function(type, msg) {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        switch(type) {
-            case msgTypes.required: {
-                msg = msg + " is required";
-                break;
-            }
-            case msgTypes.matchWhitespace: {
-                msg = msg + " : whitespace is not allowed";
-                break;
-            }
-        }
-        return msg;
-    },
     setPage: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;

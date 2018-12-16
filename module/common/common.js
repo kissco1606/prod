@@ -148,53 +148,6 @@ CommonModule.prototype = {
         setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
         return null;
     },
-    getCheckObject: function(value, name) {
-        return {
-            value: value,
-            name: name
-        };
-    },
-    validation: function() {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        const result = {
-            error: false,
-            message: null
-        };
-        const argumentsList = Array.prototype.slice.call(arguments);
-        const errorMsg = new Array();
-        argumentsList.forEach(function(arg) {
-            const value = arg.value;
-            const name = arg.name;
-            if(!value) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.required, name));
-            }
-//            else if(value.match(new RegExp(SIGN.ws, "g"))) {
-//                result.error = true;
-//                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
-//            }
-        });
-        if(result.error) {
-            result.message = errorMsg.join(SIGN.br);
-        }
-        return result;
-    },
-    getMessage: function(type, msg) {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        switch(type) {
-            case msgTypes.required: {
-                msg = msg + " is required";
-                break;
-            }
-            case msgTypes.matchWhitespace: {
-                msg = msg + " : whitespace is not allowed";
-                break;
-            }
-        }
-        return msg;
-    },
     setPage: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
@@ -263,15 +216,19 @@ CommonModule.prototype = {
         const types = _this.Define.TYPES;
         const loading = new Loading();
         loading.on().then(function() {
-            const targetPath = _this.getCheckObject(jqById(seId.fileTreePath).val(), captions.targetPath);
-            const result = _this.validation(targetPath);
+            const targetPathValue = jqById(seId.fileTreePath).val();
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const fileTreePathInitData = v.initLayout(targetPathValue, captions.targetPath)
+            const fileTreePathLayout = v.getLayout(fileTreePathInitData, [vTypes.required]);
+            v.reset().append(fileTreePathLayout);
+            const result = v.exec();
             if(result.error) {
                 new Notification().error().open(result.message);
                 loading.off();
                 return false;
             }
-            const path = targetPath.value;
-            const fileTree = new FileTree(path).build();
+            const fileTree = new FileTree(targetPathValue).build();
             const worker = new Worker(types.path.fileTreeWorker);
             worker.onmessage = function(e) {
                 const fileTreeData = e.data;
@@ -551,15 +508,22 @@ CommonModule.prototype = {
                 return $container;
             };
             const callback = function(dialogClose) {
-                const name = _this.getCheckObject(eventInjector.name.val(), upperCase(captions.name));
-                const path = _this.getCheckObject(eventInjector.path.val(), upperCase(captions.path));
-                const result = _this.validation(name, path);
+                const nameValue = eventInjector.name.val();
+                const pathValue = eventInjector.path.val();
+                const v = new Validation();
+                const vTypes = v.getTypes();
+                const nameInitData = v.initLayout(nameValue, upperCase(captions.name));
+                const nameLayout = v.getLayout(nameInitData, [vTypes.required, vTypes.notSpace]);
+                const pathInitData = v.initLayout(pathValue, upperCase(captions.path));
+                const pathLayout = v.getLayout(pathInitData, [vTypes.required]);
+                v.reset().appendList([nameLayout, pathLayout]);
+                const result = v.exec();
                 if(result.error) {
                     new Notification().error().open(result.message);
                     return false;
                 }
                 const dSL = store.init()[itf.getKey()];
-                if(!isVoid(dSL) && !isVoid(dSL[name.value]) && !(isEditMode && info.name === name.value)) {
+                if(!isVoid(dSL) && !isVoid(dSL[nameValue]) && !(isEditMode && info.name === nameValue)) {
                     new Notification().error().open(messages.already_exits_name);
                     return false;
                 }
@@ -567,10 +531,10 @@ CommonModule.prototype = {
                     if(isEditMode && !isVoid(dSL[info.name])) return dSL[info.name].order;
                     return getObjectMaxOrder(dSL) + 1;
                 };
-                const jsonPath = new FileSystem(path.value).toJsonPath().getPath();
-                const injectData = itf.getInjectData(name.value, jsonPath, getOrder());
-                itf.inject(store, injectData, name.value);
-                if(isEditMode && info.name !== name.value) store.connect([itf.getKey(), info.name]).delete().apply();
+                const jsonPath = new FileSystem(pathValue).toJsonPath().getPath();
+                const injectData = itf.getInjectData(nameValue, jsonPath, getOrder());
+                itf.inject(store, injectData, nameValue);
+                if(isEditMode && info.name !== nameValue) store.connect([itf.getKey(), info.name]).delete().apply();
                 store.connect([itf.getKey()]).set(sortObjectByOrder(store.init()[itf.getKey()])).apply();
                 buildContents();
                 store.sync();
@@ -593,18 +557,25 @@ CommonModule.prototype = {
         const messages = _this.Define.MESSAGES;
         const calendar = new Calendar();
         const mode = calendar.def.mode;
-        const targetPath = _this.getCheckObject(jqById(seId.dateTargetPath).val(), captions.targetPath);
-        const systemDate = _this.getCheckObject(jqById(seId.dateInput).val(), captions.systemDate);
-        const result = _this.validation(targetPath, systemDate);
+        const targetPathValue = jqById(seId.dateTargetPath).val();
+        const systemDateValue = jqById(seId.dateInput).val();
+        const v = new Validation();
+        const vTypes = v.getTypes();
+        const targetPathInitData = v.initLayout(targetPathValue, captions.targetPath);
+        const targetPathLayout = v.getLayout(targetPathInitData, [vTypes.required]);
+        const systemDateInitData = v.initLayout(systemDateValue, captions.systemDate);
+        const systemDateLayout = v.getLayout(systemDateInitData, [vTypes.required, vTypes.notSpace]);
+        v.reset().appendList([targetPathLayout, systemDateLayout]);
+        const result = v.exec();
         if(result.error) {
             new Notification().error().open(result.message);
             return false;
         }
-        const validate = _this.dateFormatValidate(systemDate.value);
+        const validate = _this.dateFormatValidate(systemDateValue);
         if(validate === mode.ymd) {
             try {
                 const today = getToday();
-                const valueArray = systemDate.value.split(SIGN.ssh);
+                const valueArray = systemDateValue.split(SIGN.ssh);
                 const year = valueArray[0];
                 const month = valueArray[1];
                 const date = valueArray[2];
@@ -637,7 +608,8 @@ CommonModule.prototype = {
             }
         }
         else {
-            new Notification().error().open(messages.invalid_format);
+            const message = concatString(captions.systemDate, " : ", messages.invalid_format);
+            new Notification().error().open(message);
         }
         return null;
     },
@@ -713,7 +685,7 @@ CommonModule.prototype = {
         const phaseType = types.phase.clipboardLinker;
         const $card = jqById(seId.clipboardLinkerCard);
         const $cardContents = $card.find(concatString(".", eClass.cardContents));
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $contentsContainer = $cardContents.find(concatString(".", seClass.contentsContainer));
         const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
         const $setButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.set));
         const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
@@ -753,8 +725,24 @@ CommonModule.prototype = {
         const $copyList = jqById(seId.clipboardLinkerCopyList);
         const copyListValue = $copyList.val();
         const copyList = getExistArray(copyListValue.split(separatorType));
-        if(isVoid(copyList)) {
-            new Notification().error().open("Copy List is required");
+        const v = new Validation();
+        const vTypes = v.getTypes();
+        const validAction = function() {
+            const actionLayout = v.getActionLayout();
+            if(isVoid(copyList)) {
+                actionLayout.error = true;
+                actionLayout.message = v.getMessage(vTypes.required, captions.copyList);
+            }
+            return actionLayout;
+        };
+        const copyListInitData = v.initLayout(copyList, captions.copyList);
+        const actionObj = new Object();
+        actionObj[vTypes.required] = validAction;
+        const copyListLayout = v.getLayout(copyListInitData, [vTypes.required], actionObj);
+        v.reset().append(copyListLayout);
+        const result = v.exec();
+        if(result.error) {
+            new Notification().error().open(result.message);
             return false;
         }
         clipboardLinkerState.injector.commandArea.forEach(function(item) {
@@ -762,7 +750,7 @@ CommonModule.prototype = {
         });
         const $card = jqById(seId.clipboardLinkerCard);
         const $cardContents = $card.find(concatString(".", eClass.cardContents));
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $contentsContainer = $cardContents.find(concatString(".", seClass.contentsContainer));
         const $commandArea = jqNode("div", { id: seId.clipboardLinkerSelectArea, class: seClass.commandArea });
         copyList.forEach(function(linkText) {
             const $button = jqNode("button").text(linkText);
