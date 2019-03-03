@@ -1,13 +1,13 @@
 function jqNode(tag, option) {
-	return $("<" + tag + " />", option);
+    return $("<" + tag + " />", option);
 };
 
 function jqById(id) {
-	return $("#" + id);
+    return $("#" + id);
 };
 
 function jqByClass(className) {
-	return $("." + className);
+    return $("." + className);
 };
 
 function jqByTag(tagName) {
@@ -16,12 +16,12 @@ function jqByTag(tagName) {
 
 function classes() {
     const argumentsList = Array.prototype.slice.call(arguments);
-	const classes = new Array();
-	argumentsList.forEach(function(item) {
-		classes.push(item);
-	});
-	const size = classes.length;
-	return size >= 1 ? classes.join(SIGN.ws) : "";
+    const classes = new Array();
+    argumentsList.forEach(function(item) {
+        classes.push(item);
+    });
+    const size = classes.length;
+    return size >= 1 ? classes.join(SIGN.ws) : "";
 };
 
 function fadeOut(element) {
@@ -160,9 +160,9 @@ function setCharPadding(char, len, fillChar, fillPos) {
 
 function concatString() {
     const argumentsList = Array.prototype.slice.call(arguments);
-	const stack = new Array();
-	argumentsList.forEach(function(item) {
-		stack.push(item);
+    const stack = new Array();
+    argumentsList.forEach(function(item) {
+        stack.push(item);
     });
     return stack.join(SIGN.none);
 };
@@ -275,6 +275,27 @@ function isVoid(val) {
     }
 };
 
+function createObject(key, value) {
+    const obj = new Object();
+    obj[key] = value;
+    return obj;
+};
+
+function createMultipleObject(setter) {
+    let flag = true;
+    const obj = new Object();
+    setter.some(function(item) {
+        const key = item[0];
+        const value = item[1];
+        if(isVoid(key)) {
+            flag = false;
+            return true;
+        }
+        obj[key] = value;
+    });
+    return flag ? obj : null;
+};
+
 function accessObject(obj, keys) {
     try {
         return keys.reduce(function(prev, curr) {
@@ -303,6 +324,18 @@ function setObject(obj, keys, value) {
         if(isVoid(prev[curr])) return prev[curr] = new Object();
         return prev[curr];
     }, obj);
+};
+
+function mergeObject(objA, objB) {
+    try {
+        const imfoA = Immutable.fromJS(objA);
+        const imfoB = Immutable.fromJS(objB);
+        const objMap = imfoA.merge(imfoB);
+        return objMap.toJS();
+    }
+    catch(e) {
+        return new Object();
+    }
 };
 
 function getProperty(obj, key) {
@@ -791,7 +824,11 @@ const FileController = function () {
     this.allowed = null;
 };
 FileController.prototype = {
-    setListener: function (listenerId) {
+    setListener: function (listener) {
+        this.listener = listener;
+        return this;
+    },
+    setListenerById: function (listenerId) {
         this.listener = jqById(listenerId);
         return this;
     },
@@ -812,12 +849,23 @@ FileController.prototype = {
                 e.stopPropagation();
                 const files = e.target.files;
                 if (files && files.length >= 1) {
+                    const path = e.target.value;
                     const file = files[0];
-                    if (isNotAllowed(allowed, file.type)) {
+                    const fileType = !isVoid(file.type) ? file.type : new FileSystem(path).getExtension();
+                    if (isNotAllowed(allowed, fileType)) {
+                        $listener.val(SIGN.none);
                         new Notification().error().open(MESSAGES.not_allowed_extension);
                         return false;
                     }
-                    _this.loadFile(file, func);
+                    try {
+                        _this.loadFile(file, func, path);
+                    }
+                    catch(e) {
+                        new Notification().error().open(e.message);
+                    }
+                    finally {
+                        $listener.val(SIGN.none);
+                    }
                 }
                 $listener.val(SIGN.none);
                 return false;
@@ -826,11 +874,11 @@ FileController.prototype = {
         }
         return this;
     },
-    loadFile: function (file, func) {
+    loadFile: function (file, func, path) {
         const fr = new FileReader();
         fr.onload = function(e) {
             const result = e.target.result;
-            func(result);
+            func(result, path);
         };
         readFile(fr, this.readType, file);
     }
@@ -899,13 +947,13 @@ function s2ab(s) {
 };
 
 function Workbook() {
-	if(!(this instanceof Workbook)) return new Workbook();
-	this.SheetNames = [];
-	this.Sheets = {};
+    if(!(this instanceof Workbook)) return new Workbook();
+    this.SheetNames = [];
+    this.Sheets = {};
 };
 
 function sheetFromArrayOfArrays(data, callback, parameter) {
-	const ws = new Object();
+    const ws = new Object();
     const range = {
         s: { c: 10000000, r: 10000000 },
         e: { c: 0, r: 0 }
@@ -936,9 +984,27 @@ function sheetFromArrayOfArrays(data, callback, parameter) {
 };
 
 function datenum(v, date1904) {
-	if(date1904) v += 1462;
-	const epoch = Date.parse(v);
-	return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+    if(date1904) v += 1462;
+    const epoch = Date.parse(v);
+    return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+};
+
+function duplicationCheckForArray(list) {
+    const stack = new Array();
+    const duplicated = new Array();
+    list.forEach(function(item) {
+        if(stack.indexOf(item) >= 0) {
+            if(duplicated.indexOf(item) < 0) {
+                duplicated.push(item);
+            }
+            return;
+        }
+        stack.push(item);
+    });
+    return {
+        has: duplicated.length >= 1,
+        data: duplicated
+    };
 };
 
 function removeDuplicationArray(list) {
@@ -995,12 +1061,12 @@ function threadMessage(module, actionType, params) {
     };
 };
 
-function getApplicationDBPath(storagePath) {
+function getApplicationPath(relativePath) {
     const rootPath = window.location.pathname;
     const rootPathList = getExistArray(rootPath.split(SIGN.ssh));
-    const storagePathList = getExistArray(storagePath.split(SIGN.ssh));
     rootPathList.pop();
-    const pathCollection = rootPathList.concat(storagePathList);
+    const relativePathList = getExistArray(relativePath.split(SIGN.ssh));
+    const pathCollection = rootPathList.concat(relativePathList);
     return pathCollection.join("\\\\");
 };
 
@@ -1060,100 +1126,101 @@ function getJson(path) {
 };
 
 const FileTree = function(path) {
-	this.absolutePath = null;
-	this.path = path;
-	this.tree = new Object();
-	this.treeSize = 0;
-	this.u = "\\";
+    this.absolutePath = null;
+    this.path = path;
+    this.tree = new Object();
+    this.treeSize = 0;
+    this.u = "\\";
 };
 FileTree.prototype = {
-	getAbsolutePath: function() {
-	    const path = this.path.split(this.u).filter(function(item, i, a) { return a.length > i + 1; }).join(this.u);
-		return path + this.u;
-	},
-	getRootPath: function(path) {
-	    const oPath = path.replace(this.absolutePath, "");
-	    const pathList = oPath.split(this.u);
-	    const size = pathList.length;
-	    const rootObj = { key: oPath, reference: "", size: size };
-	    if(size >= 1) rootObj.reference = pathList.slice(0, size - 1).join(this.u);
-		return rootObj;
-	},
-	getAccessKey: function(path) {
-		return getExistArray(path.replace(this.absolutePath, "").split(this.u));
-	},
-	setTreeObject: function(obj, root, fileName) {
-	    const key = root.key;
-	    const reference = root.reference;
-	    if(!obj[key]) {
-	        obj[key] = { root: reference, files: [fileName] };
-	    }
-	    else {
-	        obj[key].files.push(fileName);
-	    }
-	},
-	setFilesTree: function(fileObj, _this) {
-		const folder = fileObj.folder;
-		const path = fileObj.path;
-		const file = fileObj.file;
-		const root = _this.getRootPath(path);
-		const key = root.key;
-	    const reference = root.reference;
-	    const rootSize = root.size;
-	    _this.treeSize = _this.treeSize >= rootSize ? _this.treeSize : rootSize;
-	    const obj = _this.tree;
-	    if(!obj[key]) {
-	        obj[key] = { root: reference, folder: folder, files: [file.Name] };
-	    }
-	    else {
-	        obj[key].files.push(file.Name);
-	    }
-	},
-	iterateFiles: function(path, folder, recursive, actionPerFileCallback) {
-		const _this = this;
-		const fso = new ActiveXObject(TYPES.client.fileSystemObject);
-		const folderObj = fso.GetFolder(path);
-		const fileEnum = new Enumerator(folderObj.Files);
-		for(; !fileEnum.atEnd(); fileEnum.moveNext()){
-			const fileObj = {
-				path: path,
-				folder: folder ? folder : "",
-				file: fso.GetFile(fileEnum.item())
-			};
-			actionPerFileCallback(fileObj, _this);
-		}
-		if(recursive){
-			const subFolderEnum = new Enumerator(folderObj.SubFolders);
-			for(; !subFolderEnum.atEnd(); subFolderEnum.moveNext()){
-				var subFolderObj = fso.GetFolder(subFolderEnum.item());
-				this.iterateFiles(subFolderObj.Path, subFolderObj.Name, true, actionPerFileCallback);
-			}
-		}
-	},
-	build: function() {
-		this.absolutePath = this.getAbsolutePath(this.path);
-		this.iterateFiles(this.path, null, true, this.setFilesTree);
-		const target = this.path.replace(this.absolutePath, SIGN.none);
-		return {
-		    tree: this.tree,
-		    size: this.treeSize,
-		    target: target
-		};
-	}
+    getAbsolutePath: function() {
+        const path = this.path.split(this.u).filter(function(item, i, a) { return a.length > i + 1; }).join(this.u);
+        return path + this.u;
+    },
+    getRootPath: function(path) {
+        const oPath = path.replace(this.absolutePath, "");
+        const pathList = oPath.split(this.u);
+        const size = pathList.length;
+        const rootObj = { key: oPath, reference: "", size: size };
+        if(size >= 1) rootObj.reference = pathList.slice(0, size - 1).join(this.u);
+        return rootObj;
+    },
+    getAccessKey: function(path) {
+        return getExistArray(path.replace(this.absolutePath, "").split(this.u));
+    },
+    setTreeObject: function(obj, root, fileName) {
+        const key = root.key;
+        const reference = root.reference;
+        if(!obj[key]) {
+            obj[key] = { root: reference, files: [fileName] };
+        }
+        else {
+            obj[key].files.push(fileName);
+        }
+    },
+    setFilesTree: function(fileObj, _this) {
+        const folder = fileObj.folder;
+        const path = fileObj.path;
+        const file = fileObj.file;
+        const root = _this.getRootPath(path);
+        const key = root.key;
+        const reference = root.reference;
+        const rootSize = root.size;
+        _this.treeSize = _this.treeSize >= rootSize ? _this.treeSize : rootSize;
+        const obj = _this.tree;
+        if(!obj[key]) {
+            obj[key] = { root: reference, folder: folder, files: [file.Name] };
+        }
+        else {
+            obj[key].files.push(file.Name);
+        }
+    },
+    iterateFiles: function(path, folder, recursive, actionPerFileCallback) {
+        const _this = this;
+        const fso = new ActiveXObject(TYPES.client.fileSystemObject);
+        const folderObj = fso.GetFolder(path);
+        const fileEnum = new Enumerator(folderObj.Files);
+        for(; !fileEnum.atEnd(); fileEnum.moveNext()){
+            const fileObj = {
+                path: path,
+                folder: folder ? folder : "",
+                file: fso.GetFile(fileEnum.item())
+            };
+            actionPerFileCallback(fileObj, _this);
+        }
+        if(recursive){
+            const subFolderEnum = new Enumerator(folderObj.SubFolders);
+            for(; !subFolderEnum.atEnd(); subFolderEnum.moveNext()){
+                var subFolderObj = fso.GetFolder(subFolderEnum.item());
+                this.iterateFiles(subFolderObj.Path, subFolderObj.Name, true, actionPerFileCallback);
+            }
+        }
+    },
+    build: function() {
+        this.absolutePath = this.getAbsolutePath(this.path);
+        this.iterateFiles(this.path, null, true, this.setFilesTree);
+        const target = this.path.replace(this.absolutePath, SIGN.none);
+        return {
+            tree: this.tree,
+            size: this.treeSize,
+            target: target
+        };
+    }
 };
 
 const FileSystem = function(path) {
     const io = TYPES.file.io;
-	this.path = path;
-	this.mode = io.mode.forWriting;
-	this.option = false;
-	this.format = io.format.os;
-	this.data = null;
+    this.path = path;
+    this.mode = io.mode.forWriting;
+    this.option = false;
+    this.format = io.format.os;
+    this.data = null;
+    this.u = "\\";
 };
 FileSystem.prototype = {
-	init: function() {
-		const fso = new ActiveXObject(TYPES.client.fileSystemObject);
-		return fso;
+    init: function() {
+        const fso = new ActiveXObject(TYPES.client.fileSystemObject);
+        return fso;
     },
     toJsonPath: function() {
         if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("\\\\", "g"), "/");
@@ -1170,36 +1237,103 @@ FileSystem.prototype = {
     getPath: function() {
         return this.path;
     },
-	setFormat: function(format) {
-		this.format = format;
-		return this;
-	},
-	createNotExists: function() {
-		this.option = true;
-		return this;
-	},
-	setData: function(data) {
-		this.data = data;
-		return this;
-	},
-	read: function() {
-	    const fileTypes = TYPES.file.io;
-	    const mode = fileTypes.mode;
-		const fso = this.init();
-		const stream = fso.OpenTextFile(this.path, mode.forReading, this.option, this.format);
-		this.data = stream.ReadAll();
-		stream.Close();
-		return this;
-	},
-	write: function(data) {
-		const fileTypes = TYPES.file.io;
-	    const mode = fileTypes.mode;
-		const fso = this.init();
-		const stream = fso.OpenTextFile(this.path, mode.forWriting, this.option, this.format);
-		stream.Write(data);
-		stream.Close();
-		return this;
-	}
+    getExtension: function() {
+        try {
+            const path = this.path;
+            const pathArray = path.split(this.u);
+            const pathSize = pathArray.length;
+            const target = pathArray[pathSize - 1];
+            const targetArray = target.split(".");
+            const targetSize = targetArray.length;
+            const extension = concatString(".", targetArray[targetSize - 1]);
+            return extension;
+        }
+        catch(e) {
+            return SIGN.none;
+        }
+    },
+    setFormat: function(format) {
+        this.format = format;
+        return this;
+    },
+    createNotExists: function() {
+        this.option = true;
+        return this;
+    },
+    setData: function(data) {
+        this.data = data;
+        return this;
+    },
+    getData: function() {
+        return this.data;
+    },
+    read: function() {
+        const fileTypes = TYPES.file.io;
+        const mode = fileTypes.mode;
+        const fso = this.init();
+        const stream = fso.OpenTextFile(this.path, mode.forReading, this.option, this.format);
+        this.data = stream.ReadAll();
+        stream.Close();
+        return this;
+    },
+    write: function(data) {
+        const fileTypes = TYPES.file.io;
+        const mode = fileTypes.mode;
+        const fso = this.init();
+        const stream = fso.OpenTextFile(this.path, mode.forWriting, this.option, this.format);
+        stream.Write(data);
+        stream.Close();
+        return this;
+    },
+    createFile: function(overwrite, unicode) {
+        overwrite = overwrite ? true : false;
+        unicode = unicode ? true : false;
+        const fso = this.init();
+        const stream = fso.CreateTextFile(this.path, overwrite, unicode);
+        stream.Close();
+        return this;
+    },
+    deleteFile: function() {
+        const fso = this.init();
+        const file = fso.GetFile(this.path);
+        file.Delete();
+        return this;
+    },
+    createFolder: function(existCheck) {
+        const fso = this.init();
+        const exec = function(path, isRecursiveFunc) {
+            if(!fso.FolderExists(path)) {
+                const parentPath = fso.GetParentFolderName(path);
+                if(parentPath) {
+                    exec(parentPath, true);
+                    fso.CreateFolder(path);
+                }
+                else if(!isRecursiveFunc) {
+                    throw new Error("Invalid path");
+                }
+            }
+            else if(!isRecursiveFunc && existCheck) {
+                throw new Error("Already exists folder");
+            }
+        };
+        exec(this.path);
+        return this;
+    },
+    deleteFolder: function(force) {
+        const fso = this.init();
+        fso.DeleteFolder(this.path, force ? force : false);
+        return this;
+    },
+    copyFile: function(source, destination, isOverwrite) {
+        const fso = this.init();
+        fso.CopyFile(source, destination, isOverwrite);
+        return this;
+    },
+    copyFolder: function(source, destination, isOverwrite) {
+        const fso = this.init();
+        fso.CopyFolder(source, destination, isOverwrite);
+        return this;
+    }
 };
 
 const ElementBuilder = function(element) {
@@ -1299,12 +1433,12 @@ ElementBuilder.prototype = {
     },
     setDisable: function() {
         this.element.addClass(eClass.disable);
-        this.element.prop("disable", true);
+        this.element.prop("disabled", true);
         return this;
     },
     removeDisable: function() {
         this.element.removeClass(eClass.disable);
-        this.element.prop("disable", false);
+        this.element.prop("disabled", false);
         return this;
     },
     setDisplayNone: function() {
@@ -1451,7 +1585,7 @@ Store.prototype = {
         const data = JSON.stringify(this.toState.data);
         const aes = new Encryption();
         const enc = aes.encode(data).getData();
-        const fs = new FileSystem(getApplicationDBPath(this.path));
+        const fs = new FileSystem(getApplicationPath(this.path));
         fs.write(enc);
         return null;
     }
@@ -2016,6 +2150,10 @@ RegExpUtil.prototype = {
         const regExp = /^[0-9０-９]*$/;
         return regExp.test(this.value);
     },
+    isNumberWithLineBreak: function() {
+        const regExp = /^[\n0-9]*$/;
+        return regExp.test(this.value);
+    },
     isOverflow: function(size) {
         return this.value.length > size;
     },
@@ -2035,10 +2173,16 @@ RegExpUtil.prototype = {
 const Validation = function() {
     this.types = {
         required: "required",
-        notSpace: "notSpace"
+        requiredWithLineBreak: "requiredWithLineBreak",
+        notSpace: "notSpace",
+        numeric: "numeric",
+        numericWithLineBreak: "numericWithLineBreak",
+        size: "size"
     };
-    
     this.checkList = new Array();
+    this.transfer = {
+        size: new Object()
+    };
     this.state = {
         error: false,
         message: new Array()
@@ -2048,12 +2192,13 @@ Validation.prototype = {
     getTypes: function() {
         return this.types;
     },
-    initLayout: function(value, label) {
+    initLayout: function(value, label, bind) {
         const layout = {
             value: value,
             label: label,
             types: new Array(),
-            actions: new Object()
+            actions: new Object(),
+            bind: bind
         };
         return layout;
     },
@@ -2070,7 +2215,17 @@ Validation.prototype = {
         };
         return layout;
     },
-    getMessage: function(type, label) {
+    getSizeLayout: function(min, max, separator) {
+        const layout = {
+            size: {
+                min: min ? min : 0,
+                max: max ? max : 1000,
+                separator: separator
+            }
+        };
+        return layout;
+    },
+    getMessage: function(type, label, bind) {
         const types = this.types;
         let message = SIGN.none;
         switch(type) {
@@ -2078,14 +2233,33 @@ Validation.prototype = {
                 message = concatString(label, " is required");
                 break;
             }
+            case types.requiredWithLineBreak: {
+                message = concatString(label, " is required");
+                break;
+            }
             case types.notSpace: {
-                message = concatString(label, " : Space is not allowed")
+                message = concatString(label, " : Space is not allowed");
+                break;
+            }
+            case types.numeric: {
+                message = concatString(label, " : ", MESSAGES.allowedOnlyNumeric);
+                break;
+            }
+            case types.numericWithLineBreak: {
+                message = concatString(label, " : ", MESSAGES.allowedOnlyNumeric);
+                break;
+            }
+            case types.size: {
+                const sizeObj = accessObject(bind, ["size"]);
+                if(!isVoid(sizeObj)) {
+                    message = concatString(label, " : Invalid size ", SIGN.bs, "min:", sizeObj.min, SIGN.c, SIGN.ws, "max:", sizeObj.max ,SIGN.be);
+                }
                 break;
             }
         }
         return message;
     },
-    check: function(type, value) {
+    check: function(type, value, bind) {
         const types = this.types;
         let result = true;
         switch(type) {
@@ -2095,9 +2269,44 @@ Validation.prototype = {
                 }
                 break;
             }
+            case types.requiredWithLineBreak: {
+                if(!value || isVoid(getExistArray(value.split(SIGN.nl)))) {
+                    result = false;
+                }
+                break;
+            }
             case types.notSpace: {
                 if(new RegExpUtil(value).includeSpace()) {
                     result = false;
+                }
+                break;
+            }
+            case types.numeric: {
+                if(!new RegExpUtil(value).isNumber()) {
+                    result = false;
+                }
+                break;
+            }
+            case types.numericWithLineBreak: {
+                if(!new RegExpUtil(value).isNumberWithLineBreak()) {
+                    result = false;
+                }
+                break;
+            }
+            case types.size: {
+                const sizeObj = accessObject(bind, ["size"]);
+                if(!isVoid(sizeObj)) {
+                    if(!isVoid(sizeObj.separator)) {
+                        getExistArray(value.split(sizeObj.separator)).some(function(v) {
+                            if(v.length < sizeObj.min || v.length > sizeObj.max) {
+                                result = false;
+                                return true;
+                            }
+                        });
+                    }
+                    else if(value.length < sizeObj.min || value.length > sizeObj.max) {
+                        result = false;
+                    }
                 }
                 break;
             }
@@ -2126,10 +2335,12 @@ Validation.prototype = {
             const label = layout.label;
             const types = layout.types;
             const actions = layout.actions;
+            const bind = layout.bind;
+            if(types.indexOf(_this.types.required) < 0 && types.indexOf(_this.types.requiredWithLineBreak) < 0 && isVoid(value)) return;
             types.some(function(type) {
                 const action = getProperty(actions, type);
                 if(action && typeIs(action).function) {
-                    const result = action();
+                    const result = action(layout);
                     if(result.error) {
                         state.error = true;
                         state.message.push(result.message);
@@ -2137,9 +2348,9 @@ Validation.prototype = {
                     }
                 }
                 else {
-                    const result = _this.check(type, value);
+                    const result = _this.check(type, value, bind);
                     if(!result) {
-                        const message = _this.getMessage(type, label);
+                        const message = _this.getMessage(type, label, bind);
                         state.error = true;
                         state.message.push(message);
                         return true;
@@ -2149,5 +2360,77 @@ Validation.prototype = {
         });
         if(state.error) state.message = state.message.join(SIGN.br);
         return state;
+    }
+};
+
+const Encoder = function(data) {
+    this.data = data;
+    this.converted = null;
+};
+Encoder.prototype = {
+    toStringFromSJISArrayBuffer: function() {
+        const codes = new Uint8Array(this.data);
+        const encoding = Encoding.detect(codes);
+        const unicodeString = Encoding.convert(codes, { to: "unicode", from: encoding, type: "string" });
+        return unicodeString;
+    }
+};
+
+const DateUtil = function(year, month, date, hours, minutes, seconds, milliseconds) {
+    this.data = {
+        year: year,
+        month: month,
+        date: date,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: milliseconds
+    };
+    this.format = {
+        type1: function(o) {
+            const ymd = [o.year, setCharPadding(o.month, 2), setCharPadding(o.date, 2)].join(SIGN.ssh);
+            const hms = [setCharPadding(o.hours, 2), setCharPadding(o.minutes, 2), setCharPadding(o.seconds, 2)].join(SIGN.gc);
+            return concatString(ymd, SIGN.ws, hms);
+        },
+        type2: function(o) {
+            const m = [o.month, o.date, o.hours, o.minutes, o.seconds].map(function(item) {
+                return setCharPadding(item, 2);
+            });
+            return concatString(o.year, m.join(SIGN.none));
+        }
+    };
+};
+DateUtil.prototype = {
+    init: function(format) {
+        return new Date(format);
+    },
+    getDateObject: function(d) {
+        return {
+            year: d.getFullYear(),
+            month: d.getMonth() + 1,
+            date: d.getDate(),
+            hours: d.getHours(),
+            minutes: d.getMinutes(),
+            seconds: d.getSeconds(),
+            milliseconds: d.getMilliseconds()
+        };
+    },
+    calcDate: function(calcObj) {
+        const d = this.init(this.format.type1(this.data));
+        const cYear = calcObj.year ? calcObj.yaer : 0;
+        const cMonth = calcObj.month ? calcObj.month : 0;
+        const cDate = calcObj.date ? calcObj.date : 0;
+        const cHours = calcObj.hours ? calcObj.hours : 0;
+        const cMinutes = calcObj.minutes ? calcObj.minutes : 0;
+        const cSeconds = calcObj.seconds ? calcObj.seconds : 0;
+        const cMilliseconds = calcObj.milliseconds ? calcObj.milliseconds : 0;
+        d.setFullYear(d.getFullYear() + cYear);
+        d.setMonth(d.getMonth() + cMonth);
+        d.setDate(d.getDate() + cDate);
+        d.setHours(d.getHours() + cHours);
+        d.setMinutes(d.getMinutes() + cMinutes);
+        d.setSeconds(d.getSeconds() + cSeconds);
+        d.setMilliseconds(d.getMilliseconds() + cMilliseconds);
+        return this.getDateObject(d);
     }
 };

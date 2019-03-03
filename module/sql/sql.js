@@ -18,6 +18,7 @@ const SqlModule = function() {
                 createUserCard: "create-user-card",
                 lincErrorResolutionCard: "linc-error-resolution-card",
                 policyNumberFrom: "policy-number__from",
+                policyNumberFromTextarea: "policy-number__from__textarea",
                 policyNumberTo: "policy-number-to",
                 subSid: "sub-sid",
                 subUid: "sub-uid",
@@ -109,7 +110,14 @@ const SqlModule = function() {
             name: "name",
             load: "load",
             birthday: "birthday",
-            id: "id"
+            id: "id",
+            extractMode: "Extract Mode",
+            extractGroup: "Extract Group",
+            single: "single",
+            multiple: "multiple",
+            skei: "skei",
+            kkanri: "kkanri",
+            hksiharai: "hksiharai"
         },
         TYPES: {
             toolId: {
@@ -132,6 +140,7 @@ const SqlModule = function() {
                     complete: "complete"
                 },
                 dataCopy: {
+                    import: "import",
                     insert: "insert",
                     commit: "commit",
                     complete: "complete"
@@ -169,12 +178,94 @@ const SqlModule = function() {
                     { label: "All(without columns)", value: "all_without_columns" },
                     { label: "Separate by consoles", value: "separate_by_consoles" }
                 ]
+            },
+            design: {
+                dataCopy: {
+                    extractMode: {
+                        single: "single",
+                        multiple: "multiple"
+                    },
+                    extractGroup: {
+                        skei: "skei",
+                        kkanri: "kkanri",
+                        hksiharai: "hksiharai",
+                        option: "option"
+                    },
+                    extractExecTypes: {
+                        import: "import"
+                    }
+                }
             }
         },
         MESSAGES: {
             locking_transaction: "Locking by other transaction",
             only_exec_select_query: "Can be excute only [SELECT] query",
             already_exits_name: "Already exists name"
+        }
+    };
+    this.design = {
+        dataCopy: {
+            extractModeRadio: {
+                name: "data-copy__extract-mode-radiobox",
+                type: {
+                    single: {
+                        label: upperCase(this.Define.CAPTIONS.single, 0),
+                        id: "data-copy__extract-mode-single",
+                        value: this.Define.TYPES.design.dataCopy.extractMode.single,
+                        isChecked: true
+                    },
+                    multiple: {
+                        label: upperCase(this.Define.CAPTIONS.multiple, 0),
+                        id: "data-copy__extract-mode-multiple",
+                        value: this.Define.TYPES.design.dataCopy.extractMode.multiple,
+                        isChecked: false
+                    }
+                }
+            },
+            extractGroupCheck: {
+                name: "data-copy__extract-group-checkbox",
+                type: {
+                    skei: {
+                        label: this.Define.CAPTIONS.skei,
+                        id: "data-copy__extract-group-cb-skei",
+                        value: this.Define.TYPES.design.dataCopy.extractGroup.skei,
+                        isChecked: true
+                    },
+                    kkanri: {
+                        label: this.Define.CAPTIONS.kkanri,
+                        id: "data-copy__extract-group-cb-kkanri",
+                        value: this.Define.TYPES.design.dataCopy.extractGroup.kkanri,
+                        isChecked: false
+                    },
+                    hksiharai: {
+                        label: this.Define.CAPTIONS.hksiharai,
+                        id: "data-copy__extract-group-cb-hksiharai",
+                        value: this.Define.TYPES.design.dataCopy.extractGroup.hksiharai,
+                        isChecked: false
+                    }
+                }
+            }
+        }
+    };
+    this.event = {
+        dataCopy: {
+            status: {
+                extractMode: this.Define.TYPES.design.dataCopy.extractMode.single
+            },
+            element: {
+                extractMode: concatString("input[name=", this.design.dataCopy.extractModeRadio.name, "]"),
+                extractGroup: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]"),
+                extractGroupChecked: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]:checked"),
+                sid: null,
+                uid: null,
+                pwd: null,
+                pnf: null,
+                pnft: null,
+                pnt: null
+            },
+            handler: {
+               a: null
+            }
         }
     };
     this.state = {
@@ -305,52 +396,54 @@ SqlModule.prototype = {
         setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
         return null;
     },
-    getCheckObject: function(value, name) {
+    createInfoObject: function(value, name) {
         return {
             value: value,
             name: name
         };
     },
-    validation: function() {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        const result = {
-            error: false,
-            message: SIGN.none
+    resetState: function(){
+        this.event = {
+            dataCopy: {
+                status: {
+                    extractMode: this.Define.TYPES.design.dataCopy.extractMode.single
+                },
+                element: {
+                    extractMode: concatString("input[name=", this.design.dataCopy.extractModeRadio.name, "]"),
+                    extractGroup: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]"),
+                    extractGroupChecked: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]:checked"),
+                    sid: null,
+                    uid: null,
+                    pwd: null,
+                    pnf: null,
+                    pnft: null,
+                    pnt: null
+                },
+                handler: {
+                   a: null
+                }
+            }
         };
-        const argumentsList = Array.prototype.slice.call(arguments);
-        const errorMsg = new Array();
-        argumentsList.forEach(function(arg) {
-            const value = arg.value;
-            const name = arg.name;
-            if(!value) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.required, name));
-            }
-            else if(value.match(new RegExp(SIGN.ws, "g"))) {
-                result.error = true;
-                errorMsg.push(_this.getMessage(msgTypes.matchWhitespace, name));
-            }
-        });
-        if(result.error) {
-            result.message = errorMsg.join(SIGN.br);
-        }
-        return result;
-    },
-    getMessage: function(type, msg) {
-        const _this = this;
-        const msgTypes = _this.Define.TYPES.message;
-        switch(type) {
-            case msgTypes.required: {
-                msg = msg + " is required";
-                break;
-            }
-            case msgTypes.matchWhitespace: {
-                msg = msg + " : whitespace is not allowed";
-                break;
-            }
-        }
-        return msg;
+        this.state = {
+            page: this.Define.TYPES.page.access,
+            isConnecting: false,
+            info: new Object(),
+            lock: new Object(),
+            queryCommand: {
+                ui: new Object(),
+                phase: null,
+                timer: null,
+                element: null,
+                export: {
+                    data: null,
+                    type: this.Define.TYPES.export.queryCommand[0].value
+                }
+            },
+            dataCopy: new Object(),
+            createUser: new Object(),
+            lincErrorResolution: new Object(),
+            worker: null
+        };
     },
     onAccess: function() {
         const _this = this;
@@ -359,10 +452,16 @@ SqlModule.prototype = {
         const pageType = _this.Define.TYPES.page;
         const loading = new Loading();
         loading.on().then(function() {
-            const sid = _this.getCheckObject(jqById(seId.sid).val(), captions.sid);
-            const uid = _this.getCheckObject(jqById(seId.uid).val(), captions.uid);
-            const pwd = _this.getCheckObject(jqById(seId.pwd).val(), captions.pwd);
-            const result = _this.validation(sid, uid, pwd);
+            const sid = _this.createInfoObject(jqById(seId.sid).val(), captions.sid);
+            const uid = _this.createInfoObject(jqById(seId.uid).val(), captions.uid);
+            const pwd = _this.createInfoObject(jqById(seId.pwd).val(), captions.pwd);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const sidLayout = v.getLayout(v.initLayout(sid.value, sid.name), [vTypes.required, vTypes.notSpace]);
+            const uidLayout = v.getLayout(v.initLayout(uid.value, uid.name), [vTypes.required, vTypes.notSpace]);
+            const pwdLayout = v.getLayout(v.initLayout(pwd.value, pwd.name), [vTypes.required, vTypes.notSpace]);
+            v.reset().appendList([sidLayout, uidLayout, pwdLayout]);
+            const result = v.exec();
             if(result.error) {
                 new Notification().error().open(result.message);
                 loading.off();
@@ -372,7 +471,7 @@ SqlModule.prototype = {
                 sid: sid,
                 uid: uid,
                 pwd: pwd
-            }
+            };
             // new DBUtils().connect(info).close();
             _this.state.isConnecting = true;
             _this.state.info = info;
@@ -387,15 +486,14 @@ SqlModule.prototype = {
     onDisconnect: function() {
         const _this = this;
         const pageType = _this.Define.TYPES.page;
-        _this.state.isConnecting = false;
-        _this.state.info = new Object();
+        _this.resetState();
         _this.transition(pageType.access);
         return null;
     },
     pushQueryLog: function(list, query) {
-        list.push(query);
-        const timeLog = concatString("# > Executed query at ", getSystemDateTimeMilliseconds());
-        list.push(timeLog);
+        list.push(concatString(query, SIGN.sc));
+        // const timeLog = concatString("-- # > Executed query at ", getSystemDateTimeMilliseconds());
+        // list.push(timeLog);
         return null;
     },
     downloadLog: function(toolId) {
@@ -410,6 +508,8 @@ SqlModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seSrc = _this.Define.ELEMENTS.src;
         const captions = _this.Define.CAPTIONS;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
         const $contents = jqById(getContentsId());
         $contents.empty();
         switch(type) {
@@ -451,6 +551,7 @@ SqlModule.prototype = {
                 });
                 $screen.append($cardContainer);
                 $contents.append($screen);
+                dataCopyEvent.handler.a();
                 _this.renderQueryEditor();
                 break;
             }
@@ -630,11 +731,18 @@ SqlModule.prototype = {
                 return $container;
             };
             const callback = function(dialogClose) {
-                const name = _this.getCheckObject(eventInjector.name.val(), upperCase(captions.name));
-                const sid = _this.getCheckObject(eventInjector.sid.val(), captions.sid);
-                const uid = _this.getCheckObject(eventInjector.uid.val(), captions.uid);
-                const pwd = _this.getCheckObject(eventInjector.pwd.val(), captions.pwd);
-                const result = _this.validation(name, sid, uid, pwd);
+                const name = _this.createInfoObject(eventInjector.name.val(), upperCase(captions.name));
+                const sid = _this.createInfoObject(eventInjector.sid.val(), captions.sid);
+                const uid = _this.createInfoObject(eventInjector.uid.val(), captions.uid);
+                const pwd = _this.createInfoObject(eventInjector.pwd.val(), captions.pwd);
+                const v = new Validation();
+                const vTypes = v.getTypes();
+                const nameLayout = v.getLayout(v.initLayout(name.value, name.name), [vTypes.required, vTypes.notSpace]);
+                const sidLayout = v.getLayout(v.initLayout(sid.value, sid.name), [vTypes.required, vTypes.notSpace]);
+                const uidLayout = v.getLayout(v.initLayout(uid.value, uid.name), [vTypes.required, vTypes.notSpace]);
+                const pwdLayout = v.getLayout(v.initLayout(pwd.value, pwd.name), [vTypes.required, vTypes.notSpace]);
+                v.reset().appendList([nameLayout, sidLayout, uidLayout, pwdLayout]);
+                const result = v.exec();
                 if(result.error) {
                     new Notification().error().open(result.message);
                     return false;
@@ -688,8 +796,10 @@ SqlModule.prototype = {
         $execButton.click(function() {
             const editor = _this.state.queryEditor;
             if(editor) {
+                const value = editor.getValue();
                 const selection = editor.getSession().doc.getTextRange(editor.selection.getRange());
-                _this.execQuery(selection);
+                const query = selection ? selection : value;
+                _this.execQuery(query);
             }
         });
         $cancelButton.click(function() {
@@ -715,8 +825,10 @@ SqlModule.prototype = {
             editor.commands.addCommand({
                 name: "exec_key_event",
                 exec: function() {
+                    const value = editor.getValue();
                     const selection = editor.getSession().doc.getTextRange(editor.selection.getRange());
-                    _this.execQuery(selection);
+                    const query = selection ? selection : value;
+                    _this.execQuery(query);
                 },
                 bindKey: { mac: "cmd-f", win: "ctrl-f" }
             });
@@ -851,7 +963,7 @@ SqlModule.prototype = {
                     break;
                 }
                 case exportType[1].value: {
-                	consoleData.forEach(function(dataSet) {
+                    consoleData.forEach(function(dataSet) {
                        const data = convertData(dataSet.data);
                        convertedData = convertedData.concat(data);
                     });
@@ -909,9 +1021,10 @@ SqlModule.prototype = {
         $tabs.empty();
         $contents.empty();
         _this.state.queryCommand.ui = new Object();
+        _this.actionControllerQueryCommand(null);
         return null;
     },
-    execQuery: function(selection) {
+    execQuery: function(query) {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
@@ -919,14 +1032,17 @@ SqlModule.prototype = {
         const types = _this.Define.TYPES;
         const phaseType = types.phase.queryCommand;
         const qcState = _this.state.queryCommand;
-        if(isVoid(selection)) return false;
+        if(isVoid(query)) {
+            new Notification().error().open("Not found query");
+            return false;
+        }
         try {
             const exceptionRule = new RegExp("(((INSERT INTO))|((UPDATE).+?(SET))|((DELETE FROM))|(CREATE TABLE)|(DROP TABLE)|(TRUNCATE TABLE))", "gi");
-            if(exceptionRule.test(selection)) {
+            if(exceptionRule.test(query)) {
                 new Notification().error().open(messages.only_exec_select_query);
                 return false;
             }
-            const queryStack = getExistArray(selection.split(SIGN.sc).map(function(item) { return item.trim().replace(new RegExp("\r\nSELECT", "g"), "SELECT"); }));
+            const queryStack = getExistArray(query.split(SIGN.sc).map(function(item) { return item.trim().replace(new RegExp("\r\nSELECT", "g"), "SELECT"); }));
             const $tabs = jqById(seId.queryGridTabs);
             const $contents = jqById(seId.queryGridContents);
             if(!isVoid(qcState.ui)) {
@@ -1040,6 +1156,11 @@ SqlModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const dcdt = types.design.dataCopy;
+        const dataCopyDesign = _this.design.dataCopy;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
         const eb = new ElementBuilder();
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
@@ -1049,6 +1170,57 @@ SqlModule.prototype = {
         const $importButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase(captions.import));
         eb.listAppend($actionArea, [$loadButton, $checkButton, $extractButton, $importButton]);
         $container.append($actionArea);
+        const emr = dataCopyDesign.extractModeRadio;
+        const egc = dataCopyDesign.extractGroupCheck;
+        const getItemListObject = function(ds, type, optionClass) {
+            return {
+                label: ds.type[type].label,
+                attributes: {
+                    id: ds.type[type].id,
+                    name: ds.name,
+                    value: ds.type[type].value
+                },
+                isChecked: ds.type[type].isChecked,
+                optionClass: optionClass ? optionClass : SIGN.none
+            };
+        };
+        const extractModeRadioItemList = [getItemListObject(emr, dcdt.extractMode.single), getItemListObject(emr, dcdt.extractMode.multiple)];
+        const $emrCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $emrItem = eb.createRadio(extractModeRadioItemList).getItem();
+        const $emrLabel = jqNode("label").css("line-height", "2.5").text(captions.extractMode);
+        const $emrMain = jqNode("div", { class: eClass.fullWidth }).append($emrItem);
+        eb.listAppend($emrCommandArea, [$emrLabel, $emrMain]);
+        const extractGroupCheckItemList = [getItemListObject(egc, dcdt.extractGroup.skei), getItemListObject(egc, dcdt.extractGroup.kkanri), getItemListObject(egc, dcdt.extractGroup.hksiharai)];
+        const $egcCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $egcItem = eb.createCheckbox(extractGroupCheckItemList).getItem();
+        const $egcLabel = jqNode("label").css("line-height", "2.5").text(captions.extractGroup);
+        const $egcMain = jqNode("div", { class: eClass.fullWidth }).append($egcItem);
+        eb.listAppend($egcCommandArea, [$egcLabel, $egcMain]);
+        eb.listAppend($container, [$emrCommandArea, $egcCommandArea]);
+        const setEvent = function() {
+            const initInputType = function(mode) {
+                switch(mode) {
+                    case emr.type.single.value: {
+                        jqById(seId.policyNumberFrom).parent().removeClass(eClass.hide);
+                        jqById(seId.policyNumberFromTextarea).parent().addClass(eClass.hide);
+                        break;
+                    }
+                    case emr.type.multiple.value: {
+                        jqById(seId.policyNumberFrom).parent().addClass(eClass.hide);
+                        jqById(seId.policyNumberFromTextarea).parent().removeClass(eClass.hide);
+                        break;
+                    }
+                }
+            };
+            const emrElement = dataCopyEvent.element.extractMode;
+            new EventHandler($(emrElement)).addEvent("change", function(e) {
+                const target = e.target;
+                dataCopyEvent.status.extractMode = target.value;
+                initInputType(target.value);
+            });
+            initInputType(dataCopyEvent.status.extractMode);
+        };
+        dataCopyEvent.handler.a = setEvent;
         const itemList = [
             {
                 label: captions.subSid,
@@ -1075,6 +1247,12 @@ SqlModule.prototype = {
                 injectId: null
             },
             {
+                label: captions.policyNumberFrom,
+                inputType: "textarea",
+                inputId: seId.policyNumberFromTextarea,
+                injectId: null
+            },
+            {
                 label: captions.policyNumberTo,
                 inputType: "textarea",
                 inputId: seId.policyNumberTo,
@@ -1089,6 +1267,32 @@ SqlModule.prototype = {
             $commandArea.append($label).append($input);
             $container.append($commandArea);
             if(item.injectId) injector[item.injectId] = $input;
+            switch(item.inputId) {
+                case seId.subSid: {
+                    dataCopyEvent.element.sid = $input;
+                    break;
+                }
+                case seId.subUid: {
+                    dataCopyEvent.element.uid = $input;
+                    break;
+                }
+                case seId.subPwd: {
+                    dataCopyEvent.element.pwd = $input;
+                    break;
+                }
+                case seId.policyNumberFrom: {
+                    dataCopyEvent.element.pnf = $input;
+                    break;
+                }
+                case seId.policyNumberFromTextarea: {
+                    dataCopyEvent.element.pnft = $input;
+                    break;
+                }
+                case seId.policyNumberTo: {
+                    dataCopyEvent.element.pnt = $input;
+                    break;
+                }
+            }
         });
         $loadButton.click(function() {
             _this.openAccessTemplate(injector);
@@ -1167,10 +1371,14 @@ SqlModule.prototype = {
         const types = _this.Define.TYPES;
         const phaseType = types.phase.dataCopy;
         const transactionId = types.toolId.dataCopy;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
         const $card = jqById(seId.dataCopyCard);
         const $cardContents = $card.find(concatString(".", eClass.cardContents));
         const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
         const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
+        const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
+        const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
         const $insertButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.insert));
         const $optionButton = jqNode("button", { class: eClass.buttonColorEnergized }).text(upperCase(captions.option));
         const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
@@ -1179,10 +1387,45 @@ SqlModule.prototype = {
         const $exportButton = jqNode("button", { class: eClass.buttonColorCalm }).text(upperCase(captions.export));
         const $backupButton = jqNode("button", { class: eClass.buttonColorRoyal }).text(upperCase(captions.backup));
         const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+        const setElementDisable = function(prop) {
+            const e = dataCopyEvent.element;
+            const disableList = prop.disableList;
+            const readonlyList = prop.readonlyList;
+            const convert = function(elementString) {
+                return $(elementString);
+            };
+            Object.keys(e).forEach(function(key) {
+                if(disableList.indexOf(key) < 0 && readonlyList.indexOf(key) < 0) return;
+                if(disableList.indexOf(key) >= 0) {
+                    const item = convert(e[key]);
+                    const eb = new ElementBuilder(item);
+                    eb.setDisable();
+                }
+                else {
+                    const item = e[key];
+                    const eb = new ElementBuilder(item);
+                    eb.setReadonly();
+                }
+            });
+        };
         let itemList = new Array();
+        const propOption = {
+            disableList: new Array(),
+            readonlyList: new Array()
+        };
         switch(phase) {
+            case phaseType.import: {
+                itemList = [$checkButton, $extractButton, $resetButton];
+                propOption.disableList = ["extractMode"];
+                propOption.readonlyList = ["sid", "uid", "pwd"];
+                setElementDisable(propOption);
+                break;
+            }
             case phaseType.insert: {
                 itemList = [$insertButton, $optionButton, $exportButton, $backupButton, $resetButton];
+                propOption.disableList = ["extractMode", "extractGroup"];
+                propOption.readonlyList = ["sid", "uid", "pwd"];
+                setElementDisable(propOption);
                 break;
             }
             case phaseType.commit: {
@@ -1197,6 +1440,12 @@ SqlModule.prototype = {
         $actionArea.empty();
         itemList.forEach(function(item) {
             $actionArea.append(item);
+        });
+        $checkButton.click(function() {
+            _this.checkDataCopy();
+        });
+        $extractButton.click(function() {
+            _this.extractDataCopy(phase);
         });
         $insertButton.click(function() {
             _this.insertDataCopy();
@@ -1230,6 +1479,8 @@ SqlModule.prototype = {
             _this.destroy(transactionId, db);
             _this.state.dataCopy = new Object();
             $cardContents.html(_this.buildDataCopyContents());
+            dataCopyEvent.status.extractMode = types.design.dataCopy.extractMode.single;
+            dataCopyEvent.handler.a();
         });
         return null;
     },
@@ -1295,7 +1546,7 @@ SqlModule.prototype = {
                     new Notification().error().open(MESSAGES.incorrect_data);
                 }
             };
-            new FileController().setListener(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
+            new FileController().setListenerById(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
         });
         new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export, $templateButton]).open(callback);
         return null;
@@ -1703,6 +1954,7 @@ SqlModule.prototype = {
                             nbState[targetId].birthday.user = jqById(getAuth(targetId, userBirthDef.id)).val();
                         });
                         const calcAge = function(inputDate) {
+                            if(isVoid(inputDate)) return SIGN.none;
                             const exp = new RegExpUtil(submissionDate);
                             if(!exp.isYYYYMMDD()) throw new Error("Submission date format is invalid");
                             const inYear = Number(inputDate.substr(0, 4));
@@ -1727,35 +1979,35 @@ SqlModule.prototype = {
                             return String(calcY);
                         };
                         const isSystemType = isSystemInput();
+                        const v = new Validation();
+                        const vTypes = v.getTypes();
                         if(isSystemType) {
-                            const checkResult = {
+                            const checkAllResult = {
                                 error: false,
                                 messageList: new Array()
                             };
                             const increment = nbState.increment;
                             if(!increment.available) {
-                                const incrementCount = _this.getCheckObject(increment.count, incrementDef.count.label);
-                                const result = _this.validation(incrementCount);
+                                const incrementCount = _this.createInfoObject(increment.count, incrementDef.count.label);
+                                const outOfRangeValidate = function() {
+                                    const actionLayout = v.getActionLayout();
+                                    if(Number(increment.count) > toList.length) {
+                                        actionLayout.error = true;
+                                        actionLayout.message = concatString(incrementDef.count.label, " is out of range");
+                                    }
+                                    return actionLayout;
+                                };
+                                const actionObj = { "outOfRange": outOfRangeValidate };
+                                const incrementCountLayout = v.getLayout(v.initLayout(incrementCount.value, incrementCount.name), [vTypes.required, vTypes.notSpace, vTypes.numeric, "outOfRange"], actionObj);
+                                const result = v.reset().append(incrementCountLayout).exec();
                                 if(result.error) {
-                                    checkResult.messageList.push(result.message);
-                                    checkResult.error = true;
-                                }
-                                else {
-                                    if(!typeIs(Number(increment.count)).number) {
-                                        const message = concatString(incrementDef.count.label, " is not a number");
-                                        checkResult.messageList.push(message);
-                                        checkResult.error = true;
-                                    }
-                                    else if(Number(increment.count) > toList.length) {
-                                        const message = concatString(incrementDef.count.label, " is out of range");
-                                        checkResult.messageList.push(message);
-                                        checkResult.error = true;
-                                    }
+                                    checkAllResult.error = true;
+                                    checkAllResult.messageList.push(result.message);
                                 }
                             }
                             executeList.forEach(function(targetId) {
                                 const state = nbState[targetId];
-                                const checkList = new Array();
+                                v.reset();
                                 const labels = [
                                     concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.id),
                                     concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.number),
@@ -1774,38 +2026,45 @@ SqlModule.prototype = {
                                     state.name.system.kanji.firstName,
                                     state.birthday.system
                                 ].forEach(function(item, i) {
-                                    checkList.push(_this.getCheckObject(item, labels[i]));
+                                    let layout = null;
+                                    if(i === 1) {
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.required, vTypes.notSpace, vTypes.numeric]);
+                                    }
+                                    else if(i === 6) {
+                                        const exp = new RegExpUtil(state.birthday.system);
+                                        const formatValidate = function() {
+                                            const actionLayout = v.getActionLayout();
+                                            if(!exp.isYYYYMMDD()) {
+                                                actionLayout.error = true;
+                                                actionLayout.message = concatString(systemBirthDef.label, " format is not valid");
+                                            }
+                                            return actionLayout;
+                                        };
+                                        const ageValidate = function() {
+                                            const actionLayout = v.getActionLayout();
+                                            if(typeIs(calcAge(state.birthday.system)).null) {
+                                                actionLayout.error = true;
+                                                actionLayout.message = concatString(systemBirthDef.label, " is over the submission date");
+                                            }
+                                            return actionLayout;
+                                        };
+                                        const actionObj = { "format": formatValidate, "age": ageValidate };
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numeric, "format", "age"], actionObj);
+                                    }
+                                    else {
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.required, vTypes.notSpace]);
+                                    }
+                                    v.append(layout);
                                 });
-                                let hasError = false;
-                                const result = _this.validation.apply(_this, checkList);
-                                if(result.error) hasError = true;
-                                let pushMessage = result.message;
-                                if(pushMessage.indexOf(systemNameDef.labels.number) < 0 && !typeIs(Number(state.name.system.number)).number) {
-                                    const message = concatString(labels[1], " is not a number");
-                                    pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
-                                    hasError = true;
-                                }
-                                if(pushMessage.indexOf(systemBirthDef.label) < 0) {
-                                    const exp = new RegExpUtil(state.birthday.system);
-                                    if(!exp.isYYYYMMDD()) {
-                                        const message = concatString(systemBirthDef.label, " format is not valid");
-                                        pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
-                                        hasError = true;
-                                    }
-                                    else if(typeIs(calcAge(state.birthday.system)).null) {
-                                        const message = concatString(systemBirthDef.label, " is over the submission date");
-                                        pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
-                                        hasError = true;
-                                    }
-                                }
-                                if(hasError) {
-                                    const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
-                                    checkResult.messageList.push(targetLabel + pushMessage);
-                                    checkResult.error = true;
+                                const result = v.exec();
+                                if(result.error) {
+                                    const targetLabel = concatString(SIGN.abs, upperCase(targetId, 0), SIGN.abe, SIGN.br);
+                                    checkAllResult.error = true;
+                                    checkAllResult.messageList.push(targetLabel + result.message);
                                 }
                             });
-                            if(checkResult.error) {
-                                throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
+                            if(checkAllResult.error) {
+                                throw new Error(checkAllResult.messageList.join(concatString(SIGN.br, SIGN.br)));
                             }
                             else {
                                 const generator = function(c, tableCount) {
@@ -1883,7 +2142,7 @@ SqlModule.prototype = {
                             }
                         }
                         else {
-                            const checkResult = {
+                            const checkAllResult = {
                                 error: false,
                                 messageList: new Array(),
                                 baseSize: null
@@ -1891,6 +2150,7 @@ SqlModule.prototype = {
                             const userInputObj = new Object();
                             executeList.forEach(function(targetId) {
                                 const state = nbState[targetId];
+                                v.reset();
                                 const checkList = new Array();
                                 const labels = [
                                     concatString(userNameDef.labels.nameKana, " > ", userNameDef.labels.lastNameKana),
@@ -1906,32 +2166,45 @@ SqlModule.prototype = {
                                     state.name.user.kanji.firstName,
                                     state.birthday.user
                                 ].forEach(function(item, i) {
-                                    checkList.push(_this.getCheckObject(item.split(SIGN.nl).join(SIGN.none), labels[i]));
+                                    let layout = null;
+                                    if(i === 4) {
+                                        const formatValidate = function() {
+                                            const actionLayout = v.getActionLayout();
+                                            item.split(SIGN.nl).some(function(bd, j) {
+                                                const exp = new RegExpUtil(bd);
+                                                if(!exp.isYYYYMMDD()) {
+                                                    actionLayout.error = true;
+                                                    actionLayout.message = concatString(labels[i], " format is not valid[Line:", j + 1, "]");
+                                                    return true;
+                                                }
+                                            });
+                                            return actionLayout;
+                                        };
+                                        const ageValidate = function() {
+                                            const actionLayout = v.getActionLayout();
+                                            item.split(SIGN.nl).some(function(bd, j) {
+                                                const exp = new RegExpUtil(bd);
+                                                if(typeIs(calcAge(bd)).null) {
+                                                    actionLayout.error = true;
+                                                    actionLayout.message = concatString(labels[i], " is over submission date[Line:", j + 1, "]");
+                                                    return true;
+                                                }
+                                            });
+                                            return actionLayout;
+                                        };
+                                        const actionObj = { "format": formatValidate, "age": ageValidate };
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numericWithLineBreak, "format", "age"], actionObj);
+                                    }
+                                    else {
+                                        layout = v.getLayout(v.initLayout(item.split(SIGN.nl).join(SIGN.none), labels[i]), [vTypes.required, vTypes.notSpace]);
+                                    }
+                                    v.append(layout);
                                 });
-                                let hasError = false;
-                                const result = _this.validation.apply(_this, checkList);
-                                if(result.error) hasError = true;
-                                let pushMessage = result.message;
-                                if(pushMessage.indexOf(userBirthDef.label) < 0) {
-                                    state.birthday.user.split(SIGN.nl).some(function(bd, i) {
-                                        const exp = new RegExpUtil(bd);
-                                        if(!exp.isYYYYMMDD()) {
-                                            const message = concatString(userBirthDef.label, " format is not valid[Line:", i + 1, "]");
-                                            pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
-                                            hasError = true;
-                                            return true;
-                                        }
-                                        else if(typeIs(calcAge(bd)).null) {
-                                            const message = concatString(userBirthDef.label, " is over the submission date[Line:", i + 1, "]");
-                                            pushMessage = concatString(pushMessage, pushMessage ? SIGN.br : SIGN.none, message);
-                                            hasError = true;
-                                        }
-                                    });
-                                }
-                                if(hasError) {
-                                    const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
-                                    checkResult.messageList.push(targetLabel + pushMessage);
-                                    checkResult.error = true;
+                                const result = v.exec();
+                                if(result.error) {
+                                    const targetLabel = concatString(SIGN.abs, upperCase(targetId, 0), SIGN.abe, SIGN.br);
+                                    checkAllResult.error = true;
+                                    checkAllResult.messageList.push(targetLabel + result.message);
                                 }
                                 else {
                                     const nameKanaLastName = getExistArray(state.name.user.kana.lastName.split(SIGN.nl));
@@ -1939,15 +2212,17 @@ SqlModule.prototype = {
                                     const nameKanjiLastName = getExistArray(state.name.user.kanji.lastName.split(SIGN.nl));
                                     const nameKanjiFirstName = getExistArray(state.name.user.kanji.firstName.split(SIGN.nl));
                                     const birthday = getExistArray(state.birthday.user.split(SIGN.nl));
-                                    if(!checkResult.baseSize) checkResult.baseSize = nameKanaLastName.length;
+                                    if(!checkAllResult.baseSize) checkAllResult.baseSize = nameKanaLastName.length;
                                     const instance = new Object();
                                     instance[keys.nameKana] = { lastName: nameKanaLastName, firstName: nameKanaFirstName };
                                     instance[keys.nameKanji] = { lastName: nameKanjiLastName, firstName: nameKanjiFirstName };
                                     instance[keys.birthday] = birthday;
                                     const sizeCheck = function() {
                                         let flag = true;
-                                        [nameKanaLastName, nameKanaFirstName, nameKanjiLastName, nameKanjiFirstName, birthday].some(function(item) {
-                                            if(item.length != checkResult.baseSize) {
+                                        const checkList = [nameKanaLastName, nameKanaFirstName, nameKanjiLastName, nameKanjiFirstName];
+                                        if(!isVoid(birthday)) checkList.push(birthday);
+                                        checkList.some(function(item) {
+                                            if(item.length != checkAllResult.baseSize) {
                                                 flag = false;
                                                 return true;
                                             }
@@ -1955,18 +2230,24 @@ SqlModule.prototype = {
                                         return flag;
                                     };
                                     if(!sizeCheck()) {
-                                        const targetLabel = concatString("&lt;", upperCase(targetId, 0), "&gt;", SIGN.br);
+                                        const targetLabel = concatString(SIGN.abs, upperCase(targetId, 0), SIGN.abe, SIGN.br);
                                         const message = "Number of input value rows ​do not match";
-                                        checkResult.messageList.push(targetLabel + message);
-                                        checkResult.error = true;
+                                        checkAllResult.error = true;
+                                        checkAllResult.messageList.push(targetLabel + message);
+                                    }
+                                    else if(checkAllResult.baseSize > toList.length) {
+                                        const targetLabel = concatString(SIGN.abs, upperCase(targetId, 0), SIGN.abe, SIGN.br);
+                                        const message = "Size overflow";
+                                        checkAllResult.error = true;
+                                        checkAllResult.messageList.push(targetLabel + message);
                                     }
                                     else {
                                         userInputObj[targetId] = instance;
                                     }
                                 }
                             });
-                            if(checkResult.error) {
-                                throw new Error(checkResult.messageList.join(concatString(SIGN.br, SIGN.br)));
+                            if(checkAllResult.error) {
+                                throw new Error(checkAllResult.messageList.join(concatString(SIGN.br, SIGN.br)));
                             }
                             else {
                                 const generator = function(c) {
@@ -1974,49 +2255,50 @@ SqlModule.prototype = {
                                     const target = c.target;
                                     const separator = c.separator;
                                     const isBoth = target === keys.both;
-                                    const iterateNum = checkResult.baseSize;
                                     const getName = function(state) {
+                                        const nameStack = new Array();
                                         const lastName = state.lastName;
                                         const firstName = state.firstName;
-                                        const fullName = concatString(lastName, separator, firstName);
-                                        return toFullWidth(fullName);
+                                        for(let i = 0; i < lastName.length; i++) {
+                                            const fullName = concatString(lastName[i], separator, firstName[i]);
+                                            nameStack.push(toFullWidth(fullName));
+                                        }
+                                        return nameStack;
                                     };
                                     let dataStack = new Array();
-                                    getIterator(iterateNum).forEach(function(v, i) {
-                                        if(type === keys.nameKana || type === keys.nameKanji) {
-                                            if(isBoth) {
-                                                executeList.forEach(function(targetId) {
-                                                    dataStack = dataStack.concat(getName(userInputObj[targetId][type]));
-                                                });
-                                            }
-                                            else {
-                                                dataStack = dataStack.concat(getName(userInputObj[target][type]));
-                                            }
+                                    if(type === keys.nameKana || type === keys.nameKanji) {
+                                        if(isBoth) {
+                                            executeList.forEach(function(targetId) {
+                                                dataStack = getName(userInputObj[targetId][type]);
+                                            });
                                         }
-                                        else if(type === keys.birthday) {
-                                            if(isBoth) {
-                                                executeList.forEach(function(targetId) {
-                                                    dataStack = dataStack.concat(userInputObj[targetId][type]);
-                                                });
-                                            }
-                                            else {
-                                                dataStack = dataStack.concat(userInputObj[target][type]);
-                                            }
+                                        else {
+                                            dataStack = getName(userInputObj[target][type]);
                                         }
-                                        else if(type === keys.age) {
-                                            const calcAgeMapping = function(bdArray) {
-                                                return bdArray.map(function(bd) { return calcAge(bd); });
-                                            };
-                                            if(isBoth) {
-                                                executeList.forEach(function(targetId) {
-                                                    dataStack = dataStack.concat(calcAgeMapping(userInputObj[targetId][keys.birthday]));
-                                                });
-                                            }
-                                            else {
-                                                dataStack = dataStack.concat(calcAgeMapping(userInputObj[target][keys.birthday]));
-                                            }
+                                    }
+                                    else if(type === keys.birthday) {
+                                        if(isBoth) {
+                                            executeList.forEach(function(targetId) {
+                                                dataStack = userInputObj[targetId][type];
+                                            });
                                         }
-                                    });
+                                        else {
+                                            dataStack = userInputObj[target][type];
+                                        }
+                                    }
+                                    else if(type === keys.age) {
+                                        const calcAgeMapping = function(bdArray) {
+                                            return getExistArray(bdArray.map(function(bd) { return calcAge(bd); }));
+                                        };
+                                        if(isBoth) {
+                                            executeList.forEach(function(targetId) {
+                                                dataStack = calcAgeMapping(userInputObj[targetId][keys.birthday]);
+                                            });
+                                        }
+                                        else {
+                                            dataStack = calcAgeMapping(userInputObj[target][keys.birthday]);
+                                        }
+                                    }
                                     const existData = getExistArray(dataStack);
                                     return existData.length >= 1 ? existData.join(SIGN.nl) : SIGN.none;
                                 }
@@ -2058,32 +2340,21 @@ SqlModule.prototype = {
         const captions = _this.Define.CAPTIONS;
         const loading = new Loading();
         loading.on().then(function() {
-            const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-            const result = _this.validation(policyNumberTo);
+            const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const policyNumberToLayout = v.getLayout(v.initLayout(policyNumberTo.value, policyNumberTo.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
+            v.reset().append(policyNumberToLayout);
+            const result = v.exec();
             if(result.error) {
                 new Notification().error().open(result.message);
                 loading.off();
                 return false;
             }
-            else {
-                const numericCheckResult = {
-                    error: false,
-                    message: new Array()
-                };
-                if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
-                    numericCheckResult.error = true;
-                    numericCheckResult.message.push([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
-                }
-                if(numericCheckResult.error) {
-                    new Notification().error().open(numericCheckResult.message.join(SIGN.br));
-                    loading.off();
-                    return false;
-                }
-            }
             const pnt = policyNumberTo.value;
             const pntList = pnt.split(SIGN.nl).filter(function(item) { return item });
             const inConditions = pntList.map(function(item) { return concatString(SIGN.sq, item, SIGN.sq); }).join(SIGN.cw);
-            const query = concatString("SELECT S_SYONO FROM KT_KokKykKanren WHERE S_SYONO IN (", inConditions, ")");
+            const query = concatString("SELECT S_SYONO FROM ST_MosKihon WHERE S_SYONO IN (", inConditions, ")");
             const db = new DBUtils().connect(_this.state.info);
             const dataSet = db.executeSelect(query).onEnd(true).dataSet;
             if(dataSet.count >= 1) {
@@ -2108,30 +2379,70 @@ SqlModule.prototype = {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
-        const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-        const result = _this.validation(policyNumberTo);
-        if(result.error) {
-            new Notification().error().open(result.message);
-            return false;
-        }
-        else if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
-            new Notification().error().open([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
-            return false;
-        }
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.dataCopy;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
+        const dataCopyState = _this.state.dataCopy;
         const onReadFile = function(data) {
+            let isImporting = true;
+            let isSingleMode = true;
+            let pnfElementId = SIGN.none;
+            switch(dataCopyEvent.status.extractMode) {
+                case types.design.dataCopy.extractMode.single:{
+                    pnfElementId = seId.policyNumberFrom;
+                    isSingleMode = true;
+                    break;
+                }
+                case types.design.dataCopy.extractMode.multiple: {
+                    pnfElementId = seId.policyNumberFromTextarea;
+                    isSingleMode = false;
+                    break;
+                }
+            }
             try {
-                _this.state.dataCopy.extractedData = JSON.parse(data);
+                const importData = JSON.parse(data);
+                isImporting = false;
+                const fromKeyList = Object.keys(importData);
+                const fromKeyString = fromKeyList.join(SIGN.nl);
+                if(fromKeyList.length <= 0) {
+                    throw new Error(MESSAGES.incorrect_data);
+                }
+                else if(fromKeyList.length === 1 && !isSingleMode) {
+                    throw new Error("This data can be import only on single mode");
+                }
+                else if(fromKeyList.length >= 2 && isSingleMode) {
+                    throw new Error("This data can be import only on multiple mode");
+                }
+                else {
+                    const policyNumberFrom = _this.createInfoObject(fromKeyString, captions.policyNumberFrom);
+                    const v = new Validation();
+                    const vTypes = v.getTypes();
+                    const policyNumberFromLayout = v.getLayout(v.initLayout(policyNumberFrom.value, policyNumberFrom.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
+                    v.reset().append(policyNumberFromLayout);
+                    const result = v.exec();
+                    if(result.error) {
+                        throw new Error(MESSAGES.incorrect_data);
+                    }
+                }
+                jqById(pnfElementId).val(fromKeyString);
+                dataCopyState.ref = new Object();
+                dataCopyState.ref = createObject("import", {
+                    fromKeyList: fromKeyList,
+                    data: importData
+                });
+                _this.actionControllerDataCopy(phaseType.import);
             }
             catch(e) {
-                new Notification().error().open(MESSAGES.incorrect_data).exit(e.message);
+                const errMsg = isImporting ? MESSAGES.incorrect_data : e.message;
+                new Notification().error().open(errMsg);
             }
-            _this.extractDataCopy();
         };
-        new FileController().setListener(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
+        new FileController().setListenerById(eId.fileListener).allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
         return null;
     },
     getDataCopySelectQuery: function(table, pn) {
-    	const _this = this;
+        const _this = this;
         const dataCopyExport = _this.export.dataCopy;
         const keySet = dataCopyExport.keySet;
         let query = "";
@@ -2153,137 +2464,214 @@ SqlModule.prototype = {
                     query = concatString("SELECT * FROM ", table, " WHERE ", key, " = '", pn.slice(1, pn.length - 1), "'");
                     break;
                 }
+                case 2: {
+                    const joinCond = concatString("A.", key, " = ", "B.", key);
+                    const mainCond = concatString("ROWNUM = 1 AND B.S_SYONO = '", pn, "'");
+                    query = concatString("SELECT A.* FROM ", table, " A LEFT OUTER JOIN ST_MosKihon B ON ", joinCond, " WHERE ", mainCond);
+                    break;
+                }
             }
         }
         return query;
     },
-    extractDataCopy: function() {
+    extractDataCopy: function(phase) {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
         const types = _this.Define.TYPES;
         const phaseType = types.phase.dataCopy;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
         const dataCopyExport = _this.export.dataCopy;
         const dataCopyState = _this.state.dataCopy;
+        let isSingleMode = true;
+        let pnfElementId = SIGN.none;
+        switch(dataCopyEvent.status.extractMode) {
+            case types.design.dataCopy.extractMode.single:{
+                pnfElementId = seId.policyNumberFrom;
+                isSingleMode = true;
+                break;
+            }
+            case types.design.dataCopy.extractMode.multiple: {
+                pnfElementId = seId.policyNumberFromTextarea;
+                isSingleMode = false;
+                break;
+            }
+        }
         const loading = new Loading();
         loading.on().then(function() {
-            // dataCopyState.dataKey = { from: null, to: new Object() };
-            // let pnf, pnt;
-            // let extractedData = new Object();
-            // if(!dataCopyState.extractedData) {
-            //     const subSid = _this.getCheckObject(jqById(seId.subSid).val(), captions.subSid);
-            //     const subUid = _this.getCheckObject(jqById(seId.subUid).val(), captions.subUid);
-            //     const subPwd = _this.getCheckObject(jqById(seId.subPwd).val(), captions.subPwd);
-            //     const policyNumberFrom = _this.getCheckObject(jqById(seId.policyNumberFrom).val(), captions.policyNumberFrom);
-            //     const policyNumberTo = _this.getCheckObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-            //     const result = _this.validation(subSid, subUid, subPwd, policyNumberFrom, policyNumberTo);
-            //     if(result.error) {
-            //         new Notification().error().open(result.message);
-            //         loading.off();
-            //         return false;
-            //     }
-            //     else {
-            //         const numericCheckResult = {
-            //             error: false,
-            //             message: new Array()
-            //         };
-            //         if(!policyNumberFrom.value.match(REG_EXP.numeric)) {
-            //             numericCheckResult.error = true;
-            //             numericCheckResult.message.push([captions.policyNumberFrom, MESSAGES.allowedOnlyNumeric].join(" : "));
-            //         }
-            //         if(!policyNumberTo.value.match(REG_EXP.numeric_nl)) {
-            //             numericCheckResult.error = true;
-            //             numericCheckResult.message.push([captions.policyNumberTo, MESSAGES.allowedOnlyNumeric].join(" : "));
-            //         }
-            //         if(numericCheckResult.error) {
-            //             new Notification().error().open(numericCheckResult.message.join(SIGN.br));
-            //             loading.off();
-            //             return false;
-            //         }
-            //     }
-            //     const actionStatus = {
-            //         extractError: false,
-            //         insertError: false,
-            //         message: null
-            //     };
-            //     pnf = policyNumberFrom.value;
-            //     pnt = policyNumberTo.value;
-            //     const info = {
-            //         sid: subSid,
-            //         uid: subUid,
-            //         pwd: subPwd
-            //     };
-            //     const subDB = new DBUtils().connect(info);
-            //     extractedData[pnf] = new Object();
-            //     dataCopyExport.tableList.some(function(table, i, a) {
-            //         const query = _this.getDataCopySelectQuery(table, pnf);
-            //         const dataSet = subDB.executeSelect(query).onEnd((a.length === i + 1)).dataSet;
-            //         extractedData[pnf][table] = dataSet;
-            //         if(dataSet.error) {
-            //             actionStatus.extractError = true;
-            //             actionStatus.message = "Extract failed";
-            //         }
-            //         return dataSet.error;
-            //     });
-            //     if(actionStatus.extractError) throw new Error(actionStatus.message);
-            // }
-            // else {
-            //     extractedData = dataCopyState.extractedData;
-            //     pnf = Object.keys(extractedData)[0];
-            //     pnt = jqById(seId.policyNumberTo).val();
-            // }
-            // const db = new DBUtils().connect(_this.state.info);
-            // const rules = dataCopyExport.rules;
-            // const defaultKey = dataCopyExport.keySet.defaultKey;
-            // const insertData = new Object();
-            // const pntList = pnt.split(SIGN.nl).filter(function(item) { return item });
-            // dataCopyState.toList = pntList;
-            // const countStack = new Array();
-            // Object.keys(extractedData[pnf]).forEach(function(table) {
-            //     const dataSet = extractedData[pnf][table];
-            //     const count = dataSet.count;
-            //     countStack.push(count);
-            //     if(count >= 1) {
-            //         dataCopyState.keys = new Array();
-            //         const name = dataSet.name;
-            //         const data = dataSet.data;
-            //         const applyData = new Array();
-            //         dataCopyState.dataKey.to[table] = new Array();
-            //         pntList.forEach(function(to) {
-            //             const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
-            //             data.forEach(function(record) {
-            //                 const applyRecord = cloneJS(record);
-            //                 if(keyIndex >= 0) {
-            //                     applyRecord[keyIndex] = to;
-            //                 }
-            //                 applyData.push(applyRecord);
-            //                 dataCopyState.keys.push(to);
-            //                 dataCopyState.dataKey.to[table].push(to);
-            //             });
-            //         });
-            //         if(rules[table]) {
-            //             Object.keys(rules[table]).forEach(function(column) {
-            //                 const applyType = rules[table][column];
-            //                 const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
-            //                 dataCopyState.applyIndex = applyIndex;
-            //                 _this.applyRulesDataCopy(applyType, applyData, table, db);
-            //             });
-            //         }
-            //         insertData[table] = {
-            //             name: name,
-            //             data: applyData
-            //         };
-            //     }
-            // });
-            // if(countStack.reduce(function(a, b) { return a + b; }) <= 0) throw new Error("Nothing extracted data");
-            // db.close();
-            // dataCopyState.extractedData = extractedData;
-            // dataCopyState.insertData = insertData;
-            // dataCopyState.insertDataStatic = cloneJS(insertData);
-            // dataCopyState.dataKey.from = pnf;
-            // test_s
-            _this.state.dataCopy = JSON.parse(testData);
-            // test_e
+            let pnf, pnt;
+            let pnfList = new Array();
+            let pntList = new Array();
+            let extractedData = new Object();
+            const extractMap = new Object();
+            const isImport = phase === phaseType.import;
+            const subSid = _this.createInfoObject(jqById(seId.subSid).val(), captions.subSid);
+            const subUid = _this.createInfoObject(jqById(seId.subUid).val(), captions.subUid);
+            const subPwd = _this.createInfoObject(jqById(seId.subPwd).val(), captions.subPwd);
+            const policyNumberFrom = _this.createInfoObject(jqById(pnfElementId).val(), captions.policyNumberFrom);
+            const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const subSidLayout = v.getLayout(v.initLayout(subSid.value, subSid.name), [vTypes.required, vTypes.notSpace]);
+            const subUidLayout = v.getLayout(v.initLayout(subUid.value, subUid.name), [vTypes.required, vTypes.notSpace]);
+            const subPwdLayout = v.getLayout(v.initLayout(subPwd.value, subPwd.name), [vTypes.required, vTypes.notSpace]);
+            const policyNumberFromLayout = v.getLayout(v.initLayout(policyNumberFrom.value, policyNumberFrom.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
+            const policyNumberToLayout = v.getLayout(v.initLayout(policyNumberTo.value, policyNumberTo.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
+            let layoutList = new Array();
+            if(isImport) {
+                layoutList = [policyNumberFromLayout, policyNumberToLayout];
+            }
+            else {
+                layoutList = [subSidLayout, subUidLayout, subPwdLayout, policyNumberFromLayout, policyNumberToLayout];
+            }
+            v.reset().appendList(layoutList);
+            const result = v.exec();
+            if(result.error) {
+                throw new Error(result.message);
+            }
+            pnf = policyNumberFrom.value;
+            pnt = policyNumberTo.value;
+            pnfList = getExistArray(pnf.split(SIGN.nl));
+            pntList = getExistArray(pnt.split(SIGN.nl));
+            if(pntList.length >= 1000) {
+                const lMsg = "More than 1000 items of data can not be copied";
+                throw new Error(lMsg);
+            }
+            const dCheck = duplicationCheckForArray(pntList);
+            if(dCheck.has) {
+                const dMsg = [concatString("Policy Number(To) has duplicates", SIGN.br)].concat(dCheck.data).join(SIGN.br);
+                throw new Error(dMsg);
+            }
+            if(!isSingleMode && pnfList.length != pntList.length) {
+                const mMsg = "Policy Number(From) and Policy Number(To) do not match";
+                throw new Error(mMsg);
+            }
+            const extractGroupStack = new Array();
+            $(dataCopyEvent.element.extractGroupChecked).each(function() {
+                extractGroupStack.push($(this).val());
+            });
+            if(extractGroupStack.length <= 0) {
+                const egMsg = concatString(captions.extractGroup, " is required");
+                throw new Error(egMsg);
+            }
+            pntList.forEach(function(toKey, i) {
+                extractMap[toKey] = isSingleMode ? pnfList[0] : pnfList[i];
+            });
+            const getExportTableList = function(key) {
+                return dataCopyExport.tableListObject[key];
+            };
+            const extractTableList = extractGroupStack.map(function(tableListKey) {
+                return getExportTableList(tableListKey)
+            }).reduce(function(pre, curr) {
+                return pre.concat(curr);
+            });
+            dataCopyState.extractMap = extractMap;
+            if(isImport) {
+                extractedData = cloneJS(dataCopyState.ref.import.data);
+                Object.keys(extractedData).forEach(function(key) {
+                    const t = extractedData[key];
+                    Object.keys(t).forEach(function(table) {
+                        if(extractTableList.indexOf(table) < 0) {
+                            delete t[table];
+                        }
+                    });
+                });
+            }
+            else {
+                dataCopyState.ref = new Object();
+                const actionStatus = {
+                    extractError: false,
+                    insertError: false,
+                    message: new Array()
+                };
+                const info = {
+                    sid: subSid,
+                    uid: subUid,
+                    pwd: subPwd
+                };
+                const subDB = new DBUtils().connect(info);
+                const extractedPnfStack = new Array();
+                pnfList.forEach(function(fromKey) {
+                    if(extractedPnfStack.indexOf(fromKey) < 0) {
+                        extractedPnfStack.push(fromKey);
+                        extractedData[fromKey] = new Object();
+                    }
+                    const countStack = new Array();
+                    extractTableList.some(function(table, i, a) {
+                        const query = _this.getDataCopySelectQuery(table, fromKey);
+                        const dataSet = subDB.executeSelect(query).dataSet;
+                        extractedData[fromKey][table] = dataSet;
+                        if(dataSet.error) {
+                            actionStatus.extractError = true;
+                            actionStatus.message = ["Extract failed"];
+                        }
+                        countStack.push(dataSet.count);
+                        return dataSet.error;
+                    });
+                    if(countStack.reduce(function(a, b) { return a + b; }) <= 0) {
+                        actionStatus.extractError = true;
+                        actionStatus.message = [concatString(fromKey, " : Nothing extracted data")];
+                    }
+                });
+                subDB.close();
+                if(actionStatus.extractError) {
+                    throw new Error(actionStatus.message.join(SIGN.br));
+                }
+            }
+            const db = new DBUtils().connect(_this.state.info);
+            const rules = dataCopyExport.rules;
+            const defaultKey = dataCopyExport.keySet.defaultKey;
+            const insertData = new Object();
+            dataCopyState.dataKey = { to: new Object() };
+            Object.keys(dataCopyState.extractMap).forEach(function(toKey, idUpdIndex) {
+                const fromKey = dataCopyState.extractMap[toKey];
+                Object.keys(extractedData[fromKey]).forEach(function(table) {
+                    const dataSet = extractedData[fromKey][table];
+                    const count = dataSet.count;
+                    if(count >= 1) {
+                        dataCopyState.keys = new Array();
+                        const name = dataSet.name;
+                        const data = dataSet.data;
+                        const applyData = new Array();
+                        dataCopyState.dataKey.to[table] = new Array();
+                        const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
+                        data.forEach(function(record) {
+                            const applyRecord = cloneJS(record);
+                            if(keyIndex >= 0) {
+                                applyRecord[keyIndex] = toKey;
+                            }
+                            applyData.push(applyRecord);
+                            dataCopyState.keys.push(toKey);
+                            dataCopyState.dataKey.to[table].push(toKey);
+                        });
+                        if(!isVoid(rules[table])) {
+                            Object.keys(rules[table]).forEach(function(column) {
+                                const applyType = rules[table][column];
+                                const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
+                                dataCopyState.applyIndex = applyIndex;
+                                _this.applyRulesDataCopy(applyType, applyData, table, db, name, extractedData[fromKey], idUpdIndex);
+                            });
+                        }
+                        const dataObj = {
+                            name: name,
+                            data: applyData
+                        };
+                        if(isVoid(insertData[table])) {
+                            insertData[table] = createObject(toKey, dataObj);
+                        }
+                        else {
+                            insertData[table][toKey] = dataObj
+                        }
+                    }
+                });
+            });
+            db.close();
+            dataCopyState.extractedData = extractedData;
+            dataCopyState.insertData = insertData;
+            dataCopyState.insertDataStatic = cloneJS(insertData);
+            dataCopyState.ref.isSingleMode = isSingleMode;
+            dataCopyState.toList = pntList;
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
         }).catch(function(e) {
@@ -2292,8 +2680,10 @@ SqlModule.prototype = {
         });
         return null;
     },
-    applyRulesDataCopy: function(applyType, applyData, table, db) {
+    applyRulesDataCopy: function(applyType, applyData, table, db, nameData, exd, idUpdIndex) {
         const _this = this;
+        const dataCopyExport = _this.export.dataCopy;
+        const defineSet = dataCopyExport.defineSet;
         const state = _this.state.dataCopy;
         switch(applyType) {
             case "identifyCustomerNumber": {
@@ -2316,9 +2706,15 @@ SqlModule.prototype = {
                 });
                 break;
             }
-            case "changeTo": {
+            case "changeToOne": {
                 applyData.forEach(function(record) {
                     record[state.applyIndex] = "1";
+                });
+                break;
+            }
+            case "changeToZero": {
+                applyData.forEach(function(record) {
+                    record[state.applyIndex] = "0";
                 });
                 break;
             }
@@ -2348,7 +2744,9 @@ SqlModule.prototype = {
                 const hours = setCharPadding(String(d.getHours()), 2);
                 const minutes = setCharPadding(String(d.getMinutes()), 2);
                 const seconds = setCharPadding(String(d.getSeconds()), 2);
-                state.timeStampIdentifier = concatString(year, month, date, hours, minutes, seconds);
+                const du = new DateUtil(year, month, date, hours, minutes, seconds);
+                const calcDate = du.calcDate({ seconds: idUpdIndex });
+                state.timeStampIdentifier = du.format.type2(calcDate);
                 applyData.forEach(function(record, i) {
                     record[state.applyIndex] = concatString(state.timeStampIdentifier, setCharPadding(String(i + 1), 3));
                 });
@@ -2360,14 +2758,22 @@ SqlModule.prototype = {
                 });
                 break;
             }
-            case "deleteExceptSkei": {
+            case "deleteExceptByAdProcedure": {
                 let i = applyData.length;
+                const adProcedureCodeStack = ["skei", "skwb", "skmd", "sksk", "sktg"];
                 while(i--) {
-                    if(applyData[i][state.applyIndex] !== "skei") {
+                    const rowData = applyData[i][state.applyIndex];
+                    if(adProcedureCodeStack.indexOf(rowData) < 0) {
                         applyData.splice(i, 1);
                         state.dataKey.to[table].splice(i, 1);
                     }
                 }
+                break;
+            }
+            case "setPolicyNumberHead": {
+                applyData.forEach(function(record, i) {
+                    record[state.applyIndex] = state.keys[i].slice(0, 1);
+                });
                 break;
             }
             case "slicePolicyNumber": {
@@ -2396,6 +2802,66 @@ SqlModule.prototype = {
                 });
                 break;
             }
+            case "identifyMyPageUserId": {
+                const d = new Date();
+                const year = String(d.getFullYear());
+                const month = setCharPadding(String(d.getMonth() + 1), 2);
+                const date = setCharPadding(String(d.getDate()), 2);
+                const hours = setCharPadding(String(d.getHours()), 2);
+                const minutes = setCharPadding(String(d.getMinutes()), 2);
+                const seconds = setCharPadding(String(d.getSeconds()), 2);
+                const du = new DateUtil(year, month, date, hours, minutes, seconds);
+                const calcDate = du.calcDate({ seconds: idUpdIndex });
+                const oDB = new DBUtils();
+                const exMyPageUserId = oDB.getColumnData(exd, defineSet.table.mosKihon, defineSet.column.myPageUserId);
+                state.myPageUserIdInfo = {
+                    isWeb: !isVoid(exMyPageUserId),
+                    identifier: du.format.type2(calcDate),
+                    policyNumberMap: new Object()
+                };
+                if(state.myPageUserIdInfo.isWeb) {
+                    const rowPnIndex = nameData.map(mapUpperCase).indexOf(upperCase(defineSet.column.policyNumber));
+                    applyData.forEach(function(record, i) {
+                        const rowPn = record[rowPnIndex];
+                        const id = concatString(state.myPageUserIdInfo.identifier, setCharPadding(String(i + 1), 3));
+                        state.myPageUserIdInfo.policyNumberMap[rowPn] = id;
+                        record[state.applyIndex] = id;
+                    });
+                }
+                break;
+            }
+            case "getIdentifierMyPageUserId": {
+                if(state.myPageUserIdInfo.isWeb) {
+                    applyData.forEach(function(record, i) {
+                        record[state.applyIndex] = concatString(state.myPageUserIdInfo.identifier, setCharPadding(String(i + 1), 3));
+                    });
+                }
+                break;
+            }
+            case "getIdentifierMyPageUserIdByPolicyNumber": {
+                if(state.myPageUserIdInfo.isWeb) {
+                    const rowPnIndex = nameData.map(mapUpperCase).indexOf(upperCase(defineSet.column.policyNumber));
+                    applyData.forEach(function(record, i) {
+                        const rowPn = record[rowPnIndex];
+                        record[state.applyIndex] = state.myPageUserIdInfo.policyNumberMap[rowPn];
+                    });
+                }
+                break;
+            }
+            case "setMyPageLoginId": {
+                applyData.forEach(function(record, i) {
+                    const pn = state.toList[i];
+                    record[state.applyIndex] = concatString("a", pn);
+                });
+                break;
+            }
+            case "setMyPageMail": {
+                applyData.forEach(function(record, i) {
+                    const pn = state.toList[i];
+                    record[state.applyIndex] = concatString("a", pn, "@direct.test.com");
+                });
+                break;
+            }
         }
         return null;
     },
@@ -2403,7 +2869,10 @@ SqlModule.prototype = {
         const _this = this;
         const fileDefine = TYPES.file;
         const dataCopyState = _this.state.dataCopy;
-        const extractedData = dataCopyState.extractedData[Object.keys(dataCopyState.extractedData)[0]];
+        const ref = dataCopyState.ref;
+        const extractMap = dataCopyState.extractMap;
+        const extractedData = dataCopyState.extractedData;
+        const fromList = Object.keys(extractedData);
         const insertData = dataCopyState.insertData;
         const headerStyle = {
             fill: {
@@ -2428,20 +2897,60 @@ SqlModule.prototype = {
                 bottom: { style: "thin", tint: 1 }
             }
         };
-        const getExportData = function(data, type, toKey) {
-            const dataKey = dataCopyState.dataKey;
-            const cd = cloneJS(data);
-            cd.name.unshift("KEY");
+        const getExportData = function(refObj, table, type) {
+            const o = cloneJS(refObj);
+            const cd = {
+                name: new Array(),
+                data: new Array(),
+                count: 0
+            };
+            const columnTypes = {
+                header: "header",
+                data: "data"
+            };
+            const setColumns = function(data, columnType, key, from) {
+                switch(columnType) {
+                    case columnTypes.header: {
+                        data.unshift("FROM");
+                        data.unshift("KEY");
+                        break;
+                    }
+                    case columnTypes.data: {
+                        data.unshift(from ? from : SIGN.none);
+                        data.unshift(key ? key : SIGN.none);
+                        break;
+                    }
+                }
+            };
             switch(type) {
                 case "from": {
-                    cd.data.forEach(function(record) {
-                        record.unshift(dataKey.from);
+                    Object.keys(o).forEach(function(fromKey, i) {
+                        const t = o[fromKey][table];
+                        if(i === 0) {
+                            cd.name = t.name;
+                            setColumns(cd.name, columnTypes.header);
+                        }
+                        t.data.forEach(function(record) {
+                            setColumns(record, columnTypes.data, fromKey);
+                        });
+                        cd.data = cd.data.concat(t.data);
+                        cd.count += t.count;
                     });
                     break;
                 }
                 case "to": {
-                    cd.data.forEach(function(record, i) {
-                        record.unshift(toKey[i]);
+                    const toObj = o[table];
+                    Object.keys(toObj).forEach(function(toKey, i) {
+                        const t = toObj[toKey];
+                        const fromKey = extractMap[toKey];
+                        if(i === 0) {
+                            cd.name = t.name;
+                            setColumns(cd.name, columnTypes.header);
+                        }
+                        t.data.forEach(function(record) {
+                            setColumns(record, columnTypes.data, toKey, fromKey);
+                        });
+                        cd.data = cd.data.concat(t.data);
                     });
                     break;
                 }
@@ -2449,7 +2958,7 @@ SqlModule.prototype = {
             return cd;
         };
         const setStyle = function(R, C, cell, count) {
-            if(R === 0 || R === count + 5 || (C === 0 && cell.v)) {
+            if(R === 0 || R === count + 5 || ((C === 0 || C === 1) && cell.v)) {
                 cell.s = headerStyle;
             }
             else if(R <= count || R >= count + 5) {
@@ -2458,8 +2967,8 @@ SqlModule.prototype = {
         };
         const wb = new Workbook();
         Object.keys(insertData).forEach(function(table) {
-            const from = getExportData(getProperty(extractedData, table), "from");
-            const to = getExportData(getProperty(insertData, table), "to", dataCopyState.dataKey.to[table]);
+            const from = getExportData(extractedData, table, "from");
+            const to = getExportData(insertData, table, "to");
             wb.SheetNames.push(table);
             const a = new Array(from.name).concat(from.data);
             const b = getIterator(4).map(function() { return [SIGN.none]; });
@@ -2481,34 +2990,39 @@ SqlModule.prototype = {
         const $optionContainer = jqById(seId.optionContainerDataCopy);
         const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
         const option = new Array();
-        let error = false;
+        let hasError = false;
         const messageStack = new Array();
         $commandLines.each(function(i, item) {
             const $input = $(item).find("input");
             const $textarea = $(item).find("textarea");
             const messageIndex = concatString("[", i + 1, "]");
-            const table = _this.getCheckObject($input.val(), concatString(messageIndex, "Table"));
-            const script = _this.getCheckObject($textarea.val(), concatString(messageIndex, "Script"));
-            const result = _this.validation(table, script);
+            const table = _this.createInfoObject($input.val(), concatString(messageIndex, "Table"));
+            const script = _this.createInfoObject($textarea.val(), concatString(messageIndex, "Script"));
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const tableLayout = v.getLayout(v.initLayout(table.value, table.name), [vTypes.required, vTypes.notSpace]);
+            const scriptLayout = v.getLayout(v.initLayout(script.value, script.name), [vTypes.required]);
+            v.reset().appendList([tableLayout, scriptLayout]);
+            const result = v.exec();
             if(result.error) {
                 messageStack.push(result.message);
-                error = true;
+                hasError = true;
             }
             else if(find(table.value, option, ["table"], upperCase).isExist) {
                 messageStack.push(concatString(messageIndex, "Table has duplicates"));
-                error = true;
+                hasError = true;
             }
             else if(!find(table.value, _this.export.dataCopy.tableList, null, upperCase).isExist) {
                 messageStack.push(concatString(messageIndex, "Not exists table"));
-                error = true;
+                hasError = true;
             }
             else if(!script.value.match(new RegExp("@", "g"))) {
                 messageStack.push(concatString(messageIndex, "Incorrect script"));
-                error = true;
+                hasError = true;
             }
             option.push({ table: table.value, script: script.value });
         });
-        if(error) {
+        if(hasError) {
             new Notification().error().open(messageStack.join(SIGN.br));
             return false;
         }
@@ -2569,6 +3083,7 @@ SqlModule.prototype = {
         const phaseType = types.phase.dataCopy;
         const transactionId = types.toolId.dataCopy;
         const dataCopyState = _this.state.dataCopy;
+        const dbTypes = new DBUtils().getTypes();
         dataCopyState.log = new Array();
         const loading = new Loading();
         loading.on().then(function() {
@@ -2578,24 +3093,28 @@ SqlModule.prototype = {
                 return concatString("INSERT INTO ", table, " (", columns, ") VALUES (", values, ")");
             };
             Object.keys(insertData).forEach(function(table) {
-                const name = insertData[table].name;
-                const data = insertData[table].data;
                 insertQuery[table] = new Array();
-                const columns = name.join(SIGN.cw);
-                data.forEach(function(record) {
-                    const values = record.map(function(item) {
-                        const v = item || item == 0 ? item : "";
-                        return concatString(SIGN.sq, v, SIGN.sq);
-                    }).join(SIGN.cw);
-                    insertQuery[table].push(getQuery(table, columns, values));
+                Object.keys(insertData[table]).forEach(function(toKey) {
+                    const name = insertData[table][toKey].name;
+                    const data = insertData[table][toKey].data;
+                    const columns = name.join(SIGN.cw);
+                    data.forEach(function(record) {
+                        const values = record.map(function(item) {
+                            const v = item || item == 0 ? item : "";
+                            return concatString(SIGN.sq, v, SIGN.sq);
+                        }).join(SIGN.cw);
+                        insertQuery[table].push(getQuery(table, columns, values));
+                    });
                 });
             });
             const onTransaction = _this.transaction(transactionId);
             if(onTransaction.error) throw new Error(onTransaction.message);
             const db = onTransaction.db;
+            let executeTable = SIGN.none;
             try {
                 Object.keys(insertQuery).forEach(function(table) {
-                    dataCopyState.log.push(concatString("[[", table, "]]"));
+                    executeTable = table;
+                    dataCopyState.log.push(concatString("-- <", table, ">"));
                     insertQuery[table].forEach(function(query) {
                         db.execute(query);
                         _this.pushQueryLog(dataCopyState.log, query);
@@ -2604,8 +3123,13 @@ SqlModule.prototype = {
                 _this.actionControllerDataCopy(phaseType.commit);
             }
             catch(e) {
+                const errorType = dbTypes.error;
+                let message = e.message;
+                if(message.indexOf(errorType.uniqueConstraint) >= 0) {
+                    message = concatString(SIGN.abs, executeTable, SIGN.abe, SIGN.br, message);
+                }
                 _this.destroy(transactionId, db);
-                throw new Error(e.message);
+                throw new Error(message);
             }
             loading.off();
         }).catch(function(e) {
@@ -2717,29 +3241,19 @@ SqlModule.prototype = {
         createUserState.log = new Array();
         const loading = new Loading();
         loading.on().then(function() {
-            const userCode = _this.getCheckObject(jqById(seId.userCode).val(), captions.userCode);
-            const userName = _this.getCheckObject(jqById(seId.userName).val(), captions.userName);
-            const checkList = createUserState.actionType === types.action.delete ? [userCode] : [userCode, userName];
-            const result = _this.validation.apply(_this, checkList);
+            const userCode = _this.createInfoObject(jqById(seId.userCode).val(), captions.userCode);
+            const userName = _this.createInfoObject(jqById(seId.userName).val(), captions.userName);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const userCodeLayout = v.getLayout(v.initLayout(userCode.value, userCode.name, v.getSizeLayout(6, 6)), [vTypes.required, vTypes.notSpace, vTypes.numeric, vTypes.size]);
+            const userNameLayout = v.getLayout(v.initLayout(userName.value, userName.name), [vTypes.required, vTypes.notSpace]);
+            const layoutList = createUserState.actionType === types.action.delete ? [userCodeLayout] : [userCodeLayout, userNameLayout];
+            v.reset().appendList(layoutList);
+            const result = v.exec();
             if(result.error) {
                 new Notification().error().open(result.message);
                 loading.off();
                 return false;
-            }
-            else {
-                const numericCheckResult = {
-                    error: false,
-                    message: new Array()
-                };
-                if(!userCode.value.match(REG_EXP.numeric)) {
-                    numericCheckResult.error = true;
-                    numericCheckResult.message.push([captions.userCode, MESSAGES.allowedOnlyNumeric].join(" : "));
-                }
-                if(numericCheckResult.error) {
-                    new Notification().error().open(numericCheckResult.message.join(SIGN.br));
-                    loading.off();
-                    return false;
-                }
             }
             const info = _this.state.info;
             const uc = userCode.value;
@@ -2996,23 +3510,14 @@ SqlModule.prototype = {
         lincErrorState.log = new Array();
         const loading = new Loading();
         loading.on().then(function() {
-            const policyNumber = _this.getCheckObject(jqById(seId.lincPolicyNumber).val(), captions.policyNumber);
-            const result = _this.validation(policyNumber);
+            const policyNumber = _this.createInfoObject(jqById(seId.lincPolicyNumber).val(), captions.policyNumber);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const policyNumberLayout = v.getLayout(v.initLayout(policyNumber.value, policyNumber.name, v.getSizeLayout(11, 11)), [vTypes.required, vTypes.notSpace, vTypes.numeric, vTypes.size]);
+            v.reset().append(policyNumberLayout);
+            const result = v.exec();
             if(result.error) {
                 throw new Error(result.message);
-            }
-            else {
-                const numericCheckResult = {
-                    error: false,
-                    message: new Array()
-                };
-                if(!policyNumber.value.match(REG_EXP.numeric)) {
-                    numericCheckResult.error = true;
-                    numericCheckResult.message.push([captions.policyNumber, MESSAGES.allowedOnlyNumeric].join(" : "));
-                }
-                if(numericCheckResult.error) {
-                    throw new Error(numericCheckResult.message.join(SIGN.br));
-                }
             }
             const pn = policyNumber.value;
             const onTransaction = _this.transaction(transactionId);
@@ -3048,9 +3553,9 @@ const DBUtils = function() {
             command: "ADODB.Command"
         },
         OLEDB: {
-        	provider: "Provider=OraOLEDB.Oracle;",
-        	dataSource: "Data Source=",
-        	uid: "User ID=",
+            provider: "Provider=OraOLEDB.Oracle;",
+            dataSource: "Data Source=",
+            uid: "User ID=",
             pwd: "Password="
         },
         DIRECT: {
@@ -3088,6 +3593,9 @@ const DBUtils = function() {
                 adCmdTableDirect: 512,
                 adVarWChar: 202,
                 adParamInput: 1,
+            },
+            error: {
+                uniqueConstraint: "ORA-00001"
             }
         }
     };
@@ -3097,6 +3605,9 @@ const DBUtils = function() {
     this.dataSet = null;
 };
 DBUtils.prototype = {
+    getTypes: function() {
+        return this.Define.TYPES;
+    },
     createConnectString: function(sid, uid, pwd, type) {
         const OLEDB = this.Define.OLEDB;
         const DIRECT = this.Define.DIRECT;
@@ -3113,11 +3624,11 @@ DBUtils.prototype = {
         let str = "";
         switch(paramType) {
             case connectType.oledb: {
-            	str += OLEDB.provider;
-            	str += getConnectString(OLEDB.dataSource, sid);
-            	str += getConnectString(OLEDB.uid, uid);
-            	str += getConnectString(OLEDB.pwd, pwd);
-            	break;
+                str += OLEDB.provider;
+                str += getConnectString(OLEDB.dataSource, sid);
+                str += getConnectString(OLEDB.uid, uid);
+                str += getConnectString(OLEDB.pwd, pwd);
+                break;
             }
             case connectType.direct: {
                 str += DIRECT.provider;

@@ -73,7 +73,9 @@
 
 #file-tree-card .contents-container > .command-area,
 #system-date-editor .contents-container > .command-area,
-#clipboard-linker-card .contents-container > .command-area
+#clipboard-linker-card .contents-container > .command-area,
+#folder-generator-card .contents-container > .command-area,
+#copy-file-card .contents-container > .command-area
 {
     position: relative;
     display: flex;
@@ -83,14 +85,17 @@
 
 #file-tree-card .contents-container > .command-area > label,
 #system-date-editor .contents-container > .command-area > label,
-#clipboard-linker-card .contents-container > .command-area > label
+#clipboard-linker-card .contents-container > .command-area > label,
+#folder-generator-card .contents-container > .command-area > label,
+#copy-file-card .contents-container > .command-area > label
 {
     width: 200px;
     text-align: left;
     line-height: 1.5;
 }
 
-#file-tree-card .contents-container > .command-area > input
+#file-tree-card .contents-container > .command-area > input,
+#system-date-editor .contents-container > .command-area > input
 {
     padding: 5px;
     border: 1px solid rgba(0, 0, 0, 0.4);
@@ -101,7 +106,9 @@
 
 #file-tree-card .contents-container > .action-area,
 #system-date-editor .contents-container > .action-area,
-#clipboard-linker-card .contents-container > .action-area
+#clipboard-linker-card .contents-container > .action-area,
+#folder-generator-card .contents-container > .action-area,
+#copy-file-card .contents-container > .action-area
 {
     padding: 10px 0;
     text-align: right;
@@ -109,7 +116,9 @@
 
 #file-tree-card .contents-container > .action-area > button,
 #system-date-editor .contents-container > .action-area > button,
-#clipboard-linker-card .contents-container > .action-area > button
+#clipboard-linker-card .contents-container > .action-area > button,
+#folder-generator-card .contents-container > .action-area > button,
+#copy-file-card .contents-container > .action-area > button
 {
     margin-left: 10px;
     margin-top: 5px;
@@ -121,16 +130,10 @@
     cursor: pointer;
 }
 
-#system-date-editor .contents-container > .command-area > input
+#clipboard-linker-card .contents-container > .command-area > textarea,
+#folder-generator-card .contents-container > .command-area > textarea,
+#copy-file-card .contents-container > .command-area > textarea
 {
-    padding: 5px;
-    border: 1px solid rgba(0, 0, 0, 0.4);
-    border-radius: 0.3em;
-    box-sizing: border-box;
-    width: 100%;
-}
-
-#clipboard-linker-card .contents-container > .command-area > textarea {
     padding: 5px;
     border: 1px solid rgba(0, 0, 0, 0.4);
     border-radius: 0.3em;

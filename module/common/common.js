@@ -15,7 +15,12 @@ const CommonModule = function() {
                 path: "path",
                 clipboardLinkerCard: "clipboard-linker-card",
                 clipboardLinkerCopyList: "clipboard-linker-copy-list",
-                clipboardLinkerSelectArea: "clipboard-linker-select-area"
+                clipboardLinkerSelectArea: "clipboard-linker-select-area",
+                folderGeneratorCard: "folder-generator-card",
+                folderGeneratorPath: "folder-generator-path",
+                copyFileCard: "copy-file-card",
+                copyFileSourcePath: "copy-file-source-path",
+                copyFileDestinationPath: "copy-file-destination-path"
             },
             class: {
                 contentsContainer: "contents-container",
@@ -42,19 +47,24 @@ const CommonModule = function() {
             systemDatePathList: "SysDate Path List",
             edit: "edit",
             add: "add",
+            read: "read",
             name: "name",
             clipboardLinker: "Clipboard Linker",
             copy: "copy",
             copyList: "Copy List",
             set: "set",
             select: "select",
-            separatorType: "Separator Type"
+            separatorType: "Separator Type",
+            folderGenerator: "Folder Generator",
+            copyFile: "Copy File",
+            sourcePath: "Source Path",
+            destinationPath: "Destination Path",
+            mode: "mode",
+            file: "file",
+            folder: "folder",
+            overwrite: "overwrite"
         },
         TYPES: {
-            message: {
-                required: "required",
-                matchWhitespace: "match-whitespace"
-            },
             page: {
                 application: "application"
             },
@@ -66,12 +76,21 @@ const CommonModule = function() {
                     init: "init",
                     set: "set"
                 }
+            },
+            copyFile: {
+                mode: {
+                    file: "file",
+                    folder: "folder"
+                }
             }
         },
         MESSAGES: {
             invalid_format: "Invalid format",
             already_exits_name: "Already exists name",
-            systemdate_modified_complete: "System date modified successfully"
+            systemdate_modified_complete: "System date modified successfully",
+            create_folder_complete: "Folder created successfully",
+            each_source_destination: "Destination Path are different from Source Path",
+            copy_file_complete: "Files are copied successfully"
         }
     };
     this.state = {
@@ -94,6 +113,40 @@ const CommonModule = function() {
                 }
             },
             injector: { commandArea: new Array() }
+        },
+        copyFile: {
+            define: {
+                modeRadio: {
+                    name: "copy-file__mode-radiobox",
+                    type: {
+                        file: {
+                            label: upperCase(this.Define.CAPTIONS.file, 0),
+                            id: "copy-file__mode-file",
+                            value: this.Define.TYPES.copyFile.mode.file
+                        },
+                        folder: {
+                            label: upperCase(this.Define.CAPTIONS.folder, 0),
+                            id: "copy-file__mode-folder",
+                            value: this.Define.TYPES.copyFile.mode.folder
+                        }
+                    }
+                },
+                overwriteRadio: {
+                    name: "copy-file__overwrite-radiobox",
+                    type: {
+                        typeTrue: {
+                            label: "True",
+                            id: "copy-file__overwrite-true",
+                            value: true
+                        },
+                        typeFalse: {
+                            label: "False",
+                            id: "copy-file__overwrite-false",
+                            value: false
+                        }
+                    }
+                }
+            }
         }
     };
 };
@@ -172,6 +225,16 @@ CommonModule.prototype = {
                 title: captions.clipboardLinker,
                 contents: _this.buildClipboardLinker()
             },
+            {
+                id: seId.folderGeneratorCard,
+                title: captions.folderGenerator,
+                contents: _this.buildFolderGenerator()
+            },
+            {
+                id: seId.copyFileCard,
+                title: captions.copyFile,
+                contents: _this.buildCopyFile()
+            }
         ];
         cardList.forEach(function(item) {
             $cardContainer.append(buildCard(item));
@@ -179,6 +242,12 @@ CommonModule.prototype = {
         $screen.append($cardContainer);
         $contents.append($screen);
         return null;
+    },
+    createInfoObject: function(value, name) {
+        return {
+            value: value,
+            name: name
+        };
     },
     buildFileTree: function() {
         const _this = this;
@@ -216,19 +285,16 @@ CommonModule.prototype = {
         const types = _this.Define.TYPES;
         const loading = new Loading();
         loading.on().then(function() {
-            const targetPathValue = jqById(seId.fileTreePath).val();
+            const targetPath = _this.createInfoObject(jqById(seId.fileTreePath).val(), captions.targetPath);
             const v = new Validation();
             const vTypes = v.getTypes();
-            const fileTreePathInitData = v.initLayout(targetPathValue, captions.targetPath)
-            const fileTreePathLayout = v.getLayout(fileTreePathInitData, [vTypes.required]);
+            const fileTreePathLayout = v.getLayout(v.initLayout(targetPath.value, targetPath.name), [vTypes.required]);
             v.reset().append(fileTreePathLayout);
             const result = v.exec();
             if(result.error) {
-                new Notification().error().open(result.message);
-                loading.off();
-                return false;
+                throw new Error(result.message);
             }
-            const fileTree = new FileTree(targetPathValue).build();
+            const fileTree = new FileTree(targetPath.value).build();
             const worker = new Worker(types.path.fileTreeWorker);
             worker.onmessage = function(e) {
                 const fileTreeData = e.data;
@@ -258,8 +324,9 @@ CommonModule.prototype = {
         const $loadButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.listAlt));
         const $calendarButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.calendar));
         const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
+        const $readButton = jqNode("button", { class: eClass.buttonColorOrange }).text(upperCase(captions.read));
         const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
-        $container.append(eb.listAppend($actionArea, [$loadButton, $calendarButton, $execButton, $clearButton]));
+        $container.append(eb.listAppend($actionArea, [$loadButton, $calendarButton, $readButton, $execButton, $clearButton]));
         const itemList = [
             {
                 label: captions.targetPath,
@@ -293,6 +360,7 @@ CommonModule.prototype = {
         });
         $calendarButton.click(function() { _this.openCalendarApi(); });
         $execButton.click(function() { _this.editSystemDate(); });
+        $readButton.click(function() { _this.readSystemDate(); })
         $clearButton.click(function() {
             elementStack.forEach(function(item) { item.val(SIGN.none); });
         });
@@ -303,8 +371,8 @@ CommonModule.prototype = {
         const def = calendar.def;
         const mode = def.mode;
         const fullDateFormat = new RegExp("^((19|20|21)[0-9]{2})\/((0[1-9])|(1[0-2]))\/((0[1-9])|([1-2][0-9])|([3][0-1]))$", "g");
-        const yearMonthForamt = new RegExp("^((19|20|21)[0-9]{2})\/((0[1-9])|(1[0-2]))(\/)?", "g");
-        const yearFormat = new RegExp("^((19|20|21)[0-9]{2})(\/)?", "g");
+        const yearMonthForamt = new RegExp("^((19|20|21)[0-9]{2})\/((0[1-9])|(1[0-2]))(\/)?$", "g");
+        const yearFormat = new RegExp("^((19|20|21)[0-9]{2})(\/)?$", "g");
         if(fullDateFormat.test(dateString)) {
             return mode.ymd;
         }
@@ -481,6 +549,7 @@ CommonModule.prototype = {
             }
         };
         const openSystemDatePathListEditor = function(editData) {
+            const _this = this;
             const isEditMode = !isVoid(editData);
             const info = isEditMode ? editData : itf.getInjectData(null, null);
             const subOption = { "width": "360px", "max-height": "500px" };
@@ -508,14 +577,12 @@ CommonModule.prototype = {
                 return $container;
             };
             const callback = function(dialogClose) {
-                const nameValue = eventInjector.name.val();
-                const pathValue = eventInjector.path.val();
+                const name = _this.createInfoObject(eventInjector.name.val(), upperCase(captions.name));
+                const path = _this.createInfoObject(eventInjector.path.val(), upperCase(captions.path));
                 const v = new Validation();
                 const vTypes = v.getTypes();
-                const nameInitData = v.initLayout(nameValue, upperCase(captions.name));
-                const nameLayout = v.getLayout(nameInitData, [vTypes.required, vTypes.notSpace]);
-                const pathInitData = v.initLayout(pathValue, upperCase(captions.path));
-                const pathLayout = v.getLayout(pathInitData, [vTypes.required]);
+                const nameLayout = v.getLayout(v.initLayout(name.value, name.name), [vTypes.required, vTypes.notSpace]);
+                const pathLayout = v.getLayout(v.initLayout(path.value, path.name), [vTypes.required]);
                 v.reset().appendList([nameLayout, pathLayout]);
                 const result = v.exec();
                 if(result.error) {
@@ -523,7 +590,7 @@ CommonModule.prototype = {
                     return false;
                 }
                 const dSL = store.init()[itf.getKey()];
-                if(!isVoid(dSL) && !isVoid(dSL[nameValue]) && !(isEditMode && info.name === nameValue)) {
+                if(!isVoid(dSL) && !isVoid(dSL[name.value]) && !(isEditMode && info.name === name.value)) {
                     new Notification().error().open(messages.already_exits_name);
                     return false;
                 }
@@ -531,10 +598,10 @@ CommonModule.prototype = {
                     if(isEditMode && !isVoid(dSL[info.name])) return dSL[info.name].order;
                     return getObjectMaxOrder(dSL) + 1;
                 };
-                const jsonPath = new FileSystem(pathValue).toJsonPath().getPath();
-                const injectData = itf.getInjectData(nameValue, jsonPath, getOrder());
-                itf.inject(store, injectData, nameValue);
-                if(isEditMode && info.name !== nameValue) store.connect([itf.getKey(), info.name]).delete().apply();
+                const jsonPath = new FileSystem(path.value).toJsonPath().getPath();
+                const injectData = itf.getInjectData(name.value, jsonPath, getOrder());
+                itf.inject(store, injectData, name.value);
+                if(isEditMode && info.name !== name.value) store.connect([itf.getKey(), info.name]).delete().apply();
                 store.connect([itf.getKey()]).set(sortObjectByOrder(store.init()[itf.getKey()])).apply();
                 buildContents();
                 store.sync();
@@ -550,6 +617,77 @@ CommonModule.prototype = {
         const option = { "width": "400px", "max-height": "530px" };
         dialog.setContents(title, $container, option).setButton([$addButton]).disableOkButton().open();
     },
+    readSystemDate: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const targetPath = _this.createInfoObject(jqById(seId.dateTargetPath).val(), captions.targetPath);
+        const v = new Validation();
+        const vTypes = v.getTypes();
+        const targetPathLayout = v.getLayout(v.initLayout(targetPath.value, targetPath.name), [vTypes.required]);
+        v.reset().append(targetPathLayout);
+        const result = v.exec();
+        if(result.error) {
+            new Notification().error().open(result.message);
+            return false;
+        }
+        try {
+            const path = targetPath.value;
+            const fs = new FileSystem(path);
+            const data = fs.read().getData();
+            const structure = {
+                year: { key: "Year", value: null },
+                month: { key: "Month", value: null },
+                day: { key: "Day", value: null }
+            };
+            const setSystemDate = function(d) {
+                const dataArray = d.split(SIGN.crlf);
+                Object.keys(structure).forEach(function(key) {
+                    const item = structure[key];
+                    const map = concatString(item.key, "=");
+                    const exp = new RegExp(concatString("^", map, ".+?$"), "g");
+                    dataArray.some(function(line) {
+                        if(exp.test(line)) {
+                            item.value = line.replace(map, SIGN.none);
+                            return true;
+                        }
+                    });
+                });
+            };
+            const checkFileStructure = function() {
+                let flag = true;
+                Object.keys(structure).some(function(key) {
+                    const item = structure[key];
+                    if(isVoid(item.value) || !typeIs(Number(item.value)).number) {
+                        flag = false;
+                        return true;
+                    }
+                });
+                return flag;
+            };
+            setSystemDate(data);
+            if(!checkFileStructure()) throw new Error(MESSAGES.incorrect_data);
+            const s = structure;
+            const today = getToday();
+            const todayStringFormat = [today.year, today.month, today.date].join(SIGN.ssh);
+            const todaySystemObject = new Date(todayStringFormat);
+            todaySystemObject.setFullYear(todaySystemObject.getFullYear() + Number(s.year.value));
+            todaySystemObject.setMonth(todaySystemObject.getMonth() + Number(s.month.value));
+            const pYear = todaySystemObject.getFullYear();
+            const pMonth = todaySystemObject.getMonth();
+            const pLastDate = new Date(pYear, pMonth, 0).getDate();
+            const pConDate = today.date > pLastDate ? pLastDate : today.date;
+            todaySystemObject.setDate(Number(pConDate) + Number(s.day.value));
+            const calcYear = todaySystemObject.getFullYear();
+            const calcMonth = setCharPadding(todaySystemObject.getMonth() + 1, 2);
+            const calcDate = setCharPadding(todaySystemObject.getDate(), 2);
+            const resultDateFormat = [calcYear, calcMonth, calcDate].join("/");
+            jqById(seId.dateInput).val(resultDateFormat);
+        }
+        catch(e) {
+            new Notification().error().open(e.message);
+        }
+    },
     editSystemDate: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
@@ -557,34 +695,33 @@ CommonModule.prototype = {
         const messages = _this.Define.MESSAGES;
         const calendar = new Calendar();
         const mode = calendar.def.mode;
-        const targetPathValue = jqById(seId.dateTargetPath).val();
-        const systemDateValue = jqById(seId.dateInput).val();
+        const targetPath = _this.createInfoObject(jqById(seId.dateTargetPath).val(), captions.targetPath);
+        const systemDate = _this.createInfoObject(jqById(seId.dateInput).val(), captions.systemDate);
         const v = new Validation();
         const vTypes = v.getTypes();
-        const targetPathInitData = v.initLayout(targetPathValue, captions.targetPath);
-        const targetPathLayout = v.getLayout(targetPathInitData, [vTypes.required]);
-        const systemDateInitData = v.initLayout(systemDateValue, captions.systemDate);
-        const systemDateLayout = v.getLayout(systemDateInitData, [vTypes.required, vTypes.notSpace]);
+        const targetPathLayout = v.getLayout(v.initLayout(targetPath.value, targetPath.name), [vTypes.required]);
+        const systemDateLayout = v.getLayout(v.initLayout(systemDate.value, systemDate.name), [vTypes.required, vTypes.notSpace]);
         v.reset().appendList([targetPathLayout, systemDateLayout]);
         const result = v.exec();
         if(result.error) {
             new Notification().error().open(result.message);
             return false;
         }
-        const validate = _this.dateFormatValidate(systemDateValue);
+        const validate = _this.dateFormatValidate(systemDate.value);
         if(validate === mode.ymd) {
             try {
                 const today = getToday();
-                const valueArray = systemDateValue.split(SIGN.ssh);
+                const valueArray = systemDate.value.split(SIGN.ssh);
                 const year = valueArray[0];
                 const month = valueArray[1];
                 const date = valueArray[2];
+                const toLastDate = new Date(year, month, 0).getDate();
+                const conDate = today.date > toLastDate ? toLastDate : today.date;
                 const yearDiff = Number(year) - Number(today.year);
                 const monthDiff = Number(month) - Number(today.month);
-                const dateDiff = Number(date) - Number(today.date);
+                const dateDiff = Number(date) - conDate;
                 const path = targetPath.value;
                 const fs = new FileSystem(path);
-                UseSetting=true
                 const structure = {
                     UseSetting: true,
                     Year: yearDiff,
@@ -727,7 +864,7 @@ CommonModule.prototype = {
         const copyList = getExistArray(copyListValue.split(separatorType));
         const v = new Validation();
         const vTypes = v.getTypes();
-        const validAction = function() {
+        const existValidate = function() {
             const actionLayout = v.getActionLayout();
             if(isVoid(copyList)) {
                 actionLayout.error = true;
@@ -735,10 +872,8 @@ CommonModule.prototype = {
             }
             return actionLayout;
         };
-        const copyListInitData = v.initLayout(copyList, captions.copyList);
-        const actionObj = new Object();
-        actionObj[vTypes.required] = validAction;
-        const copyListLayout = v.getLayout(copyListInitData, [vTypes.required], actionObj);
+        const actionObj = createObject(vTypes.required, existValidate);
+        const copyListLayout = v.getLayout(v.initLayout(copyList, captions.copyList), [vTypes.required], actionObj);
         v.reset().append(copyListLayout);
         const result = v.exec();
         if(result.error) {
@@ -784,6 +919,253 @@ CommonModule.prototype = {
             new Notification().error().open(r.message);
             return false;
         }
+        return null;
+    },
+    buildFolderGenerator: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const eb = new ElementBuilder();
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
+        $container.append(eb.listAppend($actionArea, [$execButton]));
+        const itemList = [
+            {
+                label: captions.targetPath,
+                inputType: "textarea",
+                inputId: seId.folderGeneratorPath
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: seClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+        });
+        $execButton.click(function() {
+            _this.generateFolder();
+        });
+        return $container;
+    },
+    generateFolder: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const messages = _this.Define.MESSAGES;
+        const loading = new Loading();
+        loading.on().then(function() {
+            const $targetPath = jqById(seId.folderGeneratorPath);
+            const targetPathValue = $targetPath.val();
+            const targetPath = getExistArray(targetPathValue.split(SIGN.nl));
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const existValidate = function(t) {
+                const actionLayout = v.getActionLayout();
+                if(isVoid(targetPath)) {
+                    actionLayout.error = true;
+                    actionLayout.message = v.getMessage(vTypes.required, captions.targetPath);
+                }
+                return actionLayout;
+            };
+            const actionObj = createObject(vTypes.required, existValidate);
+            const targetPathLayout = v.getLayout(v.initLayout(targetPath, captions.targetPath), [vTypes.required], actionObj);
+            v.reset().append(targetPathLayout);
+            const result = v.exec();
+            if(result.error) {
+                throw new Error(result.message);
+            }
+            targetPath.forEach(function(path) {
+                new FileSystem(path).createFolder(false);
+            });
+            new Notification().complete().open(messages.create_folder_complete);
+            loading.off();
+        }).catch(function(e) {
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+        return null;
+    },
+    buildCopyFile: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const copyFileState = _this.state.copyFile;
+        const stateDef = copyFileState.define;
+        const eb = new ElementBuilder();
+        const injectorStack = new Array();
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
+        const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
+        $container.append(eb.listAppend($actionArea, [$execButton, $clearButton]));
+        const modeRadioItemList = [
+            {
+                label: stateDef.modeRadio.type.file.label,
+                attributes: {
+                    id: stateDef.modeRadio.type.file.id,
+                    name: stateDef.modeRadio.name,
+                    value: stateDef.modeRadio.type.file.value
+                },
+                isChecked: true,
+                optionClass: SIGN.none
+            },
+            {
+                label: stateDef.modeRadio.type.folder.label,
+                attributes: {
+                    id: stateDef.modeRadio.type.folder.id,
+                    name: stateDef.modeRadio.name,
+                    value: stateDef.modeRadio.type.folder.value
+                },
+                isChecked: false,
+                optionClass: SIGN.none
+             }
+        ];
+        const $modeCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $modeRadioItem = eb.createRadio(modeRadioItemList).getItem();
+        const $modeLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.mode, 0));
+        const $modeRadio = jqNode("div", { class: eClass.fullWidth }).append($modeRadioItem);
+        eb.listAppend($modeCommandArea, [$modeLabel, $modeRadio]);
+        const overwriteRadioItemList = [
+            {
+                label: stateDef.overwriteRadio.type.typeTrue.label,
+                attributes: {
+                    id: stateDef.overwriteRadio.type.typeTrue.id,
+                    name: stateDef.overwriteRadio.name,
+                    value: stateDef.overwriteRadio.type.typeTrue.value
+                },
+                isChecked: true,
+                optionClass: SIGN.none
+            },
+            {
+                label: stateDef.overwriteRadio.type.typeFalse.label,
+                attributes: {
+                    id: stateDef.overwriteRadio.type.typeFalse.id,
+                    name: stateDef.overwriteRadio.name,
+                    value: stateDef.overwriteRadio.type.typeFalse.value
+                },
+                isChecked: false,
+                optionClass: SIGN.none
+             }
+        ];
+        const $overwriteCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $overwriteRadioItem = eb.createRadio(overwriteRadioItemList).getItem();
+        const $overwriteLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.overwrite, 0));
+        const $overwriteRadio = jqNode("div", { class: eClass.fullWidth }).append($overwriteRadioItem);
+        eb.listAppend($overwriteCommandArea, [$overwriteLabel, $overwriteRadio]);
+        eb.listAppend($container, [$modeCommandArea, $overwriteCommandArea]);
+        injectorStack.push($modeRadioItem);
+        injectorStack.push($overwriteRadioItem);
+        const itemList = [
+            {
+                label: captions.sourcePath,
+                inputType: "textarea",
+                inputId: seId.copyFileSourcePath
+            },
+            {
+                label: captions.destinationPath,
+                inputType: "textarea",
+                inputId: seId.copyFileDestinationPath
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: seClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+            injectorStack.push($input);
+        });
+        $execButton.click(function() {
+            _this.copyFile();
+        });
+        $clearButton.click(function() {
+            injectorStack.forEach(function(ele, i) {
+                if(i === 0) {
+                    jqById(stateDef.modeRadio.type.file.id).prop("checked", true);
+                    jqById(stateDef.modeRadio.type.folder.id).prop("checked", false);
+                }
+                else if(i === 1) {
+                    jqById(stateDef.overwriteRadio.type.typeTrue.id).prop("checked", true);
+                    jqById(stateDef.overwriteRadio.type.typeFalse.id).prop("checked", false);
+                }
+                else {
+                    ele.val(SIGN.none);
+                }
+            });
+        });
+        return $container;
+    },
+    copyFile: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const types = _this.Define.TYPES;
+        const captions = _this.Define.CAPTIONS;
+        const messages = _this.Define.MESSAGES;
+        const copyFileState = _this.state.copyFile;
+        const stateDef = copyFileState.define;
+        const loading = new Loading();
+        loading.on().then(function() {
+            const modeElement = concatString("input[name=", stateDef.modeRadio.name, "]:checked");
+            const overwriteElement = concatString("input[name=", stateDef.overwriteRadio.name, "]:checked");
+            const mode = $(modeElement).val();
+            const isOverwrite = $(overwriteElement).val();
+            const $sourcePath = jqById(seId.copyFileSourcePath);
+            const $destinationPath = jqById(seId.copyFileDestinationPath);
+            const sourcePathValue = $sourcePath.val();
+            const destinationPathValue = $destinationPath.val();
+            const sourcePath = getExistArray(sourcePathValue.split(SIGN.nl));
+            const destinationPath = getExistArray(destinationPathValue.split(SIGN.nl));
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const existValidate = function(t) {
+                const p = t === 0 ? sourcePath : destinationPath;
+                const c = t === 0 ? captions.sourcePath : captions.destinationPath;
+                const actionLayout = v.getActionLayout();
+                if(isVoid(p)) {
+                    actionLayout.error = true;
+                    actionLayout.message = v.getMessage(vTypes.required, c);
+                }
+                return actionLayout;
+            };
+            const actionObjS = createObject(vTypes.required, existValidate.bind(null, 0));
+            const actionObjD = createObject(vTypes.required, existValidate.bind(null, 1));
+            const sourcePathLayout = v.getLayout(v.initLayout(sourcePath, captions.sourcePath), [vTypes.required], actionObjS);
+            const destinationPathLayout = v.getLayout(v.initLayout(destinationPath, captions.destinationPath), [vTypes.required], actionObjD);
+            v.reset().appendList([sourcePathLayout, destinationPathLayout]);
+            const result = v.exec();
+            if(result.error) {
+                throw new Error(result.message);
+            }
+            else if(sourcePath.length != destinationPath.length) {
+                throw new Error(messages.each_source_destination);
+            }
+            const fs = new FileSystem();
+            switch(mode) {
+                case types.copyFile.mode.file: {
+                    sourcePath.forEach(function(sPath, i) {
+                        fs.copyFile(sPath, destinationPath[i], isOverwrite);
+                    });
+                    break;
+                }
+                case types.copyFile.mode.folder: {
+                    sourcePath.forEach(function(sPath, i) {
+                        fs.copyFolder(sPath, destinationPath[i], isOverwrite);
+                    });
+                    break;
+                }
+            }
+            new Notification().complete().open(messages.copy_file_complete);
+            loading.off();
+        }).catch(function(e) {
+            new Notification().error().open(e.message);
+            loading.off();
+        });
         return null;
     }
 };

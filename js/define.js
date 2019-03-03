@@ -17,7 +17,9 @@ const SIGN = {
     crlf: "\r\n",
     dash: "-",
     ub: "_",
-    equal: "="
+    equal: "=",
+    abs: "&lt;",
+    abe: "&gt;"
 };
 
 const ELEMENTS = {
@@ -148,7 +150,8 @@ const ELEMENTS = {
         interfaceListAddContainer: "interface-list-add-container",
         actionArea: "action-area",
         viewArea: "view-area",
-        fullWidth: "full-width"
+        fullWidth: "full-width",
+        attachLabel: "attach-label"
     },
     icon: {
         database: "fas fa-database",
@@ -174,7 +177,8 @@ const ELEMENTS = {
         arrowLeft: "fas fa-arrow-left",
         calendar: "far fa-calendar-alt",
         chevronUp: "fas fa-chevron-up",
-        chevronDown: "fas fa-chevron-down"
+        chevronDown: "fas fa-chevron-down",
+        paperClip: "fas fa-paperclip"
     },
     style: {
         transitionDuration: 300
@@ -224,7 +228,9 @@ const TYPES = {
             png: ".png",
             xls: ".xls",
             xlsx: ".xlsx",
-            csv: ".csv"
+            csv: ".csv",
+            bat: ".bat",
+            log: ".log"
         },
         contentType: {
             string: "string",
