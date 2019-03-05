@@ -426,8 +426,9 @@
 #option-template__nb > .viewer-section .command-line.system-birth > label {
     width: 150px;
 }
-#option-template__nb > .viewer-section .command-line.system-birth > input {
+#option-template__nb > .viewer-section .command-line.system-birth > textarea {
     width: 350px;
+    height: 70px;
 }
 #option-template__nb > .viewer-section .command-line.user-birth {
     display: flex;

@@ -472,7 +472,7 @@ SqlModule.prototype = {
                 uid: uid,
                 pwd: pwd
             };
-            // new DBUtils().connect(info).close();
+             new DBUtils().connect(info).close();
             _this.state.isConnecting = true;
             _this.state.info = info;
             _this.transition(pageType.application);
@@ -1168,7 +1168,8 @@ SqlModule.prototype = {
         const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
         const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
         const $importButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase(captions.import));
-        eb.listAppend($actionArea, [$loadButton, $checkButton, $extractButton, $importButton]);
+        const $deleteButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase("delete"));
+        eb.listAppend($actionArea, [$loadButton, $checkButton, $extractButton, $importButton, $deleteButton]);
         $container.append($actionArea);
         const emr = dataCopyDesign.extractModeRadio;
         const egc = dataCopyDesign.extractGroupCheck;
@@ -1306,7 +1307,44 @@ SqlModule.prototype = {
         $importButton.click(function() {
             _this.importDataCopy();
         });
+        $deleteButton.click(function() {
+            _this.deleteDataCopy();
+        });
         return $container;
+    },
+    deleteDataCopy: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.dataCopy;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
+        const dataCopyExport = _this.export.dataCopy;
+        const dataCopyState = _this.state.dataCopy;
+        const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
+        const pnt = policyNumberTo.value;
+        const pntList = getExistArray(pnt.split(SIGN.nl));
+        const extractGroupStack = new Array();
+        $(dataCopyEvent.element.extractGroupChecked).each(function() {
+            extractGroupStack.push($(this).val());
+        });
+        const getExportTableList = function(key) {
+            return dataCopyExport.tableListObject[key];
+        };
+        const extractTableList = extractGroupStack.map(function(tableListKey) {
+            return getExportTableList(tableListKey)
+        }).reduce(function(pre, curr) {
+            return pre.concat(curr);
+        });
+        const queryStack = new Array();
+        extractTableList.forEach(function(table) {
+            pntList.forEach(function(toKey) {
+                const query = concatString(_this.getDataCopySelectQuery(table, toKey), SIGN.sc);
+                queryStack.push(query.replace(/SELECT \* FROM/, "DELETE FROM"));
+            });
+        });
+        copyToClipboard(queryStack.join(SIGN.crlf));
     },
     buildOptionContents: function(optionData) {
         const _this = this;
@@ -1633,11 +1671,15 @@ SqlModule.prototype = {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const template = _this.export.dataCopy.template;
-        const templateRules = _this.export.dataCopy.templateRules;
+        // const captions = _this.Define.CAPTIONS;
+        const dataCopyExport = _this.export.dataCopy;
+        const exportDefineSet = dataCopyExport.defineSet;
+        // const template = dataCopyExport.template;
+        const templateRules = dataCopyExport.templateRules;
         const dataCopyState = _this.state.dataCopy;
         const extractedData = dataCopyState.extractedData;
+        const insertDataStatic = dataCopyState.insertDataStatic;
+        const extractMap = dataCopyState.extractMap;
         const eb = new ElementBuilder();
         const $templateContainer = jqNode("div", { class: seClass.optionTemplateContainer });
         let continueFlag = true;
@@ -1645,18 +1687,25 @@ SqlModule.prototype = {
         switch(menu) {
             case "Name_Birth": {
                 continueFlag = false;
+                const oDB = new DBUtils();
                 const rules = templateRules[menu];
-                const ownKey = Object.getOwnPropertyNames(extractedData)[0];
-                const fromData = extractedData[ownKey];
+//                const ownKey = Object.getOwnPropertyNames(extractedData)[0];
+//                const fromData = extractedData[ownKey];
                 const toList = dataCopyState.toList;
                 const tables = rules.tables;
-                const base = rules.base;
-                const count = fromData[base].count;
-                const rs = rules.submissionDate;
-                const submissionDate = new DBUtils().getColumnData(fromData, rs.table, rs.column);
-                const isContractorAvailable = count >= 2;
+                // const base = rules.base;
+//                const count = fromData[base].count;
+                // const rs = rules.submissionDate;
+//                const submissionDate = new DBUtils().getColumnData(fromData, rs.table, rs.column);
+                const isContractorAvailable = true;
                 const def = {
-                    target: { insured: "insured", contractor: "contractor" },
+                    target: {
+                        insured: "insured",
+                        contractor: "contractor",
+                        receiver: "receiver",
+                        requiredContractor: "required_contractor",
+                        requiredContractorOnWeb: "required_contractor_onWeb"
+                    },
                     injectorId: { increment: "increment" },
                     inputType: { system: "system", user: "user" },
                     elements: {
@@ -1684,6 +1733,7 @@ SqlModule.prototype = {
                                     identifier: "Identifier",
                                     id: "ID",
                                     number: "Number",
+                                    digits: "Digits",
                                     nameKana: "Name Kana",
                                     nameKanji: "Name Kanji",
                                     lastNameKana: "Last Name Kana",
@@ -1694,6 +1744,7 @@ SqlModule.prototype = {
                                 ids: {
                                     id: "system-name-id",
                                     number: "system-name-number",
+                                    digits: "system-digits",
                                     lastNameKana: "system-name-lastNameKana",
                                     firstNameKana: "system-name-firstNameKana",
                                     lastNameKanji: "system-name-lastNameKanji",
@@ -1739,7 +1790,9 @@ SqlModule.prototype = {
                         nameKanji: "name_kanji",
                         birthday: "birthday",
                         age: "age",
-                        both: "both"
+                        both: "both",
+                        nameKanaL: "name_kana_l",
+                        nameKanaF: "name_kana_f"
                     }
                 };
                 const initState = function() {
@@ -1854,12 +1907,17 @@ SqlModule.prototype = {
                         const $systemNameIdentifierLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
                         const $systemNameIdentifierLabel = jqNode("label").text(systemNameDef.labels.identifier);
                         const $systemNameIdInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.id), class: eClass.applicationInput, placeholder: systemNameDef.labels.id, value: state.name.system.id });
-                        const $systemNameNumberInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.number), class: eClass.applicationInput, placeholder: systemNameDef.labels.number, value: state.name.system.number });
+                        const $systemNameNumberInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.number), class: eClass.applicationInput, placeholder: systemNameDef.labels.number, value: state.name.system.number }).css("width", "80px");
                         new EventHandler($systemNameNumberInput).addInputEvent(function(e, value) {
                             const exp = new RegExpUtil(value);
                             if(!exp.isNumberWithFullWidth() || exp.isOverflow(3)) return false;
                         });
-                        eb.listAppend($systemNameIdentifierLine, [$systemNameIdentifierLabel, $systemNameIdInput, $systemNameNumberInput]);
+                        const $systemDigitsInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.digits), class: eClass.applicationInput, placeholder: systemNameDef.labels.digits, value: SIGN.none }).css("width", "80px");
+                        new EventHandler($systemDigitsInput).addInputEvent(function(e, value) {
+                            const exp = new RegExpUtil(value);
+                            if(!exp.isNumberWithFullWidth() || exp.isOverflow(1) || value <= 0 || value >= 4) return false;
+                        });
+                        eb.listAppend($systemNameIdentifierLine, [$systemNameIdentifierLabel, $systemNameIdInput, $systemNameNumberInput, $systemDigitsInput]);
                         const $systemNameKanaLine = jqNode("div", { class: classes(seClass.commandLine, systemNameDef.class) });
                         const $systemNameKanaLabel = jqNode("label").text(systemNameDef.labels.nameKana);
                         const $systemNameKanaLastNameInput = jqNode("input", { id: getAuth(targetId, systemNameDef.ids.lastNameKana), class: eClass.applicationInput, placeholder: systemNameDef.labels.lastNameKana, value: state.name.system.kana.lastName });
@@ -1872,7 +1930,7 @@ SqlModule.prototype = {
                         eb.listAppend($systemNameKanjiLine, [$systemNameKanjiLabel, $systemNameKanjiLastNameInput, $systemNameKanjiFirstNameInput]);
                         const $systemBirthLine = jqNode("div", { class: classes(seClass.commandLine, systemBirthDef.class) });
                         const $systemBirthLabel = jqNode("label").text(systemBirthDef.label);
-                        const $systemBirthInput = jqNode("input", { id: getAuth(targetId, systemBirthDef.id), class: eClass.applicationInput, placeholder: systemBirthDef.format, value: state.birthday.system });
+                        const $systemBirthInput = jqNode("textarea", { id: getAuth(targetId, systemBirthDef.id), class: eClass.applicationInput, placeholder: systemBirthDef.format, value: state.birthday.system });
                         eb.listAppend($systemBirthLine, [$systemBirthLabel, $systemBirthInput]);
                         eb.listAppend($systemContainer, [$systemNameIdentifierLine, $systemNameKanaLine, $systemNameKanjiLine, $systemBirthLine]);
                         const $userContainer = jqNode("div").css({ "padding-top": "10px" });;
@@ -1942,6 +2000,7 @@ SqlModule.prototype = {
                         executeList.forEach(function(targetId) {
                             nbState[targetId].name.system.id = jqById(getAuth(targetId, systemNameDef.ids.id)).val();
                             nbState[targetId].name.system.number = jqById(getAuth(targetId, systemNameDef.ids.number)).val();
+                            nbState[targetId].name.system.digits = jqById(getAuth(targetId, systemNameDef.ids.digits)).val();
                             nbState[targetId].name.system.kana.lastName = jqById(getAuth(targetId, systemNameDef.ids.lastNameKana)).val();
                             nbState[targetId].name.system.kana.firstName = jqById(getAuth(targetId, systemNameDef.ids.firstNameKana)).val();
                             nbState[targetId].name.system.kanji.lastName = jqById(getAuth(targetId, systemNameDef.ids.lastNameKanji)).val();
@@ -2005,12 +2064,14 @@ SqlModule.prototype = {
                                     checkAllResult.messageList.push(result.message);
                                 }
                             }
+                            const checkValueObject = createMultipleObject([[def.target.insured, new Array()], [def.target.contractor, new Array()]]);
                             executeList.forEach(function(targetId) {
                                 const state = nbState[targetId];
                                 v.reset();
                                 const labels = [
                                     concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.id),
                                     concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.number),
+                                    concatString(systemNameDef.labels.identifier, " > ", systemNameDef.labels.digits),
                                     concatString(systemNameDef.labels.nameKana, " > ", systemNameDef.labels.lastNameKana),
                                     concatString(systemNameDef.labels.nameKana, " > ", systemNameDef.labels.firstNameKana),
                                     concatString(systemNameDef.labels.nameKanji, " > ", systemNameDef.labels.lastNameKanji),
@@ -2020,6 +2081,7 @@ SqlModule.prototype = {
                                 [
                                     state.name.system.id,
                                     state.name.system.number,
+                                    state.name.system.digits,
                                     state.name.system.kana.lastName,
                                     state.name.system.kana.firstName,
                                     state.name.system.kanji.lastName,
@@ -2027,17 +2089,22 @@ SqlModule.prototype = {
                                     state.birthday.system
                                 ].forEach(function(item, i) {
                                     let layout = null;
-                                    if(i === 1) {
-                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.required, vTypes.notSpace, vTypes.numeric]);
+                                    if(i === 1 || i === 2) {
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numeric]);
                                     }
-                                    else if(i === 6) {
-                                        const exp = new RegExpUtil(state.birthday.system);
+                                    else if(i === 7) {
                                         const formatValidate = function() {
                                             const actionLayout = v.getActionLayout();
-                                            if(!exp.isYYYYMMDD()) {
-                                                actionLayout.error = true;
-                                                actionLayout.message = concatString(systemBirthDef.label, " format is not valid");
-                                            }
+                                            item.split(SIGN.nl).some(function(bd, j) {
+                                                if(!isVoid(bd)) {
+                                                    const exp = new RegExpUtil(bd);
+                                                    if(!exp.isYYYYMMDD()) {
+                                                        actionLayout.error = true;
+                                                        actionLayout.message = concatString(labels[i], " format is not valid[Line:", j + 1, "]");
+                                                        return true;
+                                                    }
+                                                }
+                                            });
                                             return actionLayout;
                                         };
                                         const ageValidate = function() {
@@ -2049,12 +2116,16 @@ SqlModule.prototype = {
                                             return actionLayout;
                                         };
                                         const actionObj = { "format": formatValidate, "age": ageValidate };
-                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numeric, "format", "age"], actionObj);
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numericWithLineBreak, "format"], actionObj);
                                     }
                                     else {
-                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.required, vTypes.notSpace]);
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace]);
                                     }
                                     v.append(layout);
+                                    if(i === 0 || i === 1 || i === 7) {
+                                        const tValue = i === 7 ? getExistArray(item.split(SIGN.nl)).join(SIGN.none) : item;
+                                        checkValueObject[targetId].push(tValue);
+                                    }
                                 });
                                 const result = v.exec();
                                 if(result.error) {
@@ -2067,10 +2138,53 @@ SqlModule.prototype = {
                                 throw new Error(checkAllResult.messageList.join(concatString(SIGN.br, SIGN.br)));
                             }
                             else {
-                                const generator = function(c, tableCount) {
+                                const edst = exportDefineSet.table;
+                                const edsc = exportDefineSet.column;
+                                const generator = function(fromData, table, c, toKey, toIdx) {
                                     const type = c.type;
                                     const target = c.target;
                                     const separator = c.separator;
+                                    const t_kokykKanren = edst.kokykKanren;
+                                    const c_pn = edsc.policyNumber;
+                                    const exd = fromData[table];
+                                    const isBoth = target === keys.both;
+                                    if(type === keys.nameKana || type === nameKanji || type === keys.nameKanaF || type === keys.nameKanaL) {
+                                        if(isBoth) {
+                                            const kokykKanrenData = oDB.where(fromData, t_kokykKanren, function(getIndex, getDataList) {
+                                                const c_pnIdx = getIndex(c_pn);
+                                                const con = function(record) {
+                                                    return record[c_pnIdx] === toKey;
+                                                };
+                                                return getDataList(con);
+                                            });
+                                        }
+                                        else {
+                                            switch(target) {
+                                                case def.target.insured: {
+                                                    break;
+                                                }
+                                                case def.target.contractor: {
+                                                    break;
+                                                }
+                                                case def.target.receiver: {
+                                                    break;
+                                                }
+                                                case def.target.requiredContractor: {
+                                                    break;
+                                                }
+                                                case def.target.requiredContractorOnWeb: {
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else if(type === keys.birthday) {
+
+                                    }
+                                    else if(type === keys.age) {
+
+                                    }
+                                    
                                     const isBoth = target === keys.both;
                                     const iterateNum = increment.available ? toList.length : Number(increment.count);
                                     const getName = function(state, i, type) {
@@ -2128,16 +2242,32 @@ SqlModule.prototype = {
                                     return existData.length >= 1 ? existData.join(SIGN.nl) : SIGN.none;
                                 };
                                 Object.keys(tables).forEach(function(table) {
-                                    const t = tables[table];
                                     templatePrintObject[table] = new Object();
-                                    Object.keys(t).forEach(function(column) {
-                                        const c = t[column];
-                                        const target = c.target;
-                                        const isBoth = target === keys.both;
-                                        if(!isBoth && executeList.indexOf(target) < 0) return;
-                                        const tableCount = fromData[table].count;
-                                        templatePrintObject[table][column] = generator(c, tableCount);
+                                    const ins = insertDataStatic[table];
+                                    Object.keys(ins).some(function(toKey, toIdx) {
+                                        if(!increment.available && toIdx >= Number(increment.count)) {
+                                            return true;
+                                        }
+                                        const fromData = extractedData[extractMap[toKey]];
+                                        const exd = fromData[table];
+                                        if(!isVoid(exd)) {
+                                            const t = tables[table];
+                                            Object.keys(t).forEach(function(column) {
+                                                const c = t[column];
+                                                templatePrintObject[table][column] = generator(fromData, table, c, toKey, toIdx);
+                                                // const target = c.target;
+                                                // if(target === def.target.receiver) {
+
+                                                // }
+                                                // else {
+                                                //     const isBoth = target === keys.both;
+                                                //     if(!isBoth && executeList.indexOf(target) < 0) return;
+                                                //     templatePrintObject[table][column] = generator(c, fromData, table, add);
+                                                // }
+                                            });
+                                        }
                                     });
+
                                 });
                             }
                         }
@@ -2171,11 +2301,13 @@ SqlModule.prototype = {
                                         const formatValidate = function() {
                                             const actionLayout = v.getActionLayout();
                                             item.split(SIGN.nl).some(function(bd, j) {
-                                                const exp = new RegExpUtil(bd);
-                                                if(!exp.isYYYYMMDD()) {
-                                                    actionLayout.error = true;
-                                                    actionLayout.message = concatString(labels[i], " format is not valid[Line:", j + 1, "]");
-                                                    return true;
+                                                if(!isVoid(bd)) {
+                                                    const exp = new RegExpUtil(bd);
+                                                    if(!exp.isYYYYMMDD()) {
+                                                        actionLayout.error = true;
+                                                        actionLayout.message = concatString(labels[i], " format is not valid[Line:", j + 1, "]");
+                                                        return true;
+                                                    }
                                                 }
                                             });
                                             return actionLayout;
@@ -2193,10 +2325,10 @@ SqlModule.prototype = {
                                             return actionLayout;
                                         };
                                         const actionObj = { "format": formatValidate, "age": ageValidate };
-                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numericWithLineBreak, "format", "age"], actionObj);
+                                        layout = v.getLayout(v.initLayout(item, labels[i]), [vTypes.notSpace, vTypes.numericWithLineBreak, "format"], actionObj);
                                     }
                                     else {
-                                        layout = v.getLayout(v.initLayout(item.split(SIGN.nl).join(SIGN.none), labels[i]), [vTypes.required, vTypes.notSpace]);
+                                        layout = v.getLayout(v.initLayout(item.split(SIGN.nl).join(SIGN.none), labels[i]), [vTypes.notSpace]);
                                     }
                                     v.append(layout);
                                 });
@@ -2315,7 +2447,7 @@ SqlModule.prototype = {
                                 });
                             }
                         }
-                        sync(viewerClose, templatePrintObject, nbState);
+//                        sync(viewerClose, templatePrintObject, nbState);
                     }
                     catch(e) {
                         new Notification().error().open(e.message);
@@ -2461,7 +2593,7 @@ SqlModule.prototype = {
                     break;
                 }
                 case 1: {
-                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " = '", pn.slice(1, pn.length - 1), "'");
+                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " = '", pn.slice(1, pn.length - 1), "' AND S_HATUBANKEY = '", pn.slice(0, 1), "'");
                     break;
                 }
                 case 2: {
@@ -2624,6 +2756,7 @@ SqlModule.prototype = {
             const defaultKey = dataCopyExport.keySet.defaultKey;
             const insertData = new Object();
             dataCopyState.dataKey = { to: new Object() };
+            dataCopyState.applyInfo = new Object();
             Object.keys(dataCopyState.extractMap).forEach(function(toKey, idUpdIndex) {
                 const fromKey = dataCopyState.extractMap[toKey];
                 Object.keys(extractedData[fromKey]).forEach(function(table) {
@@ -2671,6 +2804,7 @@ SqlModule.prototype = {
             dataCopyState.insertData = insertData;
             dataCopyState.insertDataStatic = cloneJS(insertData);
             dataCopyState.ref.isSingleMode = isSingleMode;
+            dataCopyState.ref.extractTableList = extractTableList;
             dataCopyState.toList = pntList;
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
@@ -2688,22 +2822,43 @@ SqlModule.prototype = {
         switch(applyType) {
             case "identifyCustomerNumber": {
                 state.customerNumberIdentifier = new Array();
-                const query = "SELECT S_KOKNO FROM KT_KokKykKanren";
-                const dataSet = db.executeSelect(query).dataSet;
                 let numberCollection = new Array();
-                if(dataSet.count >= 1) {
-                    numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
+                let checkStack = new Array();
+                if(isVoid(state[applyType])) {
+                    const query = "SELECT S_KOKNO FROM KT_KokKykKanren";
+                    const dataSet = db.executeSelect(query).dataSet;
+                    if(dataSet.count >= 1) {
+                        numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
+                    }
+                    state[applyType] = createObject("numberCollection", numberCollection);
+                    state[applyType].checkStack = new Array();
                 }
-                let identifier = Math.floor(Math.random() * 999999) + 1000000;
+                else {
+                    numberCollection = state[applyType].numberCollection;
+                    checkStack = state[applyType].checkStack;
+                }
+                let identifier = 10000;
+                let recordIdx = 0;
                 while(state.customerNumberIdentifier.length < applyData.length && identifier <= 99999999) {
-                    if(numberCollection.indexOf(identifier) < 0) {
-                        state.customerNumberIdentifier.push(toString(identifier));
+                    const idStr = toString(identifier);
+                    if(numberCollection.indexOf(idStr) < 0 && checkStack.indexOf(idStr) < 0) {
+                        state.customerNumberIdentifier.push(idStr);
+                        applyData[recordIdx][state.applyIndex] = idStr;
+                        recordIdx++;
                     }
                     identifier++;
                 }
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.customerNumberIdentifier[i];
-                });
+                state[applyType].checkStack = checkStack.concat(state.customerNumberIdentifier);
+//                let identifier = Math.floor(Math.random() * 999999) + 1000000;
+//                while(state.customerNumberIdentifier.length < applyData.length && identifier <= 99999999) {
+//                    if(numberCollection.indexOf(identifier) < 0) {
+//                        state.customerNumberIdentifier.push(toString(identifier));
+//                    }
+//                    identifier++;
+//                }
+//                applyData.forEach(function(record, i) {
+//                    record[state.applyIndex] = state.customerNumberIdentifier[i];
+//                });
                 break;
             }
             case "changeToOne": {
@@ -2783,23 +2938,44 @@ SqlModule.prototype = {
                 break;
             }
             case "identifyAccountNumber": {
-                const accountNumberIdentifier = new Array();
-                const query = "SELECT S_KOUZANO FROM ST_HrkmKouzaKanri";
-                const dataSet = db.executeSelect(query).dataSet;
+                state.accountNumberIdentifier = new Array();
                 let numberCollection = new Array();
-                if(dataSet.count >= 1) {
-                    numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
+                let checkStack = new Array();
+                if(isVoid(state[applyType])) {
+                    const query = "SELECT S_KOUZANO FROM ST_HrkmKouzaKanri";
+                    const dataSet = db.executeSelect(query).dataSet;
+                    if(dataSet.count >= 1) {
+                        numberCollection = dataSet.data.map(function(row) { return toNumber(row[0]); });
+                    }
+                    state[applyType] = createObject("numberCollection", numberCollection);
+                    state[applyType].checkStack = new Array();
                 }
-                let identifier = Math.floor(Math.random() * 999999) + 1000000;
-                while(accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
-                    if(numberCollection.indexOf(identifier) < 0) {
-                        accountNumberIdentifier.push(toString(identifier));
+                else {
+                    numberCollection = state[applyType].numberCollection;
+                    checkStack = state[applyType].checkStack;
+                }
+                let identifier = 1000000;
+                let recordIdx = 0;
+                while(state.accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
+                    const idStr = toString(identifier);
+                    if(numberCollection.indexOf(idStr) < 0 && checkStack.indexOf(idStr) < 0) {
+                        state.accountNumberIdentifier.push(idStr);
+                        applyData[recordIdx][state.applyIndex] = idStr;
+                        recordIdx++;
                     }
                     identifier++;
                 }
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = accountNumberIdentifier[i];
-                });
+                state[applyType].checkStack = checkStack.concat(state.accountNumberIdentifier);
+//                let identifier = Math.floor(Math.random() * 999999) + 1000000;
+//                while(accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
+//                    if(numberCollection.indexOf(identifier) < 0) {
+//                        accountNumberIdentifier.push(toString(identifier));
+//                    }
+//                    identifier++;
+//                }
+//                applyData.forEach(function(record, i) {
+//                    record[state.applyIndex] = accountNumberIdentifier[i];
+//                });
                 break;
             }
             case "identifyMyPageUserId": {
@@ -2984,9 +3160,10 @@ SqlModule.prototype = {
     },
     saveOptionDataCopy: function(dialogClose) {
         const _this = this;
-        const dataCopyState = _this.state.dataCopy;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
+        const dataCopyState = _this.state.dataCopy;
+        const extractTableList = dataCopyState.ref.extractTableList;
         const $optionContainer = jqById(seId.optionContainerDataCopy);
         const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
         const option = new Array();
@@ -3012,7 +3189,7 @@ SqlModule.prototype = {
                 messageStack.push(concatString(messageIndex, "Table has duplicates"));
                 hasError = true;
             }
-            else if(!find(table.value, _this.export.dataCopy.tableList, null, upperCase).isExist) {
+            else if(!find(table.value, extractTableList, null, upperCase).isExist) {
                 messageStack.push(concatString(messageIndex, "Not exists table"));
                 hasError = true;
             }
@@ -3050,20 +3227,30 @@ SqlModule.prototype = {
                 const table = line.table;
                 const script = convertScript(line.script);
                 const tableData = getProperty(dataCopyState.insertData, table);
-                if(tableData) {
+                const editData = {
+                    name: new Array(),
+                    data: new Array()
+                };
+                Object.keys(tableData).forEach(function(pn, i) {
+                    if(i === 0) {
+                        editData.name = editData.name.concat(tableData[pn].name);
+                    }
+                    editData.data = editData.data.concat(tableData[pn].data);
+                });
+                if(editData.data.length >= 1) {
                     Object.keys(script).forEach(function(column) {
-                        const applyIndex = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
+                        const applyIndex = editData.name.map(mapUpperCase).indexOf(upperCase(column));
                         if(applyIndex < 0) {
                             actionState.msg.push(concatString("[", table, "]", column, " : Not exists column"));
                             return;
                         }
                         getExistArray(script[column]).forEach(function(s, i) {
-                            if(!tableData.data[i]) {
+                            if(!editData.data[i]) {
                                 actionState.msg.push(concatString("[", table, "]", column, " > ", s, " : Overflow data"));
                                 return;
                             }
                             else if(s === "$eq") return;
-                            tableData.data[i][applyIndex] = lowerCase(s) === "$null" ? SIGN.none : s;
+                            editData.data[i][applyIndex] = lowerCase(s) === "$null" ? SIGN.none : s;
                         });
                     });
                 }
@@ -3803,5 +3990,39 @@ DBUtils.prototype = {
         if(!tableData) return null;
         const index = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
         return tableData.data[0][index];
+    },
+    convertToObject: function(name, data) {
+        const dataObject = {
+            count: data.length,
+            ref: new Object()
+        };
+        name.forEach(function(n, i) {
+            dataObject.ref[n] = data.map(function(item) {
+                return item[i];
+            });
+        });
+        return dataObject;
+    },
+    where: function(o, table, searchFunc) {
+        const prop = getProperty(o, table);
+        if(!prop) return null;
+        const name = prop.name;
+        const data = prop.data;
+        const getIndex = function(column) {
+            return name.map(mapUpperCase).indexOf(upperCase(column));
+        };
+        const getDataList = function(func) {
+            return data.filter(function(record) {
+                return func(record);
+            });
+        };
+        return this.convertToObject(name, searchFunc(getIndex, getDataList));
+    },
+    searchFuncLayout: function(getIndex, getDataList) {
+        const idx = getIndex(SIGN.none);
+        const con = function(record) {
+            return record[idx] === 1;
+        };
+        return getDataList(con);
     }
 };
