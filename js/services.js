@@ -2434,3 +2434,14 @@ DateUtil.prototype = {
         return this.getDateObject(d);
     }
 };
+
+const StringBuilder = function() {
+};
+StringBuilder.prototype = {
+    sq: function(v) {
+        return concatString(SIGN.sq, v, SIGN.sq);
+    },
+    dq: function(v) {
+        return concatString(SIGN.dq, v, SIGN.dq)
+    }
+};
