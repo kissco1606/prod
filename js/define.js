@@ -19,7 +19,9 @@ const SIGN = {
     ub: "_",
     equal: "=",
     abs: "&lt;",
-    abe: "&gt;"
+    abe: "&gt;",
+    and: "&&",
+    or: "||"
 };
 
 const ELEMENTS = {
@@ -255,10 +257,14 @@ const TYPES = {
             }
         },
     },
+    path: {
+        output: "output"
+    },
     client: {
         activeXObejct: "ActiveXObject",
         msxml2: "MSXML2.XMLHTTP",
-        fileSystemObject: "Scripting.FileSystemObject"
+        fileSystemObject: "Scripting.FileSystemObject",
+        fileStream: "ADODB.Stream"
     }
 };
 

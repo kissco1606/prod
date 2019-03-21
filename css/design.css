@@ -149,7 +149,6 @@ input[type=checkbox]:checked + .checkbox:before { opacity: 1; }
 .readonly {
     background-color: #eee !important;
     cursor: default !important;
-    pointer-events: none;
 }
 
 .button--colored:hover, .button--colored:focus { opacity: .8; }

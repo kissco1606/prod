@@ -824,8 +824,11 @@ const FileController = function () {
     this.allowed = null;
 };
 FileController.prototype = {
-    setListener: function (listener) {
-        this.listener = listener;
+    setListener: function () {
+        const $listener = jqNode("input", { type: "file", id: eId.fileListener, class: eClass.hide });
+        jqById(eId.fileListener).remove();
+        $("body").append($listener);
+        this.listener = $listener;
         return this;
     },
     setListenerById: function (listenerId) {
@@ -875,10 +878,14 @@ FileController.prototype = {
         return this;
     },
     loadFile: function (file, func, path) {
+        const _this = this;
         const fr = new FileReader();
         fr.onload = function(e) {
             const result = e.target.result;
             func(result, path);
+            if(!isVoid(_this.listener)) {
+                _this.listener.remove();
+            }
         };
         readFile(fr, this.readType, file);
     }
@@ -1068,6 +1075,13 @@ function getApplicationPath(relativePath) {
     const relativePathList = getExistArray(relativePath.split(SIGN.ssh));
     const pathCollection = rootPathList.concat(relativePathList);
     return pathCollection.join("\\\\");
+};
+
+function getOutputPath(fileName) {
+    return {
+        modulePath: getApplicationPath([TYPES.path.output, appState.module.id].join(SIGN.ssh)),
+        filePath: getApplicationPath([TYPES.path.output, appState.module.id, fileName].join(SIGN.ssh))
+    };
 };
 
 const ActiveXMLHttpRequest = function() {
@@ -2443,5 +2457,8 @@ StringBuilder.prototype = {
     },
     dq: function(v) {
         return concatString(SIGN.dq, v, SIGN.dq)
+    },
+    equalSameCase: function(a, b) {
+        return lowerCase(String(a)) === lowerCase(String(b));
     }
 };

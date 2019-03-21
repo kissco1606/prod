@@ -326,7 +326,7 @@ BatchModule.prototype = {
                         $pathContent.text(path);
                         rateDumpState.path[execType] = path;
                     };
-                    new FileController().setListener($fileListener).setReadType(fileTypeArrayBuffer).allowedExtensions([fileExtensionBatch]).access(callback);
+                    new FileController().setListener().setReadType(fileTypeArrayBuffer).allowedExtensions([fileExtensionBatch]).access(callback);
                     $input = $forLabel.append($fileListener);
                     if(execType) setObject(rateDumpState.injector, [execType, "batchPath"], $pathContent);
                 }
@@ -446,7 +446,7 @@ BatchModule.prototype = {
                     const hasError = !new RegExpUtil(consoleLogData).isNot(new RegExp("エラー", "g"));
                     const fileMessage = consoleLogDataArray.join(SIGN.crlf);
                     const dialogMessage = consoleLogDataArray.join(SIGN.br);
-                    logFs.write(getLogData(fileMessage));
+                    logFs.write(fileMessage);
                     if(hasError) {
                         new FileSystem(tempPath).deleteFolder();
                         throw new Error(dialogMessage);
@@ -472,7 +472,7 @@ BatchModule.prototype = {
                     case rateDumpTypes.parameter.exportRateVOnlyT210: {
                         const psoTableName = find(rateDumpExport.variables.tableName, ps[execType], ["variable"]).data[0];
                         const psoSyouhnCd = find(rateDumpExport.variables.syouhnCd, ps[execType], ["variable"]).data[0];
-                        const psoRyourituVer = find(rateDumpExport.variables.ryourituVer, ps[execType], ["variable"]).data;
+                        const psoRyourituVer = find(rateDumpExport.variables.ryourituVer, ps[execType], ["variable"]).data[0];
                         const ryourituVer = _this.createInfoObject(injector[execType][rateDumpExport.variables.ryourituVer].val(), parameterCaptions.ryourituVer);
                         const rvArray = getExistArray(ryourituVer.value.split(SIGN.nl));
                         if(isVoid(rvArray)) break;

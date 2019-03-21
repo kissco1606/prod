@@ -149,11 +149,6 @@
     padding-bottom: 10px;
 }
 
-#rate-dump-card .contents-container > .command-block.rate-dump-block {
-    /* border: 1px dotted #000;
-    boder-radius: 0.2em; */
-}
-
 #rate-dump-card .contents-container > .command-block.rate-dump-block > .rate-dump-block-title {
     display: flex;
     flex-direction: row;

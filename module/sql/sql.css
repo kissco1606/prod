@@ -137,6 +137,7 @@
 }
 
 #data-copy-card .contents-container > .command-area,
+#delete-data-card .contents-container > .command-area,
 #create-user-card .contents-container > .command-area,
 #linc-error-resolution-card .contents-container > .command-area
 {
@@ -145,6 +146,7 @@
     padding: 10px 0;
 }
 #data-copy-card .contents-container > .command-area > label,
+#delete-data-card .contents-container > .command-area > label,
 #create-user-card .contents-container > .command-area > label,
 #linc-error-resolution-card .contents-container > .command-area > label
 {
@@ -153,8 +155,8 @@
     line-height: 1.5;
 }
 #data-copy-card .contents-container > .command-area > input,
-#create-user-card .contents-container > .command-area > input,
-#linc-error-resolution-card .contents-container > .command-area > input
+#delete-data-card .contents-container > .command-area > input,
+#create-user-card .contents-container > .command-area > input
 {
     padding: 5px;
     border: 1px solid rgba(0, 0, 0, 0.4);
@@ -164,6 +166,7 @@
 }
 #query-command-card .contents-container > .action-area,
 #data-copy-card .contents-container > .action-area,
+#delete-data-card .contents-container > .action-area,
 #create-user-card .contents-container > .action-area,
 #linc-error-resolution-card .contents-container > .action-area
 {
@@ -172,6 +175,7 @@
 }
 #query-command-card .contents-container > .action-area > button,
 #data-copy-card .contents-container > .action-area > button,
+#delete-data-card .contents-container > .action-area > button,
 #create-user-card .contents-container > .action-area > button,
 #linc-error-resolution-card .contents-container > .action-area > button
 {
@@ -185,7 +189,10 @@
     cursor: pointer;
 }
 
-#data-copy-card .contents-container > .command-area > textarea {
+#data-copy-card .contents-container > .command-area > textarea,
+#delete-data-card .contents-container > .command-area > textarea,
+#linc-error-resolution-card .contents-container > .command-area > textarea
+{
     padding: 5px;
     border: 1px solid rgba(0, 0, 0, 0.4);
     border-radius: 0.3em;
@@ -382,62 +389,34 @@
 #option-template__nb .command-line {
     padding: 10px 0;
 }
-#option-template__nb > .viewer-section .command-line.system-increment {
+#option-template__nb > .viewer-section .command-line.increment {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
-#option-template__nb > .viewer-section .command-line.system-name {
+#option-template__nb > .viewer-section .command-line.name {
     display: flex;
     flex-direction: row;
     padding-top: 10px;
 }
-#option-template__nb > .viewer-section .command-line.system-name > label {
+#option-template__nb > .viewer-section .command-line.name > label {
     width: 150px;
 }
-#option-template__nb > .viewer-section .command-line.system-name > input {
+#option-template__nb > .viewer-section .command-line.name > input {
     width: 170px;
     margin-right: 10px;
 }
-#option-template__nb > .viewer-section .command-line.system-name > input:last-child {
+#option-template__nb > .viewer-section .command-line.name > input:last-child {
     margin-right: 0;
 }
-#option-template__nb > .viewer-section .command-line.user-name {
-    display: flex;
-    flex-direction: row;
-    padding-top: 10px;
-}
-#option-template__nb > .viewer-section .command-line.user-name > label {
-    width: 150px;
-    line-height: 17px;
-}
-#option-template__nb > .viewer-section .command-line.user-name > textarea {
-    width: 170px;
-    height: 70px;
-    margin-right: 10px;
-}
-#option-template__nb > .viewer-section .command-line.user-name > textarea:last-child {
-    margin-right: 0;
-}
-#option-template__nb > .viewer-section .command-line.system-birth {
+#option-template__nb > .viewer-section .command-line.birth {
     display: flex;
     flex-direction: row;
 }
-#option-template__nb > .viewer-section .command-line.system-birth > label {
+#option-template__nb > .viewer-section .command-line.birth > label {
     width: 150px;
 }
-#option-template__nb > .viewer-section .command-line.system-birth > textarea {
-    width: 350px;
-    height: 70px;
-}
-#option-template__nb > .viewer-section .command-line.user-birth {
-    display: flex;
-    flex-direction: row;
-}
-#option-template__nb > .viewer-section .command-line.user-birth > label {
-    width: 150px;
-}
-#option-template__nb > .viewer-section .command-line.user-birth > textarea {
+#option-template__nb > .viewer-section .command-line.birth > textarea {
     width: 350px;
     height: 70px;
 }
