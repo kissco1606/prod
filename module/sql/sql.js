@@ -562,7 +562,7 @@ SqlModule.prototype = {
                 uid: uid,
                 pwd: pwd
             };
-            // new DBUtils().connect(info).close();
+            new DBUtils().connect(info).close();
             _this.state.isConnecting = true;
             _this.state.info = info;
             _this.transition(pageType.application);
@@ -1744,7 +1744,8 @@ SqlModule.prototype = {
                         contractorOnExist: "contractor_onExist",
                         receiver: "receiver",
                         requiredContractor: "required_contractor",
-                        requiredContractorOnWeb: "required_contractor_onWeb"
+                        requiredContractorOnWeb: "required_contractor_onWeb",
+                        requiredContractorOnWebOrPL: "required_contractor_onWebOrPaperLess"
                     },
                     injectorId: { increment: "increment" },
                     elements: {
@@ -2111,7 +2112,9 @@ SqlModule.prototype = {
                                 const isCustomer = target === def.target.customer;
                                 const keihiKbn = kokykKanrenData.ref[edsc.keihiKbn];
                                 const isSameKeihi = keihiKbn.length === 1 && keihiKbn[0] == 3;
-                                const isWeb = !isVoid(mosKihonData.ref[edsc.myPageUserId][0]);
+                                const mosKbn = Number(mosKihonData.ref[edsc.mosKbn][0]);
+                                const isWeb = mosKbn === 4;
+                                const isPaperLess = mosKbn === 5;
                                 const setDataByKeihi = function(insuredData, contractorData) {
                                     if(isSameKeihi) {
                                         dataStack.push(insuredData);
@@ -2257,6 +2260,12 @@ SqlModule.prototype = {
                                                 }
                                                 break;
                                             }
+                                            case def.target.requiredContractorOnWebOrPL: {
+                                                if(isWeb || isPaperLess) {
+                                                    pushData(isSameKeihi ? insuredName : contractorName);
+                                                }
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -2273,6 +2282,12 @@ SqlModule.prototype = {
                                             }
                                             case def.target.requiredContractorOnWeb: {
                                                 if(isWeb) {
+                                                    ti = isSameKeihi ? def.target.insured : def.target.contractor;
+                                                }
+                                                break;
+                                            }
+                                            case def.target.requiredContractorOnWebOrPL: {
+                                                if(isWeb || isPaperLess) {
                                                     ti = isSameKeihi ? def.target.insured : def.target.contractor;
                                                 }
                                                 break;
@@ -2536,6 +2551,10 @@ SqlModule.prototype = {
                     query = concatString("SELECT * FROM ", table, " A WHERE EXISTS (SELECT B.* FROM ST_MosKihon B WHERE ", joinCond, " AND ", mainCond, ")");
                     break;
                 }
+                case 3: {
+                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " IN (SELECT ", key, " FROM HKT_Hb WHERE S_SYONO", clause, getValue(), ")");
+                    break;
+                }
             }
         }
         return query;
@@ -2676,6 +2695,7 @@ SqlModule.prototype = {
                     }
                     const countStack = new Array();
                     extractExecTableList.some(function(table, i, a) {
+                        console.log(table);
                         const query = _this.getDataCopySelectQuery(table, fromKey);
                         const dataSet = subDB.executeSelect(query).dataSet;
                         extractedData[fromKey][table] = dataSet;
@@ -2787,7 +2807,7 @@ SqlModule.prototype = {
                     numberCollection = state[applyType].numberCollection;
                     checkStack = state[applyType].checkStack;
                 }
-                let identifier = 10000;
+                let identifier = Math.floor(Math.random() * 999999) + 1000000;
                 let recordIdx = 0;
                 while(state.customerNumberIdentifier.length < applyData.length && identifier <= 99999999) {
                     const idStr = toString(identifier);
@@ -2894,7 +2914,7 @@ SqlModule.prototype = {
                     numberCollection = state[applyType].numberCollection;
                     checkStack = state[applyType].checkStack;
                 }
-                let identifier = 1000000;
+                let identifier = Math.floor(Math.random() * 999999) + 1000000;
                 let recordIdx = 0;
                 while(state.accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
                     const idStr = toString(identifier);
