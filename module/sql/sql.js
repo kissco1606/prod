@@ -562,7 +562,7 @@ SqlModule.prototype = {
                 uid: uid,
                 pwd: pwd
             };
-            new DBUtils().connect(info).close();
+            // new DBUtils().connect(info).close();
             _this.state.isConnecting = true;
             _this.state.info = info;
             _this.transition(pageType.application);
@@ -2559,11 +2559,12 @@ SqlModule.prototype = {
         }
         return query;
     },
-    getExtractTableListDataCopy: function(extractGroupStack) {
+    getExtractTableListDataCopy: function(extractGroupStack, tableObject) {
         const _this = this;
         const dataCopyExport = _this.export.dataCopy;
+        const to = isVoid(tableObject) ? dataCopyExport.tableListObject : tableObject;
         const getExportTableList = function(key) {
-            return getProperty(dataCopyExport.tableListObject, key);
+            return getProperty(to, key);
         };
         const extractTableList = extractGroupStack.map(function(tableListKey) {
             return getExportTableList(tableListKey);
@@ -3450,9 +3451,9 @@ SqlModule.prototype = {
             }
             const extractTableList = _this.getExtractTableListDataCopy(deleteGroupStack);
             const edsd = dataCopyExport.defineSet.delete;
-            const priorityTable = edsd.priorityTable;
-            const priorityTableLowCase = priorityTable.map(mapLowerCase);
-            const deleteTableList = priorityTable.concat(extractTableList.filter(function(table) {
+            const priorityTableList = _this.getExtractTableListDataCopy(deleteGroupStack, edsd.priorityTableObject);
+            const priorityTableLowCase = priorityTableList.map(mapLowerCase);
+            const deleteTableList = priorityTableList.concat(extractTableList.filter(function(table) {
                 if(priorityTableLowCase.indexOf(lowerCase(table)) < 0) {
                     return true;
                 }
