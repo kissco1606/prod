@@ -928,7 +928,7 @@ function readFile(fr, type, file) {
     }
 };
 
-function saveAsFile(parts, type, fileName) {
+function saveAsFile(parts, type, fileName, isMs) {
     try {
         switch(type) {
             case TYPES.file.mime.CSV: {
@@ -937,7 +937,12 @@ function saveAsFile(parts, type, fileName) {
             }
         }
         const blob = new Blob([parts], { tpye: type });
-        saveAs(blob, fileName);
+        if(isMs) {
+            window.navigator.msSaveBlob(blob, fileName);
+        }
+        else {
+            saveAs(blob, fileName);
+        }
     }
     catch (e) {
         new Notification().error().open(MESSAGES.faild_download_file);
