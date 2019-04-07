@@ -1,4253 +1,2518 @@
-const SqlModule = function() {
-    this.Define = {
-        ELEMENTS: {
-            id: {
-                accessPage: "access-page",
-                accessLogo: "access-logo",
-                accessCommand: "access-command",
-                sid: "sid",
-                uid: "uid",
-                pwd: "pwd",
-                sqlHeader: "sql-header",
-                sqlContents: "sql-contents",
-                sqlMenuContainer: "sql-menu-container",
-                headerToolsConfigIcon: "header-tools-config-icon",
-                applicationPage: "application-page",
-                queryCommandCard: "query-command-card",
-                dataCopyCard: "data-copy-card",
-                deleteDataCard: "delete-data-card",
-                createUserCard: "create-user-card",
-                lincErrorResolutionCard: "linc-error-resolution-card",
-                policyNumberFrom: "policy-number__from",
-                policyNumberFromTextarea: "policy-number__from__textarea",
-                policyNumberTo: "policy-number-to",
-                subSid: "sub-sid",
-                subUid: "sub-uid",
-                subPwd: "sub-pwd",
-                optionContainerDataCopy: "option-container__data-copy",
-                userCode: "user-code",
-                userName: "user-name",
-                queryEditor: "query-editor",
-                queryGridTabs: "query-grid-tabs",
-                queryGridContents: "query-grid-contents",
-                tab: "tab",
-                queryTabs: "query-tabs",
-                dataGrid: "data-grid",
-                queryTimer: "query-timer",
-                lincPolicyNumber: "linc-policy-number",
-                exportButtonQueryCommand: "export-button__query-command",
-                exportContainerQueryCommand: "export-container__query-command",
-                optionTemplateNB: "option-template__nb"
-            },
-            class: {
-                commandLine: "command-line",
-                accessButton: "access-button",
-                accessLoadButton: "access-load-button",
-                contentsContainer: "contents-container",
-                commandArea: "command-area",
-                actionArea: "action-area",
-                viewArea: "view-area",
-                optionCommandArea: "option-command-area",
-                optionRemoveButton: "option-remove-button",
-                commandLineRow: "command-line-row",
-                removeRow: "remove-row",
-                queryEditorTextInput: "ace_text-input",
-                queryGridContainer: "query-grid-container",
-                dataGrid: "data-grid",
-                optionTemplateContainer: "option-template-container",
-                optionTemplatePannel: "option-template-pannel",
-                optionTemplateClose: "option-template-close",
-                optionTemplateTab: "option-template-tab"
-            },
-            src: {
-                cloudgs_dbaas: "assets/cloudgs_dbaas.png"
-            },
-            style: {
-                backgroundColor: "#333",
-                headerHeight: "50px",
-                transitionDuration: 200
-            }
-        },
-        CAPTIONS: {
-            title: "SQL Management",
-            sid: "SID",
-            uid: "USER ID",
-            pwd: "PASSWORD",
-            queryCommand: "Query Command",
-            dataCopy: "Data Copy",
-            deleteData: "Delete Data",
-            createUser: "Create User",
-            lincErrorResolution: "Linc Error Resolution",
-            access: "access",
-            exec: "exec",
-            cancel: "cancel",
-            tab: "tab",
-            console: "console",
-            check: "check",
-            extract: "extract",
-            import: "import",
-            export: "export",
-            template: "template",
-            insert: "insert",
-            commit: "commit",
-            rollback: "rollback",
-            backup: "backup",
-            option: "option",
-            reset: "reset",
-            log: "log",
-            subSid: "SID(From)",
-            subUid: "UID(From)",
-            subPwd: "PWD(From)",
-            policyNumber: "Policy Number",
-            policyNumberFrom: "Policy Number(From)",
-            policyNumberTo: "Policy Number(To)",
-            userCode: "User Code",
-            userName: "User Name",
-            create: "create",
-            delete: "delete",
-            exportType: "Export Type",
-            accessList: "Access List",
-            add: "add",
-            edit: "edit",
-            name: "name",
-            load: "load",
-            birthday: "birthday",
-            id: "id",
-            extractMode: "Extract Mode",
-            extractGroup: "Extract Group",
-            single: "single",
-            multiple: "multiple",
-            skei: "skei",
-            kkanri: "kkanri",
-            hksiharai: "hksiharai",
-            deleteMode: "Delete Mode",
-            deleteGroup: "Delete Group",
-            include: "include",
-            exclude: "exclude"
-        },
-        TYPES: {
-            toolId: {
-                queryCommand: "queryCommand",
-                dataCopy: "dataCopy",
-                deleteData: "deleteData",
-                createUser: "createUser",
-                lincErrorResolution: "lincErrorResolution"
-            },
-            message: {
-                required: "required",
-                matchWhitespace: "match-whitespace"
-            },
-            page: {
-                access: "access",
-                application: "application"
-            },
-            phase: {
-                queryCommand: {
-                    executing: "executing",
-                    complete: "complete"
-                },
-                dataCopy: {
-                    import: "import",
-                    insert: "insert",
-                    commit: "commit",
-                    complete: "complete"
-                },
-                deleteData: {
-                    commit: "commit",
-                    complete: "complete"
-                },
-                createUser: {
-                    commit: "commit",
-                    complete: "complete"
-                },
-                lincErrorResolution: {
-                    commit: "commit",
-                    complete: "complete"
-                }
-            },
-            editor: {
-                mode: {
-                    sql: "ace/mode/sqlserver"
-                },
-                theme: {
-                    monokai: "ace/theme/monokai",
-                    terminal: "ace/theme/terminal",
-                    twilight: "ace/theme/twilight"
-                }
-            },
-            path: {
-                export: "module/sql/export.json",
-                worker: "module/sql/actions/worker.js"
-            },
-            action: {
-                create: "create",
-                delete: "delete"
-            },
-            export: {
-                queryCommand: [
-                    { label: "All", value: "all" },
-                    { label: "All(without columns)", value: "all_without_columns" },
-                    { label: "Separate by consoles", value: "separate_by_consoles" }
-                ]
-            },
-            design: {
-                dataCopy: {
-                    extractMode: {
-                        single: "single",
-                        multiple: "multiple"
-                    },
-                    extractGroup: {
-                        skei: "skei",
-                        kkanri: "kkanri",
-                        hksiharai: "hksiharai",
-                        option: "option"
-                    },
-                    extractExecTypes: {
-                        import: "import"
-                    }
-                },
-                deleteData: {
-                    deleteMode: {
-                        include: "include",
-                        exclude: "exclude"
-                    },
-                    deleteGroup: {
-                        skei: "skei",
-                        kkanri: "kkanri",
-                        hksiharai: "hksiharai",
-                        option: "option"
-                    },
-                    option: {
-                        backup: "backup"
-                    }
-                }
-            }
-        },
-        MESSAGES: {
-            locking_transaction: "Locking by other transaction",
-            only_exec_select_query: "Can be excute only [SELECT] query",
-            already_exits_name: "Already exists name"
-        }
-    };
-    this.design = {
-        dataCopy: {
-            extractModeRadio: {
-                name: "data-copy__extract-mode-radiobox",
-                type: {
-                    single: {
-                        label: upperCase(this.Define.CAPTIONS.single, 0),
-                        id: "data-copy__extract-mode-single",
-                        value: this.Define.TYPES.design.dataCopy.extractMode.single,
-                        isChecked: true
-                    },
-                    multiple: {
-                        label: upperCase(this.Define.CAPTIONS.multiple, 0),
-                        id: "data-copy__extract-mode-multiple",
-                        value: this.Define.TYPES.design.dataCopy.extractMode.multiple,
-                        isChecked: false
-                    }
-                }
-            },
-            extractGroupCheck: {
-                name: "data-copy__extract-group-checkbox",
-                type: {
-                    skei: {
-                        label: this.Define.CAPTIONS.skei,
-                        id: "data-copy__extract-group-cb-skei",
-                        value: this.Define.TYPES.design.dataCopy.extractGroup.skei,
-                        isChecked: true
-                    },
-                    kkanri: {
-                        label: this.Define.CAPTIONS.kkanri,
-                        id: "data-copy__extract-group-cb-kkanri",
-                        value: this.Define.TYPES.design.dataCopy.extractGroup.kkanri,
-                        isChecked: false
-                    },
-                    hksiharai: {
-                        label: this.Define.CAPTIONS.hksiharai,
-                        id: "data-copy__extract-group-cb-hksiharai",
-                        value: this.Define.TYPES.design.dataCopy.extractGroup.hksiharai,
-                        isChecked: false
-                    }
-                }
-            }
-        },
-        deleteData: {
-            deleteModeRadio: {
-                name: "delete-data__delete-mode-radiobox",
-                type: {
-                    include: {
-                        label: upperCase(this.Define.CAPTIONS.include, 0),
-                        id: "delete-data__delete-mode-include",
-                        value: this.Define.TYPES.design.deleteData.deleteMode.include,
-                        isChecked: true
-                    },
-                    exclude: {
-                        label: upperCase(this.Define.CAPTIONS.exclude, 0),
-                        id: "delete-data__delete-mode-exclude",
-                        value: this.Define.TYPES.design.deleteData.deleteMode.exclude,
-                        isChecked: false
-                    }
-                }
-            },
-            deleteGroupCheck: {
-                name: "delete-data__delete-group-checkbox",
-                type: {
-                    skei: {
-                        label: this.Define.CAPTIONS.skei,
-                        id: "delete-data__delete-group-cb-skei",
-                        value: this.Define.TYPES.design.deleteData.deleteGroup.skei,
-                        isChecked: true
-                    },
-                    kkanri: {
-                        label: this.Define.CAPTIONS.kkanri,
-                        id: "delete-data__delete-group-cb-kkanri",
-                        value: this.Define.TYPES.design.deleteData.deleteGroup.kkanri,
-                        isChecked: false
-                    },
-                    hksiharai: {
-                        label: this.Define.CAPTIONS.hksiharai,
-                        id: "delete-data__delete-group-cb-hksiharai",
-                        value: this.Define.TYPES.design.deleteData.deleteGroup.hksiharai,
-                        isChecked: false
-                    }
-                }
-            },
-            optionCheck: {
-                name: "delete-data__option-checkbox",
-                type: {
-                    backup: {
-                        label: this.Define.CAPTIONS.backup,
-                        id: "delete-data__option-cb-backup",
-                        value: this.Define.TYPES.design.deleteData.option.backup,
-                        isChecked: false
-                    }
-                }
-            }
-        }
-    };
-    this.event = {
-        dataCopy: {
-            status: {
-                extractMode: this.Define.TYPES.design.dataCopy.extractMode.single
-            },
-            element: {
-                extractMode: concatString("input[name=", this.design.dataCopy.extractModeRadio.name, "]"),
-                extractGroup: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]"),
-                extractGroupChecked: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]:checked"),
-                sid: null,
-                uid: null,
-                pwd: null,
-                pnf: null,
-                pnft: null,
-                pnt: null
-            },
-            handler: {
-               a: null
-            }
-        },
-        deleteData: {
-            element: {
-                deleteMode: concatString("input[name=", this.design.deleteData.deleteModeRadio.name, "]"),
-                deleteModeChecked: concatString("input[name=", this.design.deleteData.deleteModeRadio.name, "]:checked"),
-                deleteGroup: concatString("input[name=", this.design.deleteData.deleteGroupCheck.name, "]"),
-                deleteGroupChecked: concatString("input[name=", this.design.deleteData.deleteGroupCheck.name, "]:checked"),
-                option: concatString("input[name=", this.design.deleteData.optionCheck.name, "]"),
-                optionChecked: concatString("input[name=", this.design.deleteData.optionCheck.name, "]:checked"),
-                pn: null
-            }
-        },
-        createUser: {
-            element: {
-                userCode: null,
-                userName: null
-            }
-        },
-        lincErrorResolution: {
-            element: {
-                pn: null
-            }
-        }
-    };
-    this.state = {
-        page: this.Define.TYPES.page.access,
-        isConnecting: false,
-        info: new Object(),
-        lock: new Object(),
-        queryCommand: {
-            ui: new Object(),
-            phase: null,
-            timer: null,
-            element: null,
-            export: {
-                data: null,
-                type: this.Define.TYPES.export.queryCommand[0].value
-            }
-        },
-        dataCopy: new Object(),
-        deleteData: new Object(),
-        createUser: new Object(),
-        lincErrorResolution: new Object(),
-        worker: null
-    };
-    this.export = new Object();
+function jqNode(tag, option) {
+    return $("<" + tag + " />", option);
 };
-SqlModule.prototype = {
-    initSqlModule: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seSrc = _this.Define.ELEMENTS.src;
-        const seStyle = _this.Define.ELEMENTS.style;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const $container = jqById(eId.container);
-        $container.css({ "margin-top": seStyle.headerHeight, "background-color": seStyle.backgroundColor });
-        const $header = jqNode("header", { id: getHeaderId() });
-        const $contents = jqNode("div", { id: getContentsId() });
-        const $headerTitle = jqNode("div", { id: eId.headerTitle });
-        const $titleIcon = jqNode("i", { class: eIcon.database });
-        const $titleIconSpan = jqNode("span", { id: eId.titleIcon }).append($titleIcon);
-        const $titleTextSpan = jqNode("span", { id: eId.titleText }).text(captions.title);
-        $headerTitle.append($titleIconSpan).append($titleTextSpan);
-        const $headerTools = jqNode("div", { id: eId.headerTools });
-        const $ellipsisVIconSpan = jqNode("span", { class: classes(eClass.toolsIcon, eClass.iconButton) }).append(jqNode("i", { class: eIcon.ellipsisV }));
-        $ellipsisVIconSpan.click(function(e) {
-            e.stopPropagation();
-            _this.openMenu();
-        });
-        [$ellipsisVIconSpan].forEach(function(item) { $headerTools.append(item); });
-        const $menuContainer = jqNode("div", { id: seId.sqlMenuContainer, class: eClass.menuContainer });
-        [$headerTitle, $headerTools, $menuContainer].forEach(function(item) { $header.append(item); });
-        const $screen = jqNode("div", { id: seId.accessPage, class: eClass.screen });
-        const $logo = jqNode("div").append(jqNode("img", { id: seId.accessLogo, src: seSrc.cloudgs_dbaas }));
-        const $command = _this.buildAccessCommand(jqNode("div", { id: seId.accessCommand }));
-        $screen.append($logo).append($command);
-        $contents.append($screen);
-        [$header, $contents].forEach(function(item) { $container.append(item) });
-        const titleIconSize = $titleIcon.width();
-        const headerToolsSize = $headerTools.width();
-        jqById(eId.titleIcon).css({ width: (Math.ceil(titleIconSize) + 2) + "px" });
-        jqById(eId.headerTitle).css({ width: "calc(100% - " + Math.ceil(headerToolsSize) + "px)" });
-        getJson(types.path.export).then(function(data) {
-            _this.export = data;
-            fadeIn($container);
-        }).catch(function(e) {
-            $container.empty();
-            console.log(e);
-            new Notification().error().open("Failed load module");
-        });
-        return this;
-    },
-    transition: function(type) {
-        const _this = this;
-        const seStyle = _this.Define.ELEMENTS.style;
-        const $contents = jqById(getContentsId());
-        $contents.css({ opacity: 0 });
+
+function jqById(id) {
+    return $("#" + id);
+};
+
+function jqByClass(className) {
+    return $("." + className);
+};
+
+function jqByTag(tagName) {
+    return $(tagName);
+};
+
+function classes() {
+    const argumentsList = Array.prototype.slice.call(arguments);
+    const classes = new Array();
+    argumentsList.forEach(function(item) {
+        classes.push(item);
+    });
+    const size = classes.length;
+    return size >= 1 ? classes.join(SIGN.ws) : "";
+};
+
+function fadeOut(element) {
+    return new Promise(function(resolve, reject) {
+        const $header = jqByTag("header");
+        if($header) {
+            $header.css({ opacity: 0 });
+        }
+        element.css({ opacity: 0 });
         setTimeout(function() {
-            _this.setPage(type);
-            $contents.css({ opacity: 1 });
-        }, seStyle.transitionDuration);
-        return null;
-    },
-    transaction: function(id) {
-        const messages = this.Define.MESSAGES;
-        const lock = cloneJS(this.state.lock);
-        delete lock[id];
-        const error = !isVoid(lock);
-        let db = null;
-        if(!error) {
-            db = new DBUtils().connectBegin(this.state.info);
-            this.state.lock[id] = db;
+            resolve();
+        }, eStyle.transitionDuration);
+    });
+};
+
+function fadeIn(element) {
+    return new Promise(function(resolve, reject) {
+        const $header = jqByTag("header");
+        if($header) {
+            $header.css({ opacity: 1 });
         }
-        return {
-            error: error,
-            message: messages.locking_transaction,
-            db: db
-        };
-    },
-    destroy: function(id, db, isCommit) {
-        const lock = this.state.lock;
-        if(!isVoid(db)) {
-            if(isCommit) db.commit();
-            else db.rollback();
-        }
-        delete lock[id];
-        return null;
-    },
-    openMenu: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const $container = jqById(eId.container);
-        const $menuContainer = jqById(seId.sqlMenuContainer);
-        $container.click(function() { $menuContainer.removeClass(eClass.isVisible); });
-        $menuContainer.empty();
-        const $menu = jqNode("ul", { class: classes(eClass.menu, eClass.menuBottomRight) });
-        const itemList = new Array();
-        createMenuItem(itemList, eIcon.home, CAPTIONS.home, transitionMenu);
-        if(_this.state.isConnecting) {
-            const menuInfo = { sid: _this.state.info.sid, uid: _this.state.info.uid };
-            const onDisconnect = function() { _this.onDisconnect(); };
-            createMenuItem(itemList, eIcon.signOut, CAPTIONS.disconnect, onDisconnect);
-            createMenuInfo(itemList, menuInfo);
-        }
-        itemList.forEach(function(item) { $menu.append(item); });
-        $menuContainer.append($menu);
-        setTimeout(function() { $menuContainer.addClass(eClass.isVisible); });
-        return null;
-    },
-    createInfoObject: function(value, name) {
-        return {
-            value: value,
-            name: name
-        };
-    },
-    setElementDisable: function(e, prop) {
-        const disableList = prop.disableList;
-        const readonlyList = prop.readonlyList;
-        const convert = function(elementString) {
-            return $(elementString);
-        };
-        Object.keys(e).forEach(function(key) {
-            if(disableList.indexOf(key) < 0 && readonlyList.indexOf(key) < 0) return;
-            if(disableList.indexOf(key) >= 0) {
-                const item = convert(e[key]);
-                const eb = new ElementBuilder(item);
-                eb.setDisable();
-            }
-            else {
-                const item = e[key];
-                const eb = new ElementBuilder(item);
-                eb.setReadonly();
-            }
-        });
-        return null;
-    },
-    resetState: function(){
-        const _event = this.event;
-        const _state = this.state;
-        const dataCopyEvent = _event.dataCopy;
-        dataCopyEvent.status.extractMode = this.Define.TYPES.design.dataCopy.extractMode.single;
-        dataCopyEvent.handler.a = null;
-        _state.lock = new Object();
-        _state.dataCopy = new Object();
-        _state.deleteData = new Object();
-        _state.createUser = new Object();
-        _state.lincErrorResolution = new Object();
-        _state.worker = null;
-    },
-    onAccess: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const pageType = _this.Define.TYPES.page;
-        const loading = new Loading();
-        loading.on().then(function() {
-            const sid = _this.createInfoObject(jqById(seId.sid).val(), captions.sid);
-            const uid = _this.createInfoObject(jqById(seId.uid).val(), captions.uid);
-            const pwd = _this.createInfoObject(jqById(seId.pwd).val(), captions.pwd);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const sidLayout = v.getLayout(v.initLayout(sid.value, sid.name), [vTypes.required, vTypes.notSpace]);
-            const uidLayout = v.getLayout(v.initLayout(uid.value, uid.name), [vTypes.required, vTypes.notSpace]);
-            const pwdLayout = v.getLayout(v.initLayout(pwd.value, pwd.name), [vTypes.required, vTypes.notSpace]);
-            v.reset().appendList([sidLayout, uidLayout, pwdLayout]);
-            const result = v.exec();
-            if(result.error) {
-                new Notification().error().open(result.message);
-                loading.off();
-                return false;
-            }
-            const info = {
-                sid: sid,
-                uid: uid,
-                pwd: pwd
-            };
-            // new DBUtils().connect(info).close();
-            _this.state.isConnecting = true;
-            _this.state.info = info;
-            _this.transition(pageType.application);
-            loading.off();
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    onDisconnect: function() {
-        const _this = this;
-        const pageType = _this.Define.TYPES.page;
-        _this.resetState();
-        _this.state.isConnecting = false;
-        _this.state.info = new Object();
-        _this.transition(pageType.access);
-        return null;
-    },
-    pushQueryLog: function(list, query) {
-        list.push(concatString(query, SIGN.sc));
-        // const timeLog = concatString("-- # > Executed query at ", getSystemDateTimeMilliseconds());
-        // list.push(timeLog);
-        return null;
-    },
-    downloadLog: function(toolId) {
-        const logData = this.state[toolId].log;
-        const toolName = upperCase(toolId, 0);
-        saveAsFile(logData.join(SIGN.crlf), TYPES.file.mime.TEXT_UTF8, concatString(toolName, "_Log_", getFileStamp(), TYPES.file.extension.txt));
-        return null;
-    },
-    setPage: function(type) {
-        const _this = this;
-        const pageType = _this.Define.TYPES.page;
-        const seId = _this.Define.ELEMENTS.id;
-        const seSrc = _this.Define.ELEMENTS.src;
-        const captions = _this.Define.CAPTIONS;
-        const _event = _this.event;
-        const dataCopyEvent = _event.dataCopy;
-        const $contents = jqById(getContentsId());
-        $contents.empty();
-        switch(type) {
-            case pageType.access: {
-                const $screen = jqNode("div", { id: seId.accessPage, class: eClass.screen });
-                const $logo = jqNode("div").append(jqNode("img", { id: seId.accessLogo, src: seSrc.cloudgs_dbaas }));
-                const $command = _this.buildAccessCommand(jqNode("div", { id: seId.accessCommand }));
-                $screen.append($logo).append($command);
-                $contents.append($screen);
+        element.css({ opacity: 1 });
+        setTimeout(function() {
+            resolve();
+        }, eStyle.transitionDuration);
+    });
+};
+
+function getHeaderId() {
+    return appState.module.id + "-" + eId.header;
+};
+
+function getContentsId() {
+    return appState.module.id + "-" + eId.contents;
+};
+
+function overflowHide() {
+    appState.overflow.push(1);
+    if(appState.overflow.length <= 1) jqByTag("body").addClass(eClass.overflowHidden);
+};
+
+function overflowShow() {
+    appState.overflow.pop();
+    if(appState.overflow.length <= 0) jqByTag("body").removeClass(eClass.overflowHidden);
+};
+
+function typeIs(data) {
+    const typeObject = new Object;
+    const typeString = Object.prototype.toString.call(data).slice(8, -1);
+    Object.keys(TYPES.variable).forEach(function(key) {
+        const variableType = TYPES.variable[key];
+        let result = variableType === typeString
+        if(variableType === TYPES.variable.number && isNaN(data)) result = false;
+        typeObject[key] = result;
+    });
+    return typeObject;
+};
+
+function upperCase(str, position) {
+    if (!typeIs(position).number) {
+        return str.toUpperCase();
+    };
+    const ahead = str.slice(0, position);
+    const middle = str.charAt(position).toUpperCase();
+    const behind = str.slice(position + 1);
+    return  concatString(ahead, middle, behind);
+};
+
+function lowerCase(str, position) {
+    if (!typeIs(position).number) {
+        return str.toLowerCase();
+    };
+    return str.charAt(position).toLowerCase() + str.slice(position + 1);
+};
+
+function mapUpperCase(str) {
+    return str.toUpperCase();
+};
+
+function mapLowerCase(str) {
+    return str.toLowerCase();
+};
+
+function toString(value) {
+    return String(value);
+};
+
+function toNumber(value) {
+    return Number(value);
+};
+
+function toFullWidth(str) {
+    return str.replace(/[A-Za-z0-9]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) + 65248);
+    });
+};
+function toHalfWidth(str) {
+    return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 65248);
+    });
+};
+
+function repetitive(char, size) {
+    let setChar = "";
+    for (let i = 0; i < size; i++) {
+        setChar += setChar + char;
+    }
+    return setChar;
+};
+
+function setCharPadding(char, len, fillChar, fillPos) {
+    fillChar = fillChar ? fillChar : "0";
+    fillPos = fillPos ? fillPos : TYPES.syntax.left;
+    const strChar = String(char);
+    const repetition = repetitive(fillChar, len);
+    const getFilled = function() {
+        let mergedChar = "";
+        switch (fillPos) {
+            case TYPES.syntax.left: {
+                mergedChar = concatString(repetition, strChar).slice(len * -1);
                 break;
             }
-            case pageType.application: {
-                const $screen = jqNode("div", { id: seId.applicationPage, class: eClass.screen });
-                const $cardContainer = jqNode("div", { class: eClass.cardContainer });
-                const cardList = [
-                    {
-                        id: seId.queryCommandCard,
-                        title: captions.queryCommand,
-                        contents: _this.buildQueryCommand()
-                    },
-                    {
-                        id: seId.dataCopyCard,
-                        title: captions.dataCopy,
-                        contents: _this.buildDataCopy()
-                    },
-                    {
-                        id: seId.deleteDataCard,
-                        title: captions.deleteData,
-                        contents: _this.buildDeleteData()
-                    },
-                    {
-                        id: seId.createUserCard,
-                        title: captions.createUser,
-                        contents: _this.buildCreateUser()
-                    },
-                    {
-                        id: seId.lincErrorResolutionCard,
-                        title: captions.lincErrorResolution,
-                        contents: _this.buildLincErrorResolution()
-                    }
-                ];
-                cardList.forEach(function(item) {
-                    $cardContainer.append(buildCard(item));
-                });
-                $screen.append($cardContainer);
-                $contents.append($screen);
-                dataCopyEvent.handler.a();
-                _this.renderQueryEditor();
-                break;
-            }
-        }
-        _this.state.page = pageType;
-        return null;
-    },
-    buildAccessCommand: function($accessCommand){
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const injector = new Object();
-        const getInput = function(id, ph) {
-            const $input = jqNode("input", { type: "text", id: id, placeholder: ph });
-            $input.keypress(function(e) {
-                const keyCode = e.which || e.keyCode;
-                if(keyCode === 13) {
-                    _this.onAccess();
-                }
-            });
-            injector[id] = $input;
-            return $input;
-        };
-        const $sid = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.sid, captions[seId.sid]));
-        const $uid = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.uid, captions[seId.uid]));
-        const $pwd = jqNode("div", { class: seClass.commandLine }).append(getInput(seId.pwd, captions[seId.pwd]));
-        const getAccessButton = function() {
-            const $button = jqNode("button", { class: seClass.accessButton }).text(upperCase(captions.access));
-            $button.click(function() {
-                _this.onAccess();
-            });
-            return $button;
-        };
-        const getLoadButton = function() {
-            const $icon = jqNode("i", { class: eIcon.listAlt });
-            const $button = jqNode("button", { class: seClass.accessLoadButton }).append($icon);
-            $button.click(function() {
-                _this.openAccessTemplate(injector);
-            });
-            return $button;
-        };
-        const $confirm = jqNode("div", { class: seClass.commandLine }).append(getAccessButton());
-        const $load = jqNode("div", { class: seClass.commandLine }).append(getLoadButton());
-        [$sid, $uid, $pwd, $confirm, $load].forEach(function(item) { $accessCommand.append(item); });
-        return $accessCommand;
-    },
-    openAccessTemplate: function(elementInjector) {
-        const store = new Store(storage);
-        const _this = this;
-        const captions = _this.Define.CAPTIONS;
-        const messages = _this.Define.MESSAGES;
-        const title = captions.accessList;
-        const sAccessList = STRUCTURE.accessList;
-        const eb = new ElementBuilder();
-        const itf = new Interface(sAccessList).setRoot(store.init());
-        const dialog = new Dialog();
-        const $container = jqNode("div", { id: eId.interfaceListContainer });
-        const buildContents = function() {
-            const dAL = store.init()[itf.getKey()];
-            const apply = function(info) {
-                Object.keys(elementInjector).forEach(function(key) {
-                    elementInjector[key].val(info[key]);
-                });
-                dialog.close();
-            };
-            const edit = function(info) {
-                openAccessListEditor(info);
-            };
-            const remove = function(info) {
-                const callback = function(warningClose) {
-                    store.connect([itf.getKey(), info.name]).delete().apply();
-                    buildContents();
-                    store.sync();
-                    warningClose();
-                };
-                new Notification().warning(callback).open(MESSAGES.warning_remove_record);
-            };
-            if(!isVoid(dAL)) {
-                const $ul = jqNode("ul");
-                getObjectOrderList(dAL).forEach(function(key) {
-                    const info = dAL[key];
-                    const $li = jqNode("li");
-                    $li.click(function(e) {
-                        e.stopPropagation();
-                        apply(info);
-                    });
-                    const $viewArea = jqNode("div", { class: eClass.viewArea });
-                    const $viewTable = jqNode("table");
-                    const $colgroup = jqNode("colgroup");
-                    const $viewHeader = jqNode("thead");
-                    const $viewBody = jqNode("tbody");
-                    const $nameRow = jqNode("tr");
-                    const $nameCell = jqNode("th", { colspan: "3" }).text(info.name);
-                    $nameRow.append($nameCell).appendTo($viewHeader);
-                    const colgroupSizeStack = [100, 10, null];
-                    colgroupSizeStack.forEach(function(size) {
-                        $col = jqNode("col");
-                        if(size) $col.attr({ width: size });
-                        $colgroup.append($col);
-                    });
-                    const infoObj = {
-                        0: { label: captions.sid },
-                        1: { label: captions.uid },
-                        2: { label: captions.pwd }
-                    };
-                    [info.sid, info.uid, info.pwd].forEach(function(item, i) {
-                        const label = infoObj[i].label;
-                        const $infoRow = jqNode("tr");
-                        const $labelCell = jqNode("td").text(upperCase(label));
-                        const $middleCell = jqNode("td").text(SIGN.gc);
-                        const $valueCell = jqNode("td").text(item);
-                        eb.listAppend($infoRow, [$labelCell, $middleCell, $valueCell]);
-                        $viewBody.append($infoRow);
-                    });
-                    eb.listAppend($viewTable, [$colgroup, $viewHeader, $viewBody]);
-                    $viewArea.append($viewTable);
-                    const $actionArea = jqNode("div", { class: eClass.actionArea });
-                    const $editIcon = eb.getFontAwesomeIcon(eIcon.edit);
-                    const $removeIcon = eb.getFontAwesomeIcon(eIcon.trash);
-                    const $actionTable = jqNode("table");
-                    const $actionBody = jqNode("tbody");
-                    [$editIcon, $removeIcon].forEach(function(item, i) {
-                        const $row = jqNode("tr");
-                        const $cell = jqNode("td").append(item);
-                        $row.append($cell).appendTo($actionBody);
-                        $cell.click(function(e) {
-                            e.stopPropagation();
-                            switch(i) {
-                                case 0: {
-                                    edit(info);
-                                    break;
-                                }
-                                case 1: {
-                                    remove(info);
-                                    break;
-                                }
-                            }
-                        });
-                    });
-                    $actionTable.append($actionBody).appendTo($actionArea);
-                    eb.listAppend($li, [$viewArea, $actionArea]);
-                    $ul.append($li);
-                });
-                $container.empty().append($ul);
-            }
-            else {
-                $container.empty();
-            }
-        };
-        const openAccessListEditor = function(editData) {
-            const isEditMode = !isVoid(editData);
-            const info = isEditMode ? editData : itf.getInjectData(null, null, null, null);
-            const subOption = { "width": "360px", "max-height": "500px" };
-            const title = isEditMode ? upperCase(captions.edit, 0) : upperCase(captions.add, 0);
-            const eventInjector = new Object();
-            const buildSubContents = function() {
-                const $container = jqNode("div", { class: eClass.interfaceListAddContainer });
-                const $table = jqNode("table");
-                const itemList = [
-                    { key: "name", label: upperCase(captions.name), value: info.name ? info.name : SIGN.none },
-                    { key: "sid", label: upperCase(captions.sid), value: info.sid ? info.sid : SIGN.none },
-                    { key: "uid", label: upperCase(captions.uid), value: info.uid ? info.uid : SIGN.none },
-                    { key: "pwd", label: upperCase(captions.pwd), value: info.pwd ? info.pwd : SIGN.none }
-                ];
-                itemList.forEach(function(item) {
-                    const $row = jqNode("tr");
-                    const $label = jqNode("label").text(item.label);
-                    const $input = jqNode("input", { class: eClass.applicationInput, value: item.value });
-                    const $labelCell = jqNode("td").append($label);
-                    const $inputCell = jqNode("td").append($input);
-                    eb.listAppend($row, [$labelCell, $inputCell]);
-                    $table.append($row);
-                    eventInjector[item.key] = $input;
-                });
-                $container.append($table);
-                return $container;
-            };
-            const callback = function(dialogClose) {
-                const name = _this.createInfoObject(eventInjector.name.val(), upperCase(captions.name));
-                const sid = _this.createInfoObject(eventInjector.sid.val(), captions.sid);
-                const uid = _this.createInfoObject(eventInjector.uid.val(), captions.uid);
-                const pwd = _this.createInfoObject(eventInjector.pwd.val(), captions.pwd);
-                const v = new Validation();
-                const vTypes = v.getTypes();
-                const nameLayout = v.getLayout(v.initLayout(name.value, name.name), [vTypes.required, vTypes.notSpace]);
-                const sidLayout = v.getLayout(v.initLayout(sid.value, sid.name), [vTypes.required, vTypes.notSpace]);
-                const uidLayout = v.getLayout(v.initLayout(uid.value, uid.name), [vTypes.required, vTypes.notSpace]);
-                const pwdLayout = v.getLayout(v.initLayout(pwd.value, pwd.name), [vTypes.required, vTypes.notSpace]);
-                v.reset().appendList([nameLayout, sidLayout, uidLayout, pwdLayout]);
-                const result = v.exec();
-                if(result.error) {
-                    new Notification().error().open(result.message);
-                    return false;
-                }
-                const dAL = store.init()[itf.getKey()];
-                if(!isVoid(dAL) && !isVoid(dAL[name.value]) && !(isEditMode && info.name === name.value)) {
-                    new Notification().error().open(messages.already_exits_name);
-                    return false;
-                }
-                const getOrder = function() {
-                    if(isEditMode && !isVoid(dAL[info.name])) return dAL[info.name].order;
-                    return getObjectMaxOrder(dAL) + 1;
-                };
-                const injectData = itf.getInjectData(name.value, sid.value, uid.value, pwd.value, getOrder());
-                itf.inject(store, injectData, name.value);
-                if(isEditMode && info.name !== name.value) store.connect([itf.getKey(), info.name]).delete().apply();
-                store.connect([itf.getKey()]).set(sortObjectByOrder(store.init()[itf.getKey()])).apply();
-                buildContents();
-                store.sync();
-                dialogClose();
-            };
-            const okIcon = eb.getFontAwesomeIcon(eIcon.check);
-            const closeIcon = eb.getFontAwesomeIcon(eIcon.times);
-            new SubDialog().setContents(title, buildSubContents(), subOption).setUserButton(okIcon, closeIcon).open(callback);
-        };
-        const $addButton = jqNode("button").append(eb.getFontAwesomeIcon(eIcon.plus));
-        $addButton.click(function() { openAccessListEditor(); });
-        buildContents();
-        const option = { "width": "400px", "max-height": "530px" };
-        dialog.setContents(title, $container, option).setButton([$addButton]).disableOkButton().open();
-    },
-    buildQueryCommand: function() {
-        const _this = this;
-        const qcState = _this.state.queryCommand;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const $container = jqNode("div", { class: seClass.contentsContainer });
-        const $timer = jqNode("div", { id: seId.queryTimer });
-        const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
-        const $cancelButton = jqNode("button", { class: classes(eClass.buttonColorOrange, eClass.disable) }).text(upperCase(captions.cancel));
-        $cancelButton.prop("disabled", true);
-        [$execButton].forEach(function(item) { $actionArea.append(item); });
-        const $queryEditor = jqNode("div", { id: seId.queryEditor });
-        const $queryGridContainer = jqNode("div", { class: seClass.queryGridContainer });
-        const $queryGridTabs = jqNode("div", { id: seId.queryGridTabs });
-        const $queryGridContents = jqNode("div", { id: seId.queryGridContents });
-        [$queryGridTabs, $queryGridContents].forEach(function(item) { $queryGridContainer.append(item); });
-        [$timer, $actionArea, $queryEditor, $queryGridContainer].forEach(function(item) { $container.append(item); });
-        $execButton.click(function() {
-            const editor = _this.state.queryEditor;
-            if(editor) {
-                const value = editor.getValue();
-                const selection = editor.getSession().doc.getTextRange(editor.selection.getRange());
-                const query = selection ? selection : value;
-                _this.execQuery(query);
-            }
-        });
-        $cancelButton.click(function() {
-            if(!qcState.phase) return false;
-            _this.cancel();
-            _this.actionControllerQueryCommand(null);
-        });
-        qcState.element = $cancelButton;
-        return $container;
-    },
-    renderQueryEditor: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const editorTypes = _this.Define.TYPES.editor;
-        try {
-            const editor = ace.edit(seId.queryEditor);
-            _this.state.queryEditor = editor;
-            editor.setShowPrintMargin(false);
-            editor.getSession().setMode(editorTypes.mode.sql);
-            editor.setTheme(editorTypes.theme.monokai);
-            editor.setFontSize(15);
-            editor.getSession().setUseWrapMode(false);
-            editor.commands.addCommand({
-                name: "exec_key_event",
-                exec: function() {
-                    const value = editor.getValue();
-                    const selection = editor.getSession().doc.getTextRange(editor.selection.getRange());
-                    const query = selection ? selection : value;
-                    _this.execQuery(query);
-                },
-                bindKey: { mac: "cmd-f", win: "ctrl-f" }
-            });
-        }
-        catch(e) {
-            console.log(e);
-        }
-        return null;
-    },
-    actionControllerQueryCommand: function(phase) {
-        const _this = this;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.queryCommand;
-        const exportType = types.export.queryCommand;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const qcState = _this.state.queryCommand;
-        const $card = jqById(seId.queryCommandCard);
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
-        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
-        const $timer = jqById(seId.queryTimer);
-        switch(phase) {
-            case phaseType.executing: {
-                const getTimerView = function(time) {
-                    return concatString("Elapsed time : ", time, "sec");
-                };
-                qcState.element.removeClass(eClass.disable);
-                qcState.element.prop("disabled", false);
-                qcState.phase = phase;
-                let queryTimeCounter = 0;
-                $timer.text(getTimerView(queryTimeCounter));
-                qcState.timer = setInterval(function() {
-                    queryTimeCounter += 1;
-                    const milisec = (queryTimeCounter / 10).toFixed(3);
-                    $timer.text(getTimerView(milisec));
-                }, 100);
-                break;
-            }
-            case phaseType.complete: {
-                jqById(seId.exportButtonQueryCommand).remove();
-                const $exportButton = jqNode("button", { id: seId.exportButtonQueryCommand, class: eClass.buttonColorPositive }).text(upperCase(captions.export));
-                $actionArea.append($exportButton);
-                $exportButton.click(function() {
-                    const callback = function(dialogClose) {
-                        _this.exportQueryCommandConsoles(dialogClose);
-                    };
-                    const exportContents = function() {
-                        const $container = jqNode("div", { id: seId.exportContainerQueryCommand });
-                        const $label = jqNode("label").text(captions.exportType);
-                        const $select = jqNode("select");
-                        exportType.forEach(function(item) {
-                            const $option = jqNode("option", { value: item.value }).text(item.label);
-                            if(qcState.export.type === item.value) {
-                                $option.attr({ selected: true });
-                            }
-                            $select.append($option);
-                        });
-                        [$label, $select].forEach(function(item) { $container.append(item); });
-                        $select.change(function(e) {
-                           qcState.export.type = e.target.value;
-                        });
-                        return $container;
-                    };
-                    new Dialog().setContents(upperCase(captions.export, 0), exportContents()).open(callback);
-                });
+            case TYPES.syntax.right: {
+                mergedChar = concatString(strChar, repetition).slice(0, len);
                 break;
             }
             default: {
-                setTimeout(function() {
-                    qcState.element.addClass(eClass.disable);
-                    qcState.element.prop("disabled", true);
-                    qcState.phase = null;
-                    clearInterval(qcState.timer);
-                });
+                mergedChar = strChar;
                 break;
             }
         }
-        return null;
-    },
-    exportQueryCommandConsoles: function(dialogClose) {
-        const _this = this;
-        const types = _this.Define.TYPES;
-        const exportType = types.export.queryCommand;
-        const qcState = _this.state.queryCommand;
-        const exportState = qcState.export;
-        const fileType = TYPES.file.mime.OCTET_STREAM;
-        if(!exportState.data) {
-            new Notification.error().open(MESSAGES.nothing_data);
-            return false;
-        }
-        const loading = new Loading();
-        loading.on().then(function() {
-            const consoleData = exportState.data;
-            const type = exportState.type;
-            let convertedData = new Array();
-            const convertColumns = function(columns) {
-                return [columns.map(function(cObj) { return cObj.caption; })];
-            };
-            const convertData = function(data) {
-                if(isVoid(data)) return [SIGN.none];
-                return data.map(function(dObj) {
-                    delete dObj.recid;
-                    return Object.keys(dObj).map(function(key) { return dObj[key] });
-                });
-            };
-            const headerStyle = {
-                fill: {
-                    patternType: "solid",
-                    fgColor:{ rgb: "9E9E9E" }
-                }
-            };
-            switch(type) {
-                case exportType[0].value: {
-                    const setStyle = function(R, C, cell) {
-                        if(headerIndex.indexOf(R) >= 0) cell.s = headerStyle;
-                    };
-                    const headerIndex = new Array();
-                    consoleData.forEach(function(dataSet) {
-                       const columns = convertColumns(dataSet.name);
-                       const data = convertData(dataSet.data);
-                       headerIndex.push(convertedData.length);
-                       convertedData = convertedData.concat(columns.concat(data));
-                    });
-                    const wb = new Workbook();
-                    const ws = sheetFromArrayOfArrays(convertedData, setStyle);
-                    wb.SheetNames.push(type);
-                    wb.Sheets[type] = ws;
-                    const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
-                    const fileName = concatString("QueryCommand_", type ,"_", getFileStamp(), TYPES.file.extension.xlsx);
-                    saveAsFile(s2ab(wbout), fileType, fileName);
-                    break;
-                }
-                case exportType[1].value: {
-                    consoleData.forEach(function(dataSet) {
-                       const data = convertData(dataSet.data);
-                       convertedData = convertedData.concat(data);
-                    });
-                    const wb = new Workbook();
-                    const ws = sheetFromArrayOfArrays(convertedData);
-                    wb.SheetNames.push(type);
-                    wb.Sheets[type] = ws;
-                    const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
-                    const fileName = concatString("QueryCommand_", type ,"_", getFileStamp(), TYPES.file.extension.xlsx);
-                    saveAsFile(s2ab(wbout), fileType, fileName);
-                    break;
-                }
-                case exportType[2].value: {
-                    const setStyle = function(R, C, cell) {
-                        if(R === 0) cell.s = headerStyle;
-                    };
-                    const wb = new Workbook();
-                    consoleData.forEach(function(dataSet, i) {
-                        const columns = convertColumns(dataSet.name);
-                        const data = convertData(dataSet.data);
-                        const ws_data = columns.concat(data);
-                        const ws = sheetFromArrayOfArrays(ws_data, setStyle);
-                        const console = concatString("Console", i + 1);
-                        wb.SheetNames.push(console);
-                        wb.Sheets[console] = ws;
-                    });
-                    const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
-                    const fileName = concatString("QueryCommand_", type ,"_", getFileStamp(), TYPES.file.extension.xlsx);
-                    saveAsFile(s2ab(wbout), fileType, fileName);
-                    break;
-                }
-            }
-            dialogClose();
-            loading.off();
-        }).catch(function(e) {
-            new Notification.error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    clearQueryCommandUI: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const qcState = _this.state.queryCommand;
-        const $tabs = jqById(seId.queryGridTabs);
-        const $contents = jqById(seId.queryGridContents);
-        if(w2ui[seId.queryTabs]) {
-            w2ui[seId.queryTabs].destroy();
-        }
-        qcState.ui.gridIdList.forEach(function(gridId) {
-            if(w2ui[gridId]) {
-                w2ui[gridId].destroy();
-            }
-        });
-        $tabs.empty();
-        $contents.empty();
-        _this.state.queryCommand.ui = new Object();
-        _this.actionControllerQueryCommand(null);
-        return null;
-    },
-    execQuery: function(query) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const messages = _this.Define.MESSAGES;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.queryCommand;
-        const qcState = _this.state.queryCommand;
-        if(isVoid(query)) {
-            new Notification().error().open("Not found query");
-            return false;
-        }
-        try {
-            const exceptionRule = new RegExp("(((INSERT INTO))|((UPDATE).+?(SET))|((DELETE FROM))|(CREATE TABLE)|(DROP TABLE)|(TRUNCATE TABLE))", "gi");
-            if(exceptionRule.test(query)) {
-                new Notification().error().open(messages.only_exec_select_query);
-                return false;
-            }
-            const queryStack = getExistArray(query.split(SIGN.sc).map(function(item) { return item.trim().replace(new RegExp("\r\nSELECT", "g"), "SELECT"); }));
-            const $tabs = jqById(seId.queryGridTabs);
-            const $contents = jqById(seId.queryGridContents);
-            if(!isVoid(qcState.ui)) {
-                _this.clearQueryCommandUI();
-            }
-            const uiTabIdList = new Array();
-            const uiGridIdList = new Array();
-            const dataList = new Array();
-            const tabsStack = new Array();
-            const mapping = new Object();
-            const getTabId = function(idx) {
-                return concatString(seId.tab, idx);
-            };
-            const getGridId = function(idx) {
-                return concatString(seId.dataGrid, idx);
-            };
-            const createTabs = function(idx) {
-                const tabId = getTabId(idx);
-                uiTabIdList.push(tabId);
-                return {
-                    id: tabId,
-                    text: concatString(upperCase(captions.console, 0), idx),
-                    closable: true
-                };
-            };
-            const createDataGrid = function(idx, dataSet) {
-                const option = {
-                    header: false,
-                    toolbar: false,
-                    footer: false,
-                    lineNumbers: true,
-                    selectColumn: false,
-                    expandColumn: false
-                };
-                const gridId = getGridId(idx);
-                uiGridIdList.push(gridId);
-                dataList.push(dataSet);
-                return {
-                    name: gridId,
-                    header: SIGN.none,
-                    show: option,
-                    columns: dataSet.name,
-                    records: dataSet.data
-                };
-            };
-            // _this.actionControllerQueryCommand(phaseType.executing);
-            const db = new DBUtils().connect(_this.state.info);
-            queryStack.forEach(function(query, i, a) {
-                const idx = i + 1;
-                const dataSet = db.executeSelectGrid(query).onEnd(a.length === idx).dataSet;
-                tabsStack.push(createTabs(idx));
-                const gridId = getGridId(idx);
-                const $grid = jqNode("div", { id: gridId, style: "width: 100%; height: 300px;" });
-                $contents.append($grid);
-                mapping[getTabId(idx)] = $grid;
-                const dataGrid = createDataGrid(idx, dataSet);
-                $grid.w2grid(dataGrid);
-                if(idx < a.length) {
-                    $grid.hide();
-                }
-            });
-            $tabs.w2tabs({
-                name: seId.queryTabs,
-                active: tabsStack[tabsStack.length - 1].id,
-                tabs: tabsStack,
-                onClick: function(e) {
-                    const tabId = e.target;
-                    Object.keys(mapping).forEach(function(key, i) {
-                        const idx = i + 1;
-                        const $iGrid = mapping[key];
-                        if(tabId === key) {
-                            $iGrid.show();
-                            w2ui[getGridId(idx)].reload();
-                        }
-                        else {
-                            $iGrid.hide();
-                        }
-                    });
-                },
-                onClose: function(e) {
-                    const removeTab = e.target;
-                    const tabUI = w2ui[seId.queryTabs];
-                    const activeTab = tabUI.active;
-                    const tabs = qcState.ui.tabIdList;
-                    tabs.splice(tabs.indexOf(removeTab), 1);
-                    if(tabs.length >= 1) {
-                        if(activeTab === removeTab) {
-                            const lastTab = tabs[tabs.length - 1];
-                            tabUI.select(lastTab);
-                            tabUI.click(lastTab);
-                        }
-                    }
-                    else {
-                        _this.clearQueryCommandUI();
-                    }
-                }
-            });
-            qcState.ui.tabIdList = uiTabIdList;
-            qcState.ui.gridIdList = uiGridIdList;
-            qcState.export.data = dataList;
-            _this.actionControllerQueryCommand(phaseType.complete);
-        }
-        catch(e) {
-            new Notification().error().open(e.message);
-            // _this.actionControllerQueryCommand(null);
-        }
-        return null;
-    },
-    buildDataCopy: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const dcdt = types.design.dataCopy;
-        const dataCopyDesign = _this.design.dataCopy;
-        const _event = _this.event;
-        const dataCopyEvent = _event.dataCopy;
-        const eb = new ElementBuilder();
-        const $container = jqNode("div", { class: seClass.contentsContainer });
-        const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $loadButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.listAlt));
-        const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
-        const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
-        const $importButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase(captions.import));
-        eb.listAppend($actionArea, [$loadButton, $checkButton, $extractButton, $importButton]);
-        $container.append($actionArea);
-        const emr = dataCopyDesign.extractModeRadio;
-        const egc = dataCopyDesign.extractGroupCheck;
-        const getItemListObject = function(ds, type, optionClass) {
-            return {
-                label: ds.type[type].label,
-                attributes: {
-                    id: ds.type[type].id,
-                    name: ds.name,
-                    value: ds.type[type].value
-                },
-                isChecked: ds.type[type].isChecked,
-                optionClass: optionClass ? optionClass : SIGN.none
-            };
-        };
-        const extractModeRadioItemList = [getItemListObject(emr, dcdt.extractMode.single), getItemListObject(emr, dcdt.extractMode.multiple)];
-        const $emrCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $emrItem = eb.createRadio(extractModeRadioItemList).getItem();
-        const $emrLabel = jqNode("label").css("line-height", "2.5").text(captions.extractMode);
-        const $emrMain = jqNode("div", { class: eClass.fullWidth }).append($emrItem);
-        eb.listAppend($emrCommandArea, [$emrLabel, $emrMain]);
-        const extractGroupCheckItemList = [getItemListObject(egc, dcdt.extractGroup.skei), getItemListObject(egc, dcdt.extractGroup.kkanri), getItemListObject(egc, dcdt.extractGroup.hksiharai)];
-        const $egcCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $egcItem = eb.createCheckbox(extractGroupCheckItemList).getItem();
-        const $egcLabel = jqNode("label").css("line-height", "2.5").text(captions.extractGroup);
-        const $egcMain = jqNode("div", { class: eClass.fullWidth }).append($egcItem);
-        eb.listAppend($egcCommandArea, [$egcLabel, $egcMain]);
-        eb.listAppend($container, [$emrCommandArea, $egcCommandArea]);
-        const setEvent = function() {
-            const initInputType = function(mode) {
-                switch(mode) {
-                    case emr.type.single.value: {
-                        jqById(seId.policyNumberFrom).parent().removeClass(eClass.hide);
-                        jqById(seId.policyNumberFromTextarea).parent().addClass(eClass.hide);
-                        break;
-                    }
-                    case emr.type.multiple.value: {
-                        jqById(seId.policyNumberFrom).parent().addClass(eClass.hide);
-                        jqById(seId.policyNumberFromTextarea).parent().removeClass(eClass.hide);
-                        break;
-                    }
-                }
-            };
-            const emrElement = dataCopyEvent.element.extractMode;
-            new EventHandler($(emrElement)).addEvent("change", function(e) {
-                const target = e.target;
-                dataCopyEvent.status.extractMode = target.value;
-                initInputType(target.value);
-            });
-            initInputType(dataCopyEvent.status.extractMode);
-        };
-        dataCopyEvent.handler.a = setEvent;
-        const itemList = [
-            {
-                label: captions.subSid,
-                inputType: "input",
-                inputId: seId.subSid,
-                injectId: seId.sid
-            },
-            {
-                label: captions.subUid,
-                inputType: "input",
-                inputId: seId.subUid,
-                injectId: seId.uid
-            },
-            {
-                label: captions.subPwd,
-                inputType: "input",
-                inputId: seId.subPwd,
-                injectId: seId.pwd
-            },
-            {
-                label: captions.policyNumberFrom,
-                inputType: "input",
-                inputId: seId.policyNumberFrom,
-                injectId: null
-            },
-            {
-                label: captions.policyNumberFrom,
-                inputType: "textarea",
-                inputId: seId.policyNumberFromTextarea,
-                injectId: null
-            },
-            {
-                label: captions.policyNumberTo,
-                inputType: "textarea",
-                inputId: seId.policyNumberTo,
-                injectId: null
-            }
-        ];
-        const injector = new Object();
-        itemList.forEach(function(item) {
-            const $commandArea = jqNode("div", { class: seClass.commandArea });
-            const $label = jqNode("label").text(item.label);
-            const $input = jqNode(item.inputType, { id: item.inputId });
-            $commandArea.append($label).append($input);
-            $container.append($commandArea);
-            if(item.injectId) injector[item.injectId] = $input;
-            switch(item.inputId) {
-                case seId.subSid: {
-                    dataCopyEvent.element.sid = $input;
-                    break;
-                }
-                case seId.subUid: {
-                    dataCopyEvent.element.uid = $input;
-                    break;
-                }
-                case seId.subPwd: {
-                    dataCopyEvent.element.pwd = $input;
-                    break;
-                }
-                case seId.policyNumberFrom: {
-                    dataCopyEvent.element.pnf = $input;
-                    break;
-                }
-                case seId.policyNumberFromTextarea: {
-                    dataCopyEvent.element.pnft = $input;
-                    break;
-                }
-                case seId.policyNumberTo: {
-                    dataCopyEvent.element.pnt = $input;
-                    break;
-                }
-            }
-        });
-        $loadButton.click(function() {
-            _this.openAccessTemplate(injector);
-        });
-        $checkButton.click(function() {
-            _this.checkDataCopy();
-        });
-        $extractButton.click(function() {
-            _this.extractDataCopy();
-        });
-        $importButton.click(function() {
-            _this.importDataCopy();
-        });
-        return $container;
-    },
-    buildOptionContents: function(optionData) {
-        const _this = this;
-        const dataCopyState = _this.state.dataCopy;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const $container = jqNode("div", { id: seId.optionContainerDataCopy });
-        const $commandArea = jqNode("div", { class: seClass.optionCommandArea });
-        const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $addButton = jqNode("button").append(jqNode("i", { class: eIcon.plus }));
-        $addButton.click(function() {
-            $commandArea.append(_this.createOptionCommandLine());
-            jqByClass(eClass.dialogContents).scrollTop(function() { return this.scrollHeight; });
-        });
-        $actionArea.append($addButton);
-        const data = optionData ? optionData : dataCopyState.option;
-        if(data) {
-            data.forEach(function(item) {
-                $commandArea.append(_this.createOptionCommandLine(item.table, item.script));
-            });
-        }
-        [$commandArea, $actionArea].forEach(function(item) { $container.append(item); });
-        return $container;
-    },
-    createOptionCommandLine: function(table, script) {
-        const _this = this;
-        const seClass = _this.Define.ELEMENTS.class;
-        const $commandLine = jqNode("div", { class: seClass.commandLine });
-        const $removeRow = jqNode("div", { class: classes(seClass.commandLineRow, seClass.removeRow) });
-        const $removeButton = jqNode("button", { class: seClass.optionRemoveButton }).append(jqNode("i", { class: eIcon.trash }))
-        $removeRow.append($removeButton);
-        const $inputRow = jqNode("div", { class: seClass.commandLineRow });
-        const $inputLabel = jqNode("label").text("Table");
-        const $input = jqNode("input", { type: "text" });
-        const $textareaRow = jqNode("div", { class: seClass.commandLineRow });
-        const $textareaLabel = jqNode("label").text("Script");
-        const placeholder = "@column\nvalue1\nvalue2...($null: remove, $eq: pass)";
-        const $textarea = jqNode("textarea", { placeholder: placeholder });
-        if(table && script) {
-            $input.val(table);
-            $textarea.val(script);
-        }
-        [$inputLabel, $input].forEach(function(item) {
-            $inputRow.append(item);
-        });
-        [$textareaLabel, $textarea].forEach(function(item) {
-            $textareaRow.append(item);
-        });
-        [$removeRow, $inputRow, $textareaRow].forEach(function(item) {
-            $commandLine.append(item);
-        });
-        $removeButton.click(function() {
-            $commandLine.remove();
-        });
-        return $commandLine;
-    },
-    actionControllerDataCopy: function(phase) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.dataCopy;
-        const transactionId = types.toolId.dataCopy;
-        const _event = _this.event;
-        const dataCopyEvent = _event.dataCopy;
-        const $card = jqById(seId.dataCopyCard);
-        const $cardContents = $card.find(concatString(".", eClass.cardContents));
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
-        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
-        const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
-        const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
-        const $insertButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.insert));
-        const $optionButton = jqNode("button", { class: eClass.buttonColorEnergized }).text(upperCase(captions.option));
-        const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
-        const $rollbackButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.rollback));
-        const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
-        const $exportButton = jqNode("button", { class: eClass.buttonColorCalm }).text(upperCase(captions.export));
-        const $backupButton = jqNode("button", { class: eClass.buttonColorRoyal }).text(upperCase(captions.backup));
-        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
-        const propOption = {
-            disableList: new Array(),
-            readonlyList: new Array()
-        };
-        let itemList = new Array();
-        switch(phase) {
-            case phaseType.import: {
-                itemList = [$checkButton, $extractButton, $resetButton];
-                propOption.disableList = ["extractMode"];
-                propOption.readonlyList = ["sid", "uid", "pwd"];
-                _this.setElementDisable(dataCopyEvent.element, propOption);
-                break;
-            }
-            case phaseType.insert: {
-                itemList = [$insertButton, $optionButton, $exportButton, $backupButton, $resetButton];
-                propOption.disableList = ["extractMode", "extractGroup"];
-                propOption.readonlyList = ["sid", "uid", "pwd", "pnf", "pnft", "pnt"];
-                _this.setElementDisable(dataCopyEvent.element, propOption);
-                break;
-            }
-            case phaseType.commit: {
-                itemList = [$commitButton, $rollbackButton, $logButton, $exportButton, $backupButton, $resetButton];
-                break;
-            }
-            case phaseType.complete: {
-                itemList = [$logButton, $exportButton, $backupButton, $resetButton];
-                break;
-            }
-        }
-        $actionArea.empty();
-        itemList.forEach(function(item) {
-            $actionArea.append(item);
-        });
-        $checkButton.click(function() {
-            _this.checkDataCopy();
-        });
-        $extractButton.click(function() {
-            _this.extractDataCopy(phase);
-        });
-        $insertButton.click(function() {
-            _this.insertDataCopy();
-        });
-        $optionButton.click(function() {
-            _this.openOptionDataCopy();
-        });
-        $commitButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db, true);
-            _this.actionControllerDataCopy(phaseType.complete);
-            new Notification().complete().open("Data copy successfully");
-        });
-        $rollbackButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db);
-            _this.actionControllerDataCopy(phaseType.insert);
-        });
-        $logButton.click(function() {
-            _this.downloadLog(transactionId);
-        });
-        $exportButton.click(function() {
-            _this.exportToExcelDataCopy();
-        });
-        $backupButton.click(function() {
-            _this.backupDataCopy();
-        });
-        $resetButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db);
-            _this.state.dataCopy = new Object();
-            $cardContents.html(_this.buildDataCopy());
-            dataCopyEvent.status.extractMode = types.design.dataCopy.extractMode.single;
-            dataCopyEvent.handler.a();
-        });
-        return null;
-    },
-    backupDataCopy: function() {
-        const _this = this;
-        const extractedData = _this.state.dataCopy.extractedData;
-        const fileDefine = TYPES.file;
-        const parts = JSON.stringify(extractedData);
-        const fileName = concatString(["Backup", getFileStamp()].join("_"), fileDefine.extension.txt);
-        const mime = TYPES.file.mime.TEXT_UTF8;
-        saveAsFile(parts, mime, fileName);
-        return null;
-    },
-    openOptionDataCopy: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const optionContents = _this.buildOptionContents();
-        const option = { "min-width": "400px", "max-height": "530px" };
-        const callback = function(dialogClose) {
-            _this.saveOptionDataCopy(dialogClose);
-        };
-        const $templateButton = jqNode("button").text(upperCase(captions.template));
-        const $export = jqNode("button").text(upperCase(captions.export));
-        const $import = jqNode("button").text(upperCase(captions.import));
-        $templateButton.click(function() {
-            _this.openTemplateDataCopy();
-        });
-        $export.click(function() {
-            const fileData = _this.saveOptionDataCopy();
-            if(fileData) {
-                if(isVoid(fileData.data)) {
-                    new Notification().error().open(MESSAGES.nothing_data);
-                    return false;
-                }
-                saveAsFile(JSON.stringify(fileData.data), TYPES.file.mime.TEXT_UTF8, concatString("OptionData_", getFileStamp(), TYPES.file.extension.txt));
-            }
-        });
-        $import.click(function() {
-            const onReadFile = function(data) {
-                try {
-                    const parsedData = JSON.parse(data);
-                    const structureCheck = function() {
-                        let isCorrect = true;
-                        parsedData.some(function(item) {
-                            if(!(!isVoid(item.table) && typeIs(item.table).string) || !(!isVoid(item.script) && typeIs(item.script).string)) {
-                                isCorrect = false;
-                                return true;
-                            }
-                        });
-                        return isCorrect;
-                    };
-                    if(parsedData.length >= 1 && structureCheck()) {
-                        const $container = jqById(seId.optionContainerDataCopy).parent();
-                        $container.empty().append(_this.buildOptionContents(parsedData));
-                    }
-                    else {
-                        new Notification().error().open(MESSAGES.incorrect_data);
-                    }
-                }
-                catch(e) {
-                    new Notification().error().open(MESSAGES.incorrect_data);
-                }
-            };
-            new FileController().setListener().allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
-        });
-        new Dialog().setContents(upperCase(captions.option, 0), optionContents, option).setButton([$import, $export, $templateButton]).open(callback);
-        return null;
-    },
-    openTemplateDataCopy: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const template = _this.export.dataCopy.template;
-        const dataCopyState = _this.state.dataCopy;
-        const extractTableList = _this.getExtractTableListDataCopy(dataCopyState.ref.extractGroupStack);
-        const etLowerList = extractTableList.map(mapLowerCase);
-        const $templateContainer = jqNode("div", { class: seClass.optionTemplateContainer });
-        const $pannel = jqNode("div", { class: seClass.optionTemplatePannel });
-        const $closeButton = jqNode("div", { class: seClass.optionTemplateClose });
-        const $closeIcon = jqNode("i", { class: eIcon.timesCircle });
-        $closeIcon.click(function() { $templateContainer.remove(); });
-        $closeButton.append($closeIcon);
-        $pannel.append($closeButton);
-        const applyTemplate = function(menu) {
-            const exec = function(viewerClose, data, state) {
-                const $optionContainer = jqById(seId.optionContainerDataCopy);
-                const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
-                const option = new Array();
-                $commandLines.each(function(i, item) {
-                    const $input = $(item).find("input");
-                    const $textarea = $(item).find("textarea");
-                    const table = _this.createInfoObject($input.val());
-                    const script = _this.createInfoObject($textarea.val());
-                    option.push({ table: table.value, script: script.value });
-                });
-                const result = {
-                    error: false,
-                    message: new Array()
-                };
-                const templateStack = new Array();
-                const sb = new StringBuilder();
-                template[menu].forEach(function(item) {
-                    if(!item.enable || etLowerList.indexOf(lowerCase(item.table)) < 0) return;
-                    const scriptInfo = {
-                        isExist: false,
-                        data: new Array()
-                    };
-                    item.columns.forEach(function(c) {
-                        let cData = concatString("@", c);
-                        const prop = accessObjectProperty(data, [item.table, c]);
-                        if(!isVoid(prop)) {
-                            scriptInfo.isExist = true;
-                            cData = concatString(cData, SIGN.nl, prop);
-                        }
-                        scriptInfo.data.push(cData);
-                    });
-                    if(!scriptInfo.isExist) return;
-                    const obj = {
-                        table: item.table,
-                        script: scriptInfo.data.join(SIGN.nl)
-                    };
-                    templateStack.push(obj);
-                    if(find(item.table, option, ["table"], upperCase).isExist) {
-                        result.error = true;
-                        result.message.push(item.table);
-                    }
-                });
-                if(result.error) {
-                    const aet = "Already exists table";
-                    const message = concatString(aet, SIGN.br, SIGN.br, result.message.join(SIGN.br));
-                    new Notification().error().open(message);
-                    return false;
-                }
-                const $commandArea = $optionContainer.find(concatString(".", seClass.optionCommandArea));
-                templateStack.forEach(function(item) {
-                    $commandArea.append(_this.createOptionCommandLine(item.table, item.script));
-                });
-                jqByClass(eClass.dialogContents).scrollTop(function() { return this.scrollHeight; });
-                if(typeIs(viewerClose).function) {
-                    dataCopyState.template[menu] = state;
-                    viewerClose();
-                }
-            };
-            const flag = _this.optionTemplateAction(menu, exec, $templateContainer);
-            if(!flag) return false;
-            exec();
-        };
-        Object.keys(template).forEach(function(menu) {
-            const $labelButton = jqNode("div", { class: seClass.optionTemplateTab }).text(menu);
-            $labelButton.click(function() { applyTemplate(menu); });
-            $pannel.append($labelButton);
-        });
-        $templateContainer.append($pannel);
-        jqByTag("body").append($templateContainer);
-        return null;
-    },
-    optionTemplateAction: function(menu, sync, $templateContainer) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const dataCopyExport = _this.export.dataCopy;
-        const exportTableListObject = dataCopyExport.tableListObject;
-        const exportDefineSet = dataCopyExport.defineSet;
-        const templateRules = dataCopyExport.templateRules;
-        const dataCopyState = _this.state.dataCopy;
-        const extractedData = dataCopyState.extractedData;
-        const insertDataStatic = dataCopyState.insertDataStatic;
-        const extractMap = dataCopyState.extractMap;
-        const eb = new ElementBuilder();
-        let continueFlag = true;
-        if(isVoid(dataCopyState.template)) dataCopyState.template = new Object();
-        switch(menu) {
-            case "Name_Birth": {
-                continueFlag = false;
-                const oDB = new DBUtils();
-                const rules = templateRules[menu];
-                const toList = dataCopyState.toList;
-                const tables = rules.tables;
-                const isContractorAvailable = true;
-                const def = {
-                    target: {
-                        insured: "insured",
-                        contractor: "contractor",
-                        customer: "customer",
-                        contractorOnExist: "contractor_onExist",
-                        receiver: "receiver",
-                        requiredContractor: "required_contractor",
-                        requiredContractorOnWeb: "required_contractor_onWeb",
-                        requiredContractorOnWebOrPL: "required_contractor_onWebOrPaperLess"
-                    },
-                    injectorId: { increment: "increment" },
-                    elements: {
-                        increment: {
-                            checkbox: {
-                                name: "increment-checkbox",
-                                label: "Auto increment",
-                                id: "auto-increment-checkbox_id"
-                            },
-                            count: {
-                                name: "increment-count",
-                                label: "Count",
-                                id: "auto-increment-count_id"
-                            },
-                            class: "increment"
-                        },
-                        name: {
-                            labels: {
-                                identifier: "Identifier",
-                                id: "ID",
-                                number: "Number",
-                                digit: "Digit",
-                                nameKana: "Name Kana",
-                                nameKanji: "Name Kanji",
-                                lastNameKana: "Last Name Kana",
-                                firstNameKana: "First Name Kana",
-                                lastNameKanji: "Last Name Kanji",
-                                firstNameKanji: "First Name kanji"
-                            },
-                            ids: {
-                                id: "name-id",
-                                number: "name-number",
-                                digit: "digit",
-                                lastNameKana: "name-lastNameKana",
-                                firstNameKana: "name-firstNameKana",
-                                lastNameKanji: "name-lastNameKanji",
-                                firstNameKanji: "name-firstNameKanji"
-                            },
-                            class: "name"
-                        },
-                        birthday: {
-                            label: "Birthday",
-                            id: "birthday",
-                            class: "birth",
-                            format: "YYYYMMDD"
-                        }
-                    },
-                    keys: {
-                        nameKana: "name_kana",
-                        nameKanji: "name_kanji",
-                        birthday: "birthday",
-                        age: "age",
-                        nameKanaL: "name_kana_l",
-                        nameKanaF: "name_kana_f"
-                    }
-                };
-                const initState = function() {
-                    return {
-                        increment: {
-                            available: true,
-                            count: SIGN.none
-                        },
-                        insured: {
-                            name: {
-                                id: SIGN.none,
-                                number: SIGN.none,
-                                digit: SIGN.none,
-                                kana: { lastName: "ヒセイ", firstName: "ヒメイ" },
-                                kanji: { lastName: "被姓", firstName: "被名" }
-                            },
-                            birthday: SIGN.none
-                        },
-                        contractor: {
-                            name: {
-                                id: SIGN.none,
-                                number: SIGN.none,
-                                digit: SIGN.none,
-                                kana: { lastName: "ケイセイ", firstName: "ケイメイ" },
-                                kanji: { lastName: "契姓", firstName: "契名" }
-                            },
-                            birthday: SIGN.none
-                        }
-                    };
-                };
-                const nbState = cloneJS(!isVoid(dataCopyState.template[menu]) ? dataCopyState.template[menu] : initState());
-                const getAuth = function(id, w) { return concatString(id, SIGN.ub, w); };
-                const executeList = isContractorAvailable ? [def.target.insured, def.target.contractor] : [def.target.insured];
-                const elementInjector = new Object();
-                const inputTypeDef = def.elements.inputType;
-                const incrementDef = def.elements.increment;
-                const nameDef = def.elements.name;
-                const birthDef = def.elements.birthday;
-                const $container = jqNode("div", { id: seId.optionTemplateNB });
-                const $incrementSection = jqNode("div", { class: eClass.viewerSection }).css({ "padding-bottom": "20px" });
-                const $incrementLine = jqNode("div", { class: classes(seClass.commandLine, incrementDef.class) });
-                const incrementCheckboxItemList = [
-                    {
-                        label: incrementDef.checkbox.label,
-                        attributes: {
-                            id: incrementDef.checkbox.id,
-                            name: incrementDef.checkbox.name,
-                            value: SIGN.none
-                        },
-                        isChecked: nbState.increment.available,
-                        optionClass: SIGN.none
-                    }
-                ];
-                const $incrementCheckboxItem = eb.createCheckbox(incrementCheckboxItemList).getItem();
-                const $incrementCountInput = jqNode("input", { id: incrementDef.count.id, class: eClass.applicationInput, placeholder: incrementDef.count.label, value: nbState.increment.count });
-                $incrementCountInput.css({ "width": "50px", "margin-left": "10px", "margin-bottom": "5px" });
-                new EventHandler($incrementCountInput).addInputEvent(function(e, value) {
-                    const exp = new RegExpUtil(value);
-                    if(!exp.isNumber() || exp.isOverflow(3)) return false;
-                });
-                $incrementSection.append(eb.listAppend($incrementLine, [$incrementCheckboxItem, $incrementCountInput]));
-                elementInjector[def.injectorId.increment] = $incrementSection;
-                eb.listAppend($container, [$incrementSection]);
-                const buildContents = function() {
-                    executeList.forEach(function(targetId) {
-                        const state = nbState[targetId];
-                        const $section = jqNode("div", { class: eClass.viewerSection });
-                        const $title = jqNode("div", { class: eClass.sectionTitle }).text(upperCase(targetId, 0));
-                        const $targetContainer = jqNode("div").css({ "padding-top": "10px" });
-                        const $nameIdentifierLine = jqNode("div", { class: classes(seClass.commandLine, nameDef.class) });
-                        const $nameIdentifierLabel = jqNode("label").text(nameDef.labels.identifier);
-                        const $nameIdInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.id), class: eClass.applicationInput, placeholder: nameDef.labels.id, value: state.name.id });
-                        const $nameNumberInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.number), class: eClass.applicationInput, placeholder: nameDef.labels.number, value: state.name.number }).css("width", "80px");
-                        new EventHandler($nameNumberInput).addInputEvent(function(e, value) {
-                            const exp = new RegExpUtil(value);
-                            if(!exp.isNumberWithFullWidth() || exp.isOverflow(3)) return false;
-                        });
-                        const $digitInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.digit), class: eClass.applicationInput, placeholder: nameDef.labels.digit, value: state.name.digit }).css("width", "80px");
-                        new EventHandler($digitInput).addInputEvent(function(e, value) {
-                            const exp = new RegExpUtil(value);
-                            if(!exp.isNumberWithFullWidth() || exp.isOverflow(1) || toNumber(value) >= 4) return false;
-                        });
-                        eb.listAppend($nameIdentifierLine, [$nameIdentifierLabel, $nameIdInput, $nameNumberInput, $digitInput]);
-                        const $nameKanaLine = jqNode("div", { class: classes(seClass.commandLine, nameDef.class) });
-                        const $nameKanaLabel = jqNode("label").text(nameDef.labels.nameKana);
-                        const $nameKanaLastNameInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.lastNameKana), class: eClass.applicationInput, placeholder: nameDef.labels.lastNameKana, value: state.name.kana.lastName });
-                        const $nameKanaFirstNameInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.firstNameKana), class: eClass.applicationInput, placeholder: nameDef.labels.firstNameKana, value: state.name.kana.firstName });
-                        eb.listAppend($nameKanaLine, [$nameKanaLabel, $nameKanaLastNameInput, $nameKanaFirstNameInput]);
-                        const $nameKanjiLine = jqNode("div", { class: classes(seClass.commandLine, nameDef.class) });
-                        const $nameKanjiLabel = jqNode("label").text(nameDef.labels.nameKanji);
-                        const $nameKanjiLastNameInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.lastNameKanji), class: eClass.applicationInput, placeholder: nameDef.labels.lastNameKanji, value: state.name.kanji.lastName });
-                        const $nameKanjiFirstNameInput = jqNode("input", { id: getAuth(targetId, nameDef.ids.firstNameKanji), class: eClass.applicationInput, placeholder: nameDef.labels.firstNameKanji, value: state.name.kanji.firstName });
-                        eb.listAppend($nameKanjiLine, [$nameKanjiLabel, $nameKanjiLastNameInput, $nameKanjiFirstNameInput]);
-                        const $birthLine = jqNode("div", { class: classes(seClass.commandLine, birthDef.class) });
-                        const $birthLabel = jqNode("label").text(birthDef.label);
-                        const $birthInput = jqNode("textarea", { id: getAuth(targetId, birthDef.id), class: eClass.applicationTextarea, placeholder: birthDef.format }).val(state.birthday);
-                        eb.listAppend($birthLine, [$birthLabel, $birthInput]);
-                        eb.listAppend($targetContainer, [$nameIdentifierLine, $nameKanaLine, $nameKanjiLine, $birthLine]);
-                        elementInjector[targetId] = $targetContainer;
-                        $container.append(eb.listAppend($section, [$title, $targetContainer]));
-                    });
-                };
-                const initIncrementCount = function($element) {
-                    if(!$element) return false;
-                    const available = nbState.increment.available;
-                    if(available) $element.addClass(eClass.readonly).prop("readonly", true);
-                    else $element.removeClass(eClass.readonly).prop("readonly", false);
-                };
-                const setEvent = function() {
-                    executeList.forEach(function(targetId) {
-                        const incrementCheckboxElement = concatString("input[name=", incrementDef.checkbox.name, "]");
-                        new EventHandler($(incrementCheckboxElement)).addEvent("change", function(e) {
-                            const target = e.target;
-                            const available = target.checked;
-                            nbState.increment.available = available;
-                            const $incrementCountInput = jqById(incrementDef.count.id);
-                            initIncrementCount($incrementCountInput);
-                        });
-                    });
-                };
-                const callback = function(viewerClose) {
-                    try {
-                        const keys = def.keys;
-                        const edst = exportDefineSet.table;
-                        const edsc = exportDefineSet.column;
-                        const edsbt = exportDefineSet.baseTable;
-                        const edswg = exportDefineSet.wg;
-                        const edsukt = exportDefineSet.ukt;
-                        const sb = new StringBuilder();
-                        const templatePrintObject = new Object();
-                        nbState.increment.count = jqById(incrementDef.count.id).val();
-                        executeList.forEach(function(targetId) {
-                            nbState[targetId].name.id = jqById(getAuth(targetId, nameDef.ids.id)).val();
-                            nbState[targetId].name.number = jqById(getAuth(targetId, nameDef.ids.number)).val();
-                            nbState[targetId].name.digit = jqById(getAuth(targetId, nameDef.ids.digit)).val();
-                            nbState[targetId].name.kana.lastName = jqById(getAuth(targetId, nameDef.ids.lastNameKana)).val();
-                            nbState[targetId].name.kana.firstName = jqById(getAuth(targetId, nameDef.ids.firstNameKana)).val();
-                            nbState[targetId].name.kanji.lastName = jqById(getAuth(targetId, nameDef.ids.lastNameKanji)).val();
-                            nbState[targetId].name.kanji.firstName = jqById(getAuth(targetId, nameDef.ids.firstNameKanji)).val();
-                            nbState[targetId].birthday = jqById(getAuth(targetId, birthDef.id)).val();
-                        });
-                        const getState = function(targetId) {
-                            return nbState[targetId];
-                        };
-                        const targetState = {
-                            insured: getState(def.target.insured),
-                            contractor: getState(def.target.contractor)
-                        };
-                        const calcAge = function(inputDate, submissionDate) {
-                            if(isVoid(inputDate)) return SIGN.none;
-                            const exp = new RegExpUtil(submissionDate);
-                            if(!exp.isYYYYMMDD()) {
-                                throw new Error("Submission date format is invalid");
-                            }
-                            const inYear = Number(inputDate.substr(0, 4));
-                            const inMonth = Number(inputDate.substr(4, 2));
-                            const inDate = Number(inputDate.substr(6, 2));
-                            const smYear = Number(submissionDate.substr(0, 4));
-                            const smMonth = Number(submissionDate.substr(4, 2));
-                            const smDate = Number(submissionDate.substr(6, 2));
-                            const calcY = smYear - inYear;
-                            const calcM = smMonth - inMonth;
-                            const calcD = smDate - inDate;
-                            if(calcY < 0) return null;
-                            else if(calcY <= 0) {
-                                if(calcM < 0) return null;
-                                if(calcM === 0 && calcD < 0) return null;
-                            }
-                            if(calcM > 0) return String(calcY);
-                            if(calcD > 0) {
-                                if(calcY === 0) return String(calcY);
-                                return String(calcY - 1);
-                            }
-                            return String(calcY);
-                        };
-                        const v = new Validation();
-                        const vTypes = v.getTypes();
-                        const checkAllResult = {
-                            error: false,
-                            messageList: new Array()
-                        };
-                        const increment = nbState.increment;
-                        if(!increment.available) {
-                            const incrementCount = _this.createInfoObject(increment.count, incrementDef.count.label);
-                            const outOfRangeValidate = function() {
-                                const actionLayout = v.getActionLayout();
-                                if(Number(increment.count) > toList.length) {
-                                    actionLayout.error = true;
-                                    actionLayout.message = concatString(incrementDef.count.label, " is out of range");
-                                }
-                                return actionLayout;
-                            };
-                            const actionObj = { "outOfRange": outOfRangeValidate };
-                            const incrementCountLayout = v.getLayout(v.initLayout(incrementCount.value, incrementCount.name), [vTypes.required, vTypes.notSpace, vTypes.numeric, "outOfRange"], actionObj);
-                            const result = v.reset().append(incrementCountLayout).exec();
-                            if(result.error) {
-                                checkAllResult.error = true;
-                                checkAllResult.messageList.push(result.message);
-                            }
-                        }
-                        const checkValueObject = createMultipleObject([[def.target.insured, new Array()], [def.target.contractor, new Array()]]);
-                        executeList.forEach(function(targetId) {
-                            const state = nbState[targetId];
-                            v.reset();
-                            const checkList = [
-                                {
-                                    label: concatString(nameDef.labels.identifier, " > ", nameDef.labels.id),
-                                    value: state.name.id,
-                                    type: nameDef.ids.id
-                                },
-                                {
-                                    label: concatString(nameDef.labels.identifier, " > ", nameDef.labels.number),
-                                    value: state.name.number,
-                                    type: nameDef.ids.number
-                                },
-                                {
-                                    label: concatString(nameDef.labels.identifier, " > ", nameDef.labels.digit),
-                                    value: state.name.digit,
-                                    type: nameDef.ids.digit
-                                },
-                                {
-                                    label: concatString(nameDef.labels.nameKana, " > ", nameDef.labels.lastNameKana),
-                                    value: state.name.kana.lastName,
-                                    type: nameDef.ids.lastNameKana
-                                },
-                                {
-                                    label: concatString(nameDef.labels.nameKana, " > ", nameDef.labels.firstNameKana),
-                                    value: state.name.kana.firstName,
-                                    type: nameDef.ids.firstNameKana
-                                },
-                                {
-                                    label: concatString(nameDef.labels.nameKanji, " > ", nameDef.labels.lastNameKanji),
-                                    value: state.name.kanji.lastName,
-                                    type: nameDef.ids.lastNameKanji
-                                },
-                                {
-                                    label: concatString(nameDef.labels.nameKanji, " > ", nameDef.labels.firstNameKanji),
-                                    value: state.name.kanji.firstName,
-                                    type: nameDef.ids.firstNameKanji
-                                },
-                                {
-                                    label: birthDef.label,
-                                    value: state.birthday,
-                                    type: birthDef.id
-                                }
-                            ];
-                            checkList.forEach(function(item, i) {
-                                let layout = null;
-                                if(item.type === nameDef.ids.number || item.type === nameDef.ids.digit) {
-                                    layout = v.getLayout(v.initLayout(item.value, item.label), [vTypes.notSpace, vTypes.numeric]);
-                                }
-                                else if(item.type === birthDef.id) {
-                                    const formatValidate = function() {
-                                        const actionLayout = v.getActionLayout();
-                                        item.value.split(SIGN.nl).forEach(function(bd, j) {
-                                            if(!isVoid(bd)) {
-                                                const exp = new RegExpUtil(bd);
-                                                const fromKey = extractMap[Object.keys(extractMap)[j]];
-                                                if(isVoid(fromKey)) {
-                                                    return;
-                                                }
-                                                const mosKihonData = oDB.where(extractedData[fromKey], edst.mosKihon);
-                                                const submissionDate = mosKihonData.ref[edsc.mosYmd][0];
-                                                if(!exp.isYYYYMMDD()) {
-                                                    actionLayout.error = true;
-                                                    actionLayout.message = concatString("[Line:", j + 1, "]", item.label, " format is not valid");
-                                                }
-                                                else if(typeIs(calcAge(bd, submissionDate)).null) {
-                                                    actionLayout.error = true;
-                                                    actionLayout.message = concatString("[Line:", j + 1, "]", item.label, " is over the submission date(", submissionDate, ")");
-                                                }
-                                            }
-                                        });
-                                        return actionLayout;
-                                    };
-                                    const actionObj = { "format": formatValidate };
-                                    layout = v.getLayout(v.initLayout(item.value, item.label), [vTypes.notSpace, vTypes.numericWithLineBreak, "format"], actionObj);
-                                }
-                                else {
-                                    layout = v.getLayout(v.initLayout(item.value, item.label), [vTypes.notSpace]);
-                                }
-                                v.append(layout);
-                                if(item.type === nameDef.ids.id || item.type === nameDef.ids.number || item.type === birthDef.id) {
-                                    const tValue = item.type === birthDef.id ? getExistArray(item.value.split(SIGN.nl)).join(SIGN.none) : item.value;
-                                    checkValueObject[targetId].push(tValue);
-                                }
-                            });
-                            const result = v.exec();
-                            if(result.error) {
-                                const targetLabel = concatString(SIGN.abs, upperCase(targetId, 0), SIGN.abe, SIGN.br);
-                                checkAllResult.error = true;
-                                checkAllResult.messageList.push(targetLabel + result.message);
-                            }
-                        });
-                        if(checkAllResult.error) {
-                            throw new Error(checkAllResult.messageList.join(concatString(SIGN.br, SIGN.br)));
-                        }
-                        else {
-                            const generator = function(fromData, table, column, c, toIdx, tableSelData, kokykKanrenData, mosKihonData) {
-                                const dataStack = new Array();
-                                const type = c.type;
-                                const target = c.target;
-                                const separator = c.separator;
-                                const wg = Object.keys(exportTableListObject).filter(function(key) {
-                                    const tableList = exportTableListObject[key];
-                                    if(tableList.map(mapLowerCase).indexOf(lowerCase(table)) >= 0) {
-                                        return true;
-                                    }
-                                })[0];
-                                const isCustomer = target === def.target.customer;
-                                const keihiKbn = kokykKanrenData.ref[edsc.keihiKbn];
-                                const isSameKeihi = keihiKbn.length === 1 && keihiKbn[0] == 3;
-                                const mosKbn = Number(mosKihonData.ref[edsc.mosKbn][0]);
-                                const isWeb = mosKbn === 4;
-                                const isPaperLess = mosKbn === 5;
-                                const setDataByKeihi = function(insuredData, contractorData) {
-                                    if(isSameKeihi) {
-                                        dataStack.push(insuredData);
-                                    }
-                                    else if(keihiKbn.length >= 2) {
-                                        keihiKbn.forEach(function(kbn) {
-                                            switch(Number(kbn)) {
-                                                case 1: {
-                                                    if(!isVoid(contractorData)) {
-                                                        dataStack.push(contractorData);
-                                                    }
-                                                    break;
-                                                }
-                                                case 2: {
-                                                    if(!isVoid(insuredData)) {
-                                                        dataStack.push(insuredData);
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                        });
-                                    }
-                                };
-                                if([keys.nameKana, keys.nameKanji, keys.nameKanaF, keys.nameKanaL].indexOf(type) >= 0) {
-                                    const getName = function(ti) {
-                                        const state = targetState[ti];
-                                        const getId = function() {
-                                            const n = state.name.number;
-                                            const d = isVoid(state.name.digit) ? 3 : state.name.digit;
-                                            const num = isVoid(n) ? SIGN.none : setCharPadding(Number(n) + toIdx, d);
-                                            return concatString(state.name.id, num);
-                                        };
-                                        const o = {
-                                            identifier: getId(),
-                                            lastName: SIGN.none,
-                                            firstName: SIGN.none
-                                        };
-                                        switch(type) {
-                                            case keys.nameKana: {
-                                                o.lastName = concatString(o.identifier, state.name.kana.lastName);
-                                                o.firstName = concatString(o.identifier, state.name.kana.firstName);
-                                                break;
-                                            }
-                                            case keys.nameKanji: {
-                                                o.lastName = concatString(o.identifier, state.name.kanji.lastName);
-                                                o.firstName = concatString(o.identifier, state.name.kanji.firstName);
-                                                break;
-                                            }
-                                            case keys.nameKanaF: {
-                                                o.firstName = concatString(o.identifier, state.name.kana.firstName);
-                                                break;
-                                            }
-                                            case keys.nameKanaL: {
-                                                o.firstName = concatString(o.identifier, state.name.kana.lastName);
-                                                break;
-                                            }
-                                        }
-                                        const fullName = [o.lastName, o.firstName].join(separator);
-                                        return toFullWidth(fullName);
-                                    };
-                                    const insuredName = getName(def.target.insured);
-                                    const contractorName = getName(def.target.contractor);
-                                    if(isCustomer) {
-                                        setDataByKeihi(insuredName, contractorName);
-                                    }
-                                    else {
-                                        const scData = tableSelData.ref[column];
-                                        const pushData = function(data) {
-                                            scData.forEach(function() {
-                                                dataStack.push(data);
-                                            });
-                                        };
-                                        switch(target) {
-                                            case def.target.insured: {
-                                                pushData(insuredName);
-                                                break;
-                                            }
-                                            case def.target.contractor: {
-                                                pushData(contractorName);
-                                                break;
-                                            }
-                                            case def.target.contractorOnExist: {
-                                                pushData(isSameKeihi ? SIGN.none : contractorName);
-                                                break;
-                                            }
-                                            case def.target.receiver: {
-                                                const uktSyuKbnList = tableSelData.ref[edsc.uktSyuKbn];
-                                                const uktNameKana = edsukt.name.kana;
-                                                const uktNameKanji = edsukt.name.kanji;
-                                                const receiverStack = new Array();
-                                                const getReceiverName = function(uktSyuKbn) {
-                                                    const state = targetState[def.target.insured];
-                                                    const getId = function() {
-                                                        const n = state.name.number;
-                                                        const d = isVoid(state.name.digit) ? 3 : state.name.digit;
-                                                        const num = isVoid(n) ? SIGN.none : setCharPadding(Number(n) + toIdx, d);
-                                                        return concatString(state.name.id, num);
-                                                    };
-                                                    const o = {
-                                                        identifier: getId(),
-                                                        lastName: SIGN.none,
-                                                        firstName: SIGN.none
-                                                    };
-                                                    switch(type) {
-                                                        case keys.nameKana: {
-                                                            const lastName = uktNameKana.lastName[uktSyuKbn];
-                                                            const firstName = uktNameKana.firstName[uktSyuKbn];
-                                                            o.lastName = isVoid(lastName) ? SIGN.none : concatString(o.identifier, lastName);
-                                                            o.firstName = isVoid(firstName) ? SIGN.none : concatString(o.identifier, firstName);
-                                                            break;
-                                                        }
-                                                        case keys.nameKanji: {
-                                                            const lastName = uktNameKanji.lastName[uktSyuKbn];
-                                                            const firstName = uktNameKanji.firstName[uktSyuKbn];
-                                                            o.lastName = isVoid(lastName) ? SIGN.none : concatString(o.identifier, lastName);
-                                                            o.firstName = isVoid(firstName) ? SIGN.none : concatString(o.identifier, firstName);
-                                                            break;
-                                                        }
-                                                    }
-                                                    if(isVoid(o.lastName) || isVoid(o.firstName)) {
-                                                        return SIGN.none;
-                                                    }
-                                                    const fullName = [o.lastName, o.firstName].join(separator);
-                                                    return toFullWidth(fullName);
-                                                };
-                                                scData.forEach(function(item, i) {
-                                                    const uktSyuKbn = !isVoid(c.uktSyuKbn) ? c.uktSyuKbn : uktSyuKbnList[i];
-                                                    if(isVoid(item)) {
-                                                        dataStack.push(item);
-                                                        return;
-                                                    }
-                                                    dataStack.push(getReceiverName(uktSyuKbn));
-                                                });
-                                                break;
-                                            }
-                                            case def.target.requiredContractor: {
-                                                pushData(isSameKeihi ? insuredName : contractorName);
-                                                break;
-                                            }
-                                            case def.target.requiredContractorOnWeb: {
-                                                if(isWeb) {
-                                                    pushData(isSameKeihi ? insuredName : contractorName);
-                                                }
-                                                break;
-                                            }
-                                            case def.target.requiredContractorOnWebOrPL: {
-                                                if(isWeb || isPaperLess) {
-                                                    pushData(isSameKeihi ? insuredName : contractorName);
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                else if(type === keys.birthday) {
-                                    const getBirthDay = function(ti) {
-                                        switch(ti) {
-                                            case def.target.requiredContractor: {
-                                                ti = isSameKeihi ? def.target.insured : def.target.contractor;
-                                                break;
-                                            }
-                                            case def.target.contractorOnExist: {
-                                                ti = isSameKeihi ? SIGN.none : def.target.contractor;
-                                                break;
-                                            }
-                                            case def.target.requiredContractorOnWeb: {
-                                                if(isWeb) {
-                                                    ti = isSameKeihi ? def.target.insured : def.target.contractor;
-                                                }
-                                                break;
-                                            }
-                                            case def.target.requiredContractorOnWebOrPL: {
-                                                if(isWeb || isPaperLess) {
-                                                    ti = isSameKeihi ? def.target.insured : def.target.contractor;
-                                                }
-                                                break;
-                                            }
-                                        }
-                                        const state = targetState[ti];
-                                        if(isVoid(state)) return null;
-                                        const ba = state.birthday.split(SIGN.nl);
-                                        return ba.length <= 0 ? SIGN.none : ba[toIdx];
-                                    };
-                                    if(isCustomer) {
-                                        const insuredBirthday = getBirthDay(def.target.insured);
-                                        const contractorBirthday = getBirthDay(def.target.contractor);
-                                        setDataByKeihi(insuredBirthday, contractorBirthday);
-                                    }
-                                    else {
-                                        dataStack.push(getBirthDay(target));
-                                    }
-                                }
-                                else if(type === keys.age) {
-                                    const submissionDate = mosKihonData.ref[edsc.mosYmd][0];
-                                    const getAge = function(ti) {
-                                        switch(ti) {
-                                            case def.target.requiredContractor: {
-                                                ti = isSameKeihi ? def.target.insured : def.target.contractor;
-                                                break;
-                                            }
-                                            case def.target.contractorOnExist: {
-                                                ti = isSameKeihi ? SIGN.none : def.target.contractor;
-                                                break;
-                                            }
-                                        }
-                                        const state = targetState[ti];
-                                        if(isVoid(state)) return null;
-                                        const ba = state.birthday.split(SIGN.nl);
-                                        return ba.length <= 0 ? SIGN.none : calcAge(ba[toIdx], submissionDate);
-                                    };
-                                    if(isCustomer) {
-                                        const insuredAge = getAge(def.target.insured);
-                                        const contractorAge = getAge(def.target.contractor);
-                                        setDataByKeihi(insuredAge, contractorAge);
-                                    }
-                                    else {
-                                        dataStack.push(getAge(target, submissionDate));
-                                    }
-                                }
-                                const mapFunc = function(item) {
-                                    if(isVoid(item)) {
-                                        return "$eq";
-                                    }
-                                    return item;
-                                };
-                                const convertedData = dataStack.map(mapFunc);
-                                return convertedData.length >= 1 ? convertedData.join(SIGN.nl) : SIGN.none;
-                            };
-                            Object.keys(tables).forEach(function(table) {
-                                templatePrintObject[table] = new Object();
-                                const co = new Object();
-                                const ins = insertDataStatic[table];
-                                if(isVoid(ins)) {
-                                    return;
-                                }
-                                Object.keys(ins).some(function(toKey, toIdx) {
-                                    if(!increment.available && toIdx >= Number(increment.count)) {
-                                        return true;
-                                    }
-                                    const fromKey = extractMap[toKey];
-                                    const fromData = extractedData[fromKey];
-                                    const exd = fromData[table];
-                                    if(!isVoid(exd)) {
-                                        const t = tables[table];
-                                        const tableSelData = oDB.where(fromData, table);
-                                        const kokykKanrenData = oDB.where(fromData, edst.kokykKanren);
-                                        const mosKihonData = oDB.where(fromData, edst.mosKihon);
-                                        Object.keys(t).forEach(function(column) {
-                                            const c = t[column];
-                                            if(isVoid(co[column])) {
-                                                co[column] = new Object();
-                                            }
-                                            const inData = generator(fromData, table, column, c, toIdx, tableSelData, kokykKanrenData, mosKihonData);
-                                            co[column][toKey] = isVoid(inData) ? "$eq" : inData;
-                                        });
-                                    }
-                                });
-                                Object.keys(co).forEach(function(column) {
-                                    const dataMap = Object.keys(co[column]).map(function(toKey) {
-                                        return co[column][toKey];
-                                    });
-                                    const existSize = dataMap.filter(function(item) {
-                                        if(!isVoid(item) && item !== "$eq") {
-                                            return true;
-                                        }
-                                    }).length;
-                                    templatePrintObject[table][column] = existSize >= 1 ? dataMap.join(SIGN.nl) : SIGN.none;
-                                });
-                            });
-                        }
-                        sync(viewerClose, templatePrintObject, nbState);
-                    }
-                    catch(e) {
-                        new Notification().error().open(e.message);
-                    }
-                };
-                buildContents();
-                initIncrementCount($incrementCountInput);
-                new Viewer().setContents(menu, $container).open(callback).onLoad(setEvent);
-                break;
+        return mergedChar;
+    };
+    return strChar[len - 1] ? strChar : getFilled();
+};
+
+function concatString() {
+    const argumentsList = Array.prototype.slice.call(arguments);
+    const stack = new Array();
+    argumentsList.forEach(function(item) {
+        stack.push(item);
+    });
+    return stack.join(SIGN.none);
+};
+
+function escape(str) {
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\//g, '\\/').replace(/</g, '\\x3c').replace(/>/g, '\\x3e').replace(/(0x0D)/g, '\r').replace(/(0x0A)/g, '\n');
+};
+
+function queryEscape(str) {
+    return str.replace(/'/g, SIGN.none);
+};
+
+function getFileStamp() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    return concatString(year, month, date, hours,minutes, seconds);
+};
+
+function convertPath(path) {
+    return path.replace(new RegExp("\\\\", "g"), "\\\\");
+};
+
+function cloneJS(data) {
+    const type = typeIs(data);
+    if(type.object) {
+        return $.extend(true, {}, data);
+    }
+    else if(type.array) {
+        return new Array().concat(data);
+    }
+    return data;
+};
+
+function isVoid(val) {
+    const type = typeof (val);
+    const isArray = Array.isArray(val);
+    if (isArray) {
+        const size = val.length;
+        return size <= 0;
+    }
+    else if ((!val && val !== 0) || val === null || type === undefined) {
+        return true;
+    }
+    else {
+        switch (type) {
+            case 'object': {
+                const objSize = Object.keys(val).length;
+                return objSize <= 0;
             }
             default: {
-                continueFlag = true;
-                break;
-            }
-        }
-        $templateContainer.remove();
-        return continueFlag;
-    },
-    checkDataCopy: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const loading = new Loading();
-        loading.on().then(function() {
-            const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const policyNumberToLayout = v.getLayout(v.initLayout(policyNumberTo.value, policyNumberTo.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-            v.reset().append(policyNumberToLayout);
-            const result = v.exec();
-            if(result.error) {
-                throw new Error(result.message);
-            }
-            const pnt = policyNumberTo.value;
-            const pntList = getExistArray(pnt.split(SIGN.nl));
-            const inConditions = pntList.map(function(item) { return concatString(SIGN.sq, item, SIGN.sq); }).join(SIGN.cw);
-            const query = concatString("SELECT S_SYONO FROM ST_MosKihon WHERE S_SYONO IN (", inConditions, ")");
-            const db = new DBUtils().connect(_this.state.info);
-            const dataSet = db.executeSelect(query).onEnd(true).dataSet;
-            if(dataSet.count >= 1) {
-                const ngMessage = new Array();
-                ngMessage.push(concatString("Already exists", SIGN.br));
-                dataSet.data.forEach(function(record) {
-                    ngMessage.push(record[0]);
-                });
-                throw new Error(ngMessage.join(SIGN.br));
-            }
-            else {
-                const okMessage = "You can use these";
-                new Notification().complete().open(okMessage);
-            }
-            loading.off();
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-    },
-    importDataCopy: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.dataCopy;
-        const _event = _this.event;
-        const dataCopyEvent = _event.dataCopy;
-        const dataCopyState = _this.state.dataCopy;
-        const onReadFile = function(data) {
-            let isImporting = true;
-            let isSingleMode = true;
-            let pnfElementId = SIGN.none;
-            switch(dataCopyEvent.status.extractMode) {
-                case types.design.dataCopy.extractMode.single:{
-                    pnfElementId = seId.policyNumberFrom;
-                    isSingleMode = true;
-                    break;
-                }
-                case types.design.dataCopy.extractMode.multiple: {
-                    pnfElementId = seId.policyNumberFromTextarea;
-                    isSingleMode = false;
-                    break;
-                }
-            }
-            try {
-                const importData = JSON.parse(data);
-                isImporting = false;
-                const fromKeyList = Object.keys(importData);
-                const fromKeyString = fromKeyList.join(SIGN.nl);
-                if(fromKeyList.length <= 0) {
-                    throw new Error(MESSAGES.incorrect_data);
-                }
-                else if(fromKeyList.length === 1 && !isSingleMode) {
-                    throw new Error("This data can be import only on single mode");
-                }
-                else if(fromKeyList.length >= 2 && isSingleMode) {
-                    throw new Error("This data can be import only on multiple mode");
-                }
-                else {
-                    const policyNumberFrom = _this.createInfoObject(fromKeyString, captions.policyNumberFrom);
-                    const v = new Validation();
-                    const vTypes = v.getTypes();
-                    const policyNumberFromLayout = v.getLayout(v.initLayout(policyNumberFrom.value, policyNumberFrom.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-                    v.reset().append(policyNumberFromLayout);
-                    const result = v.exec();
-                    if(result.error) {
-                        throw new Error(MESSAGES.incorrect_data);
-                    }
-                }
-                jqById(pnfElementId).val(fromKeyString);
-                _this.state.dataCopy.ref = createObject("import", {
-                    fromKeyList: fromKeyList,
-                    data: importData
-                });
-                _this.actionControllerDataCopy(phaseType.import);
-            }
-            catch(e) {
-                const errMsg = isImporting ? MESSAGES.incorrect_data : e.message;
-                new Notification().error().open(errMsg);
-            }
-        };
-        new FileController().setListener().allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
-        return null;
-    },
-    getDataCopySelectQuery: function(table, pn, isFromDelete, isInclude) {
-        const _this = this;
-        const dataCopyExport = _this.export.dataCopy;
-        const keySet = dataCopyExport.keySet;
-        const sb = new StringBuilder();
-        let query = "";
-        const clause = !isFromDelete ? " = " : (isInclude ? " IN " : " NOT IN ");
-        const defaultKey = queryEscape(keySet.defaultKey);
-        const getValue = function(func) {
-            if(!isFromDelete) {
-                return typeIs(func).function ? sb.sq(func(pn)) : sb.sq(pn);
-            }
-            else {
-                const pnMap = pn.map(function(p) {
-                    return typeIs(func).function ? sb.sq(func(p)) : sb.sq(p);
-                }).join(", ");
-                return concatString(SIGN.bs, pnMap, SIGN.be);
-            }
-        };
-        if(!keySet[table]) {
-            query = concatString("SELECT * FROM ", table, " WHERE ", defaultKey, clause, getValue());
-        }
-        else {
-            const key = queryEscape(keySet[table].key);
-            const type = keySet[table].type;
-            switch(type) {
-                case 0: {
-                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " IN (SELECT S_KOKNO FROM KT_KokKykKanren WHERE S_SYONO", clause, getValue(), ")");
-                    break;
-                }
-                case 1: {
-                    const slice1 = function(v) { return v.slice(1, v.length - 1); };
-                    const slice2 = function(v) { return v.slice(0, 1); };
-                    const withCond = !isFromDelete ? concatString(" AND S_HATUBANKEY = ", getValue(slice2)) : SIGN.none;
-                    query = concatString("SELECT * FROM ", table, " WHERE ", key, clause, getValue(slice1), withCond);
-                    break;
-                }
-                case 2: {
-                    const joinCond = concatString("A.", key, " = ", "B.", key);
-                    const mainCond = concatString("B.S_SYONO", clause, getValue());
-                    query = concatString("SELECT * FROM ", table, " A WHERE EXISTS (SELECT B.* FROM ST_MosKihon B WHERE ", joinCond, " AND ", mainCond, ")");
-                    break;
-                }
-                case 3: {
-                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " IN (SELECT ", key, " FROM HKT_Hb WHERE S_SYONO", clause, getValue(), ")");
-                    break;
-                }
-            }
-        }
-        return query;
-    },
-    getExtractTableListDataCopy: function(extractGroupStack, tableObject) {
-        const _this = this;
-        const dataCopyExport = _this.export.dataCopy;
-        const to = isVoid(tableObject) ? dataCopyExport.tableListObject : tableObject;
-        const getExportTableList = function(key) {
-            return getProperty(to, key);
-        };
-        const extractTableList = extractGroupStack.map(function(tableListKey) {
-            return getExportTableList(tableListKey);
-        }).reduce(function(pre, curr) {
-            return pre.concat(curr);
-        });
-        return extractTableList;
-    },
-    extractDataCopy: function(phase) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.dataCopy;
-        const _event = _this.event;
-        const dataCopyEvent = _event.dataCopy;
-        const dataCopyExport = _this.export.dataCopy;
-        const dataCopyState = _this.state.dataCopy;
-        let isSingleMode = true;
-        let pnfElementId = SIGN.none;
-        switch(dataCopyEvent.status.extractMode) {
-            case types.design.dataCopy.extractMode.single:{
-                pnfElementId = seId.policyNumberFrom;
-                isSingleMode = true;
-                break;
-            }
-            case types.design.dataCopy.extractMode.multiple: {
-                pnfElementId = seId.policyNumberFromTextarea;
-                isSingleMode = false;
-                break;
-            }
-        }
-        const loading = new Loading();
-        loading.on().then(function() {
-            let pnf, pnt;
-            let pnfList = new Array();
-            let pntList = new Array();
-            let extractedData = new Object();
-            const extractMap = new Object();
-            const isImport = phase === phaseType.import;
-            const subSid = _this.createInfoObject(jqById(seId.subSid).val(), captions.subSid);
-            const subUid = _this.createInfoObject(jqById(seId.subUid).val(), captions.subUid);
-            const subPwd = _this.createInfoObject(jqById(seId.subPwd).val(), captions.subPwd);
-            const policyNumberFrom = _this.createInfoObject(jqById(pnfElementId).val(), captions.policyNumberFrom);
-            const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const subSidLayout = v.getLayout(v.initLayout(subSid.value, subSid.name), [vTypes.required, vTypes.notSpace]);
-            const subUidLayout = v.getLayout(v.initLayout(subUid.value, subUid.name), [vTypes.required, vTypes.notSpace]);
-            const subPwdLayout = v.getLayout(v.initLayout(subPwd.value, subPwd.name), [vTypes.required, vTypes.notSpace]);
-            const policyNumberFromLayout = v.getLayout(v.initLayout(policyNumberFrom.value, policyNumberFrom.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-            const policyNumberToLayout = v.getLayout(v.initLayout(policyNumberTo.value, policyNumberTo.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-            let layoutList = new Array();
-            if(isImport) {
-                layoutList = [policyNumberFromLayout, policyNumberToLayout];
-            }
-            else {
-                layoutList = [subSidLayout, subUidLayout, subPwdLayout, policyNumberFromLayout, policyNumberToLayout];
-            }
-            v.reset().appendList(layoutList);
-            const result = v.exec();
-            if(result.error) {
-                throw new Error(result.message);
-            }
-            pnf = policyNumberFrom.value;
-            pnt = policyNumberTo.value;
-            pnfList = getExistArray(pnf.split(SIGN.nl));
-            pntList = getExistArray(pnt.split(SIGN.nl));
-            if(pntList.length >= 1000) {
-                const lMsg = "More than 1000 items of data can not be copied";
-                throw new Error(lMsg);
-            }
-            const dCheck = duplicationCheckForArray(pntList);
-            if(dCheck.has) {
-                const dMsg = [concatString("Policy Number(To) has duplicates", SIGN.br)].concat(dCheck.data).join(SIGN.br);
-                throw new Error(dMsg);
-            }
-            if(!isSingleMode && pnfList.length != pntList.length) {
-                const mMsg = "Policy Number(From) and Policy Number(To) do not match";
-                throw new Error(mMsg);
-            }
-            const extractGroupStack = new Array();
-            $(dataCopyEvent.element.extractGroupChecked).each(function() {
-                extractGroupStack.push($(this).val());
-            });
-            if(extractGroupStack.length <= 0) {
-                const egMsg = concatString(captions.extractGroup, " is required");
-                throw new Error(egMsg);
-            }
-            pntList.forEach(function(toKey, i) {
-                extractMap[toKey] = isSingleMode ? pnfList[0] : pnfList[i];
-            });
-            const extractGroupExecStack = cloneJS(extractGroupStack);
-            if(extractGroupExecStack.indexOf(types.design.dataCopy.extractGroup.skei) < 0) {
-                extractGroupExecStack.unshift(types.design.dataCopy.extractGroup.skei);
-            }
-            const extractTableList = _this.getExtractTableListDataCopy(extractGroupStack);
-            const extractExecTableList = _this.getExtractTableListDataCopy(extractGroupExecStack);
-            dataCopyState.extractMap = extractMap;
-            if(isImport) {
-                extractedData = cloneJS(dataCopyState.ref.import.data);
-                Object.keys(extractedData).forEach(function(key) {
-                    const t = extractedData[key];
-                    Object.keys(t).forEach(function(table) {
-                        if(extractExecTableList.indexOf(table) < 0) {
-                            delete t[table];
-                        }
-                    });
-                });
-            }
-            else {
-                dataCopyState.ref = new Object();
-                const actionStatus = {
-                    extractError: false,
-                    insertError: false,
-                    message: new Array()
-                };
-                const info = {
-                    sid: subSid,
-                    uid: subUid,
-                    pwd: subPwd
-                };
-                const subDB = new DBUtils().connect(info);
-                const extractedPnfStack = new Array();
-                pnfList.forEach(function(fromKey) {
-                    if(extractedPnfStack.indexOf(fromKey) < 0) {
-                        extractedPnfStack.push(fromKey);
-                        extractedData[fromKey] = new Object();
-                    }
-                    const countStack = new Array();
-                    extractExecTableList.some(function(table, i, a) {
-                        console.log(table);
-                        const query = _this.getDataCopySelectQuery(table, fromKey);
-                        const dataSet = subDB.executeSelect(query).dataSet;
-                        extractedData[fromKey][table] = dataSet;
-                        if(dataSet.error) {
-                            actionStatus.extractError = true;
-                            actionStatus.message = ["Extract failed"];
-                        }
-                        countStack.push(dataSet.count);
-                        return dataSet.error;
-                    });
-                    if(countStack.reduce(function(a, b) { return a + b; }) <= 0) {
-                        actionStatus.extractError = true;
-                        actionStatus.message = [concatString(fromKey, " : Nothing extracted data")];
-                    }
-                });
-                subDB.close();
-                if(actionStatus.extractError) {
-                    throw new Error(actionStatus.message.join(SIGN.br));
-                }
-            }
-            const db = new DBUtils().connect(_this.state.info);
-            const rules = dataCopyExport.rules;
-            const defaultKey = dataCopyExport.keySet.defaultKey;
-            const insertData = new Object();
-            dataCopyState.dataKey = { to: new Object() };
-            dataCopyState.applyInfo = new Object();
-            const extactTableLowerList = extractTableList.map(mapLowerCase);
-            Object.keys(dataCopyState.extractMap).forEach(function(toKey, idUpdIndex) {
-                const fromKey = dataCopyState.extractMap[toKey];
-                Object.keys(extractedData[fromKey]).forEach(function(table) {
-                    if(extactTableLowerList.indexOf(lowerCase(table)) < 0) {
-                        return;
-                    }
-                    const dataSet = extractedData[fromKey][table];
-                    const count = dataSet.count;
-                    if(count >= 1) {
-                        dataCopyState.keys = new Array();
-                        const name = dataSet.name;
-                        const data = dataSet.data;
-                        const applyData = new Array();
-                        dataCopyState.dataKey.to[table] = new Array();
-                        const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
-                        data.forEach(function(record) {
-                            const applyRecord = cloneJS(record);
-                            if(keyIndex >= 0) {
-                                applyRecord[keyIndex] = toKey;
-                            }
-                            applyData.push(applyRecord);
-                            dataCopyState.keys.push(toKey);
-                            dataCopyState.dataKey.to[table].push(toKey);
-                        });
-                        if(!isVoid(rules[table])) {
-                            Object.keys(rules[table]).forEach(function(column) {
-                                const applyType = rules[table][column];
-                                const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
-                                dataCopyState.applyIndex = applyIndex;
-                                _this.applyRulesDataCopy(applyType, applyData, table, db, name, extractedData[fromKey], idUpdIndex);
-                            });
-                        }
-                        const dataObj = {
-                            name: name,
-                            data: applyData
-                        };
-                        if(isVoid(insertData[table])) {
-                            insertData[table] = createObject(toKey, dataObj);
-                        }
-                        else {
-                            insertData[table][toKey] = dataObj
-                        }
-                    }
-                });
-            });
-            db.close();
-            dataCopyState.extractedData = extractedData;
-            dataCopyState.insertData = insertData;
-            dataCopyState.insertDataStatic = cloneJS(insertData);
-            dataCopyState.ref.isSingleMode = isSingleMode;
-            dataCopyState.ref.extractGroupStack = extractGroupStack;
-            dataCopyState.ref.extractGroupExecStack = extractGroupExecStack;
-            dataCopyState.toList = pntList;
-            _this.actionControllerDataCopy(phaseType.insert);
-            loading.off();
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    applyRulesDataCopy: function(applyType, applyData, table, db, nameData, exd, idUpdIndex) {
-        const _this = this;
-        const dataCopyExport = _this.export.dataCopy;
-        const defineSet = dataCopyExport.defineSet;
-        const state = _this.state.dataCopy;
-        switch(applyType) {
-            case "identifyCustomerNumber": {
-                state.customerNumberIdentifier = new Array();
-                let numberCollection = new Array();
-                let checkStack = new Array();
-                if(isVoid(state[applyType])) {
-                    const query = "SELECT S_KOKNO FROM KT_KokKykKanren";
-                    const dataSet = db.executeSelect(query).dataSet;
-                    if(dataSet.count >= 1) {
-                        numberCollection = dataSet.data.map(function(row) { return toString(row[0]); });
-                    }
-                    state[applyType] = createObject("numberCollection", numberCollection);
-                    state[applyType].checkStack = new Array();
-                }
-                else {
-                    numberCollection = state[applyType].numberCollection;
-                    checkStack = state[applyType].checkStack;
-                }
-                let identifier = Math.floor(Math.random() * 999999) + 1000000;
-                let recordIdx = 0;
-                while(state.customerNumberIdentifier.length < applyData.length && identifier <= 99999999) {
-                    const idStr = toString(identifier);
-                    if(numberCollection.indexOf(idStr) < 0 && checkStack.indexOf(idStr) < 0) {
-                        state.customerNumberIdentifier.push(idStr);
-                        applyData[recordIdx][state.applyIndex] = idStr;
-                        recordIdx++;
-                    }
-                    identifier++;
-                }
-                state[applyType].checkStack = checkStack.concat(state.customerNumberIdentifier);
-                break;
-            }
-            case "changeToOne": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "1";
-                });
-                break;
-            }
-            case "changeToZero": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "0";
-                });
-                break;
-            }
-            case "changeUpdateFunction": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "mousikomisyo";
-                });
-                break;
-            }
-            case "changeUpdateUser": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "80563901";
-                });
-                break;
-            }
-            case "getIdentifierCustomerNumber": {
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.customerNumberIdentifier[i];
-                });
-                break;
-            }
-            case "identifyTimeStamp": {
-                const d = new Date();
-                const year = String(d.getFullYear());
-                const month = setCharPadding(String(d.getMonth() + 1), 2);
-                const date = setCharPadding(String(d.getDate()), 2);
-                const hours = setCharPadding(String(d.getHours()), 2);
-                const minutes = setCharPadding(String(d.getMinutes()), 2);
-                const seconds = setCharPadding(String(d.getSeconds()), 2);
-                const du = new DateUtil(year, month, date, hours, minutes, seconds);
-                const calcDate = du.calcDate({ seconds: idUpdIndex });
-                state.timeStampIdentifier = du.format.type2(calcDate);
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = concatString(state.timeStampIdentifier, setCharPadding(String(i + 1), 3));
-                });
-                break;
-            }
-            case "getIdentifierTimeStamp": {
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = concatString(state.timeStampIdentifier, setCharPadding(String(i + 1), 3));
-                });
-                break;
-            }
-            case "deleteExceptByAdProcedure": {
-                let i = applyData.length;
-                const adProcedureCodeStack = ["skei", "skwb", "skmd", "sksk", "sktg"];
-                while(i--) {
-                    const rowData = applyData[i][state.applyIndex];
-                    if(adProcedureCodeStack.indexOf(rowData) < 0) {
-                        applyData.splice(i, 1);
-                        state.dataKey.to[table].splice(i, 1);
-                    }
-                }
-                break;
-            }
-            case "setPolicyNumberHead": {
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.keys[i].slice(0, 1);
-                });
-                break;
-            }
-            case "slicePolicyNumber": {
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.keys[i].slice(1, state.keys[i].length - 1);
-                });
-                break;
-            }
-            case "identifyAccountNumber": {
-                state.accountNumberIdentifier = new Array();
-                let numberCollection = new Array();
-                let checkStack = new Array();
-                if(isVoid(state[applyType])) {
-                    const query = "SELECT S_KOUZANO FROM ST_HrkmKouzaKanri";
-                    const dataSet = db.executeSelect(query).dataSet;
-                    if(dataSet.count >= 1) {
-                        numberCollection = dataSet.data.map(function(row) { return toString(row[0]); });
-                    }
-                    state[applyType] = createObject("numberCollection", numberCollection);
-                    state[applyType].checkStack = new Array();
-                }
-                else {
-                    numberCollection = state[applyType].numberCollection;
-                    checkStack = state[applyType].checkStack;
-                }
-                let identifier = Math.floor(Math.random() * 999999) + 1000000;
-                let recordIdx = 0;
-                while(state.accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
-                    const idStr = toString(identifier);
-                    if(numberCollection.indexOf(idStr) < 0 && checkStack.indexOf(idStr) < 0) {
-                        state.accountNumberIdentifier.push(idStr);
-                        applyData[recordIdx][state.applyIndex] = idStr;
-                        recordIdx++;
-                    }
-                    identifier++;
-                }
-                state[applyType].checkStack = checkStack.concat(state.accountNumberIdentifier);
-                break;
-            }
-            case "identifyMyPageUserId": {
-                const d = new Date();
-                const year = String(d.getFullYear());
-                const month = setCharPadding(String(d.getMonth() + 1), 2);
-                const date = setCharPadding(String(d.getDate()), 2);
-                const hours = setCharPadding(String(d.getHours()), 2);
-                const minutes = setCharPadding(String(d.getMinutes()), 2);
-                const seconds = setCharPadding(String(d.getSeconds()), 2);
-                const du = new DateUtil(year, month, date, hours, minutes, seconds);
-                const calcDate = du.calcDate({ seconds: idUpdIndex });
-                const oDB = new DBUtils();
-                const exMyPageUserId = oDB.getColumnData(exd, defineSet.table.mosKihon, defineSet.column.myPageUserId);
-                state.myPageUserIdInfo = {
-                    isWeb: !isVoid(exMyPageUserId),
-                    identifier: du.format.type2(calcDate),
-                    policyNumberMap: new Object()
-                };
-                if(state.myPageUserIdInfo.isWeb) {
-                    const rowPnIndex = nameData.map(mapUpperCase).indexOf(upperCase(defineSet.column.policyNumber));
-                    applyData.forEach(function(record, i) {
-                        const rowPn = record[rowPnIndex];
-                        const id = concatString(state.myPageUserIdInfo.identifier, setCharPadding(String(i + 1), 3));
-                        state.myPageUserIdInfo.policyNumberMap[rowPn] = id;
-                        record[state.applyIndex] = id;
-                    });
-                }
-                break;
-            }
-            case "getIdentifierMyPageUserId": {
-                if(state.myPageUserIdInfo.isWeb) {
-                    applyData.forEach(function(record, i) {
-                        record[state.applyIndex] = concatString(state.myPageUserIdInfo.identifier, setCharPadding(String(i + 1), 3));
-                    });
-                }
-                break;
-            }
-            case "getIdentifierMyPageUserIdByPolicyNumber": {
-                if(state.myPageUserIdInfo.isWeb) {
-                    const rowPnIndex = nameData.map(mapUpperCase).indexOf(upperCase(defineSet.column.policyNumber));
-                    applyData.forEach(function(record, i) {
-                        const rowPn = record[rowPnIndex];
-                        record[state.applyIndex] = state.myPageUserIdInfo.policyNumberMap[rowPn];
-                    });
-                }
-                break;
-            }
-            case "setMyPageLoginId": {
-                applyData.forEach(function(record, i) {
-                    const pn = state.toList[i];
-                    record[state.applyIndex] = concatString("a", pn);
-                });
-                break;
-            }
-            case "setMyPageMail": {
-                applyData.forEach(function(record, i) {
-                    const pn = state.toList[i];
-                    record[state.applyIndex] = concatString("a", pn, "@direct.test.com");
-                });
-                break;
-            }
-        }
-        return null;
-    },
-    exportToExcelDataCopy: function() {
-        const _this = this;
-        const fileDefine = TYPES.file;
-        const dataCopyState = _this.state.dataCopy;
-        const extractMap = dataCopyState.extractMap;
-        const extractedData = dataCopyState.extractedData;
-        const insertData = dataCopyState.insertData;
-        const headerStyle = {
-            fill: {
-                patternType: "solid",
-                fgColor:{ rgb: "9E9E9E" }
-            },
-            font: {
-                bold: false
-            },
-            border: {
-                top: { style: "thin", tint: 1 },
-                left: { style: "thin", tint: 1 },
-                right: { style: "thin", tint: 1 },
-                bottom: { style: "thin", tint: 1 }
-            }
-        };
-        const bodyStyle = {
-            border: {
-                top: { style: "thin", tint: 1 },
-                left: { style: "thin", tint: 1 },
-                right: { style: "thin", tint: 1 },
-                bottom: { style: "thin", tint: 1 }
-            }
-        };
-        const getExportData = function(refObj, table, type) {
-            const o = cloneJS(refObj);
-            const cd = {
-                name: new Array(),
-                data: new Array(),
-                count: 0
-            };
-            const columnTypes = {
-                header: "header",
-                data: "data"
-            };
-            const setColumns = function(data, columnType, key, from) {
-                switch(columnType) {
-                    case columnTypes.header: {
-                        data.unshift("FROM");
-                        data.unshift("KEY");
-                        break;
-                    }
-                    case columnTypes.data: {
-                        data.unshift(from ? from : SIGN.none);
-                        data.unshift(key ? key : SIGN.none);
-                        break;
-                    }
-                }
-            };
-            switch(type) {
-                case "from": {
-                    Object.keys(o).forEach(function(fromKey, i) {
-                        const t = o[fromKey][table];
-                        if(i === 0) {
-                            cd.name = t.name;
-                            setColumns(cd.name, columnTypes.header);
-                        }
-                        t.data.forEach(function(record) {
-                            setColumns(record, columnTypes.data, fromKey);
-                        });
-                        cd.data = cd.data.concat(t.data);
-                        cd.count += t.count;
-                    });
-                    break;
-                }
-                case "to": {
-                    const toObj = o[table];
-                    Object.keys(toObj).forEach(function(toKey, i) {
-                        const t = toObj[toKey];
-                        const fromKey = extractMap[toKey];
-                        if(i === 0) {
-                            cd.name = t.name;
-                            setColumns(cd.name, columnTypes.header);
-                        }
-                        t.data.forEach(function(record) {
-                            setColumns(record, columnTypes.data, toKey, fromKey);
-                        });
-                        cd.data = cd.data.concat(t.data);
-                    });
-                    break;
-                }
-            }
-            return cd;
-        };
-        const setStyle = function(R, C, cell, count) {
-            if(R === 0 || R === count + 5 || ((C === 0 || C === 1) && cell.v)) {
-                cell.s = headerStyle;
-            }
-            else if(R <= count || R >= count + 5) {
-                cell.s = bodyStyle;
-            }
-        };
-        const wb = new Workbook();
-        Object.keys(insertData).forEach(function(table) {
-            const from = getExportData(extractedData, table, "from");
-            const to = getExportData(insertData, table, "to");
-            wb.SheetNames.push(table);
-            const a = new Array(from.name).concat(from.data);
-            const b = getIterator(4).map(function() { return [SIGN.none]; });
-            const c = new Array(to.name).concat(to.data);
-            const ws_data = a.concat(b).concat(c);
-            const ws = sheetFromArrayOfArrays(ws_data, setStyle, from.count);
-            wb.Sheets[table] = ws;
-        });
-        const wbout = XLSX.write(wb, { bookType: "xlsx", bookSST: true, type: "binary" });
-        const fileName = concatString("DataCopyCheck_", getFileStamp(), TYPES.file.extension.xlsx);
-        saveAsFile(s2ab(wbout), fileDefine.mime.OCTET_STREAM, fileName);
-        return null;
-    },
-    saveOptionDataCopy: function(dialogClose) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const dataCopyState = _this.state.dataCopy;
-        const extractTableList = _this.getExtractTableListDataCopy(dataCopyState.ref.extractGroupStack);
-        const $optionContainer = jqById(seId.optionContainerDataCopy);
-        const $commandLines = $optionContainer.find(concatString(".", seClass.commandLine));
-        const option = new Array();
-        let hasError = false;
-        const messageStack = new Array();
-        $commandLines.each(function(i, item) {
-            const $input = $(item).find("input");
-            const $textarea = $(item).find("textarea");
-            const messageIndex = concatString("[", i + 1, "]");
-            const table = _this.createInfoObject($input.val(), concatString(messageIndex, "Table"));
-            const script = _this.createInfoObject($textarea.val(), concatString(messageIndex, "Script"));
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const tableLayout = v.getLayout(v.initLayout(table.value, table.name), [vTypes.required, vTypes.notSpace]);
-            const scriptLayout = v.getLayout(v.initLayout(script.value, script.name), [vTypes.required]);
-            v.reset().appendList([tableLayout, scriptLayout]);
-            const result = v.exec();
-            if(result.error) {
-                messageStack.push(result.message);
-                hasError = true;
-            }
-            else if(find(table.value, option, ["table"], upperCase).isExist) {
-                messageStack.push(concatString(messageIndex, "Table has duplicates"));
-                hasError = true;
-            }
-            else if(!find(table.value, extractTableList, null, upperCase).isExist) {
-                messageStack.push(concatString(messageIndex, "Not exists table"));
-                hasError = true;
-            }
-            else if(!script.value.match(new RegExp("@", "g"))) {
-                messageStack.push(concatString(messageIndex, "Incorrect script"));
-                hasError = true;
-            }
-            option.push({ table: table.value, script: script.value });
-        });
-        if(hasError) {
-            new Notification().error().open(messageStack.join(SIGN.br));
-            return false;
-        }
-        if(!dialogClose) {
-            return { data: option };
-        }
-        const actionState = {
-            msg: new Array(),
-            backup: null
-        };
-        dataCopyState.insertData = cloneJS(dataCopyState.insertDataStatic);
-        if(option.length >= 1) {
-            actionState.backup = cloneJS(dataCopyState.insertData);
-            const convertScript = function(script) {
-                const scriptObj = new Object();
-                const sc = getExistArray(script.replace(new RegExp("\n@", "g"), "@").split("@")).map(function(item) { return item.split(SIGN.nl); });
-                sc.forEach(function(item) {
-                    const column = item.slice(0, 1)[0];
-                    const data = item.slice(1);
-                    scriptObj[column] = data;
-                });
-                return scriptObj;
-            };
-            option.forEach(function(line) {
-                const table = line.table;
-                const script = convertScript(line.script);
-                const tableData = getProperty(dataCopyState.insertData, table);
-                if(isVoid(tableData)) return;
-                const editData = {
-                    name: new Array(),
-                    data: new Array()
-                };
-                Object.keys(tableData).forEach(function(pn, i) {
-                    if(i === 0) {
-                        editData.name = editData.name.concat(tableData[pn].name);
-                    }
-                    editData.data = editData.data.concat(tableData[pn].data);
-                });
-                if(editData.data.length >= 1) {
-                    Object.keys(script).forEach(function(column) {
-                        const applyIndex = editData.name.map(mapUpperCase).indexOf(upperCase(column));
-                        if(applyIndex < 0) {
-                            actionState.msg.push(concatString("[", table, "]", column, " : Not exists column"));
-                            return;
-                        }
-                        getExistArray(script[column]).forEach(function(s, i) {
-                            if(!editData.data[i]) {
-                                actionState.msg.push(concatString("[", table, "]", column, " > ", s, " : Overflow data"));
-                                return;
-                            }
-                            else if(s === "$eq") return;
-                            editData.data[i][applyIndex] = lowerCase(s) === "$null" ? SIGN.none : s;
-                        });
-                    });
-                }
-            });
-            if(actionState.msg.length >= 1) {
-                dataCopyState.insertData = actionState.backup;
-                new Notification().error().open(actionState.msg.join(SIGN.br));
                 return false;
             }
         }
-        dataCopyState.option = option;
-        dialogClose();
-    },
-    insertDataCopy: function() {
-        const _this = this;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.dataCopy;
-        const transactionId = types.toolId.dataCopy;
-        const dataCopyState = _this.state.dataCopy;
-        const dbTypes = new DBUtils().getTypes();
-        dataCopyState.log = new Array();
-        const loading = new Loading();
-        loading.on().then(function() {
-            const insertData = dataCopyState.insertData;
-            const insertQuery = new Object();
-            const getQuery = function(table, columns, values) {
-                return concatString("INSERT INTO ", table, " (", columns, ") VALUES (", values, ")");
-            };
-            Object.keys(insertData).forEach(function(table) {
-                insertQuery[table] = new Array();
-                Object.keys(insertData[table]).forEach(function(toKey) {
-                    const name = insertData[table][toKey].name;
-                    const data = insertData[table][toKey].data;
-                    const columns = name.join(SIGN.cw);
-                    data.forEach(function(record) {
-                        const values = record.map(function(item) {
-                            const v = item || item == 0 ? item : "";
-                            return concatString(SIGN.sq, v, SIGN.sq);
-                        }).join(SIGN.cw);
-                        insertQuery[table].push(getQuery(table, columns, values));
-                    });
-                });
-            });
-            const onTransaction = _this.transaction(transactionId);
-            if(onTransaction.error) throw new Error(onTransaction.message);
-            const db = onTransaction.db;
-            let executeTable = SIGN.none;
-            try {
-                Object.keys(insertQuery).forEach(function(table) {
-                    executeTable = table;
-                    dataCopyState.log.push(concatString("-- <", table, ">"));
-                    insertQuery[table].forEach(function(query) {
-                        db.execute(query);
-                        _this.pushQueryLog(dataCopyState.log, query);
-                    });
-                });
-                _this.actionControllerDataCopy(phaseType.commit);
-            }
-            catch(e) {
-                const errorType = dbTypes.error;
-                let message = e.message;
-                if(message.indexOf(errorType.uniqueConstraint) >= 0) {
-                    message = concatString(SIGN.abs, executeTable, SIGN.abe, SIGN.br, message);
-                }
-                _this.destroy(transactionId, db);
-                throw new Error(message);
-            }
-            loading.off();
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    buildDeleteData: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const dddt = types.design.deleteData;
-        const deleteDataDesign = _this.design.deleteData;
-        const _event = _this.event;
-        const deleteDataEvent = _event.deleteData;
-        const eb = new ElementBuilder();
-        const $container = jqNode("div", { class: seClass.contentsContainer });
-        const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $deleteButton = jqNode("button", { class: eClass.buttonColorDeepOrange }).text(upperCase(captions.delete));
-        eb.listAppend($actionArea, [$deleteButton]);
-        $container.append($actionArea);
-        const dmr = deleteDataDesign.deleteModeRadio;
-        const dgc = deleteDataDesign.deleteGroupCheck;
-        const dopt = deleteDataDesign.optionCheck;
-        const getItemListObject = function(ds, type, optionClass) {
-            return {
-                label: ds.type[type].label,
-                attributes: {
-                    id: ds.type[type].id,
-                    name: ds.name,
-                    value: ds.type[type].value
-                },
-                isChecked: ds.type[type].isChecked,
-                optionClass: optionClass ? optionClass : SIGN.none
-            };
-        };
-        const deleteModeRadioItemList = [getItemListObject(dmr, dddt.deleteMode.include), getItemListObject(dmr, dddt.deleteMode.exclude)];
-        const $dmrCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $dmrItem = eb.createRadio(deleteModeRadioItemList).getItem();
-        const $dmrLabel = jqNode("label").css("line-height", "2.5").text(captions.deleteMode);
-        const $dmrMain = jqNode("div", { class: eClass.fullWidth }).append($dmrItem);
-        eb.listAppend($dmrCommandArea, [$dmrLabel, $dmrMain]);
-        const deleteGroupCheckItemList = [getItemListObject(dgc, dddt.deleteGroup.skei), getItemListObject(dgc, dddt.deleteGroup.kkanri), getItemListObject(dgc, dddt.deleteGroup.hksiharai)];
-        const $dgcCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $dgcItem = eb.createCheckbox(deleteGroupCheckItemList).getItem();
-        const $dgcLabel = jqNode("label").css("line-height", "2.5").text(captions.deleteGroup);
-        const $dgcMain = jqNode("div", { class: eClass.fullWidth }).append($dgcItem);
-        eb.listAppend($dgcCommandArea, [$dgcLabel, $dgcMain]);
-        const optionCheckItemList = [getItemListObject(dopt, dddt.option.backup)];
-        const $doptCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $doptItem = eb.createCheckbox(optionCheckItemList).getItem();
-        const $doptLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.option, 0));
-        const $doptMain = jqNode("div", { class: eClass.fullWidth }).append($doptItem);
-        eb.listAppend($doptCommandArea, [$doptLabel, $doptMain]);
-        eb.listAppend($container, [$dmrCommandArea, $dgcCommandArea, $doptCommandArea]);
-        const itemList = [
-            {
-                label: captions.policyNumber,
-                inputType: "textarea",
-                inputId: seId.policyNumber
-            }
-        ];
-        itemList.forEach(function(item) {
-            const $commandArea = jqNode("div", { class: seClass.commandArea });
-            const $label = jqNode("label").text(item.label);
-            const $input = jqNode(item.inputType, { id: item.inputId });
-            $commandArea.append($label).append($input);
-            $container.append($commandArea);
-            switch(item.inputId) {
-                case seId.policyNumber: {
-                    deleteDataEvent.element.pn = $input;
-                    break;
-                }
-            }
-        });
-        $deleteButton.click(function() {
-            _this.deleteData();
-        });
-        return $container;
-    },
-    actionControllerDeleteData: function(phase) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.deleteData;
-        const transactionId = types.toolId.deleteData;
-        const _event = _this.event;
-        const deleteDataEvent = _event.deleteData;
-        const $card = jqById(seId.deleteDataCard);
-        const $cardContents = $card.find(concatString(".", eClass.cardContents));
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
-        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
-        const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
-        const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
-        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
-        const propOption = {
-            disableList: new Array(),
-            readonlyList: new Array()
-        };
-        let itemList = new Array();
-        switch(phase) {
-            case phaseType.commit: {
-                itemList = [$commitButton, $logButton, $resetButton];
-                propOption.disableList = ["deleteMode", "deleteGroup", "option"];
-                propOption.readonlyList = ["pn"];
-                _this.setElementDisable(deleteDataEvent.element, propOption);
-                break;
-            }
-            case phaseType.complete: {
-                itemList = [$logButton, $resetButton];
-                break;
-            }
+    }
+};
+
+function createObject(key, value) {
+    const obj = new Object();
+    obj[key] = value;
+    return obj;
+};
+
+function createMultipleObject(setter) {
+    let flag = true;
+    const obj = new Object();
+    setter.some(function(item) {
+        const key = item[0];
+        const value = item[1];
+        if(isVoid(key)) {
+            flag = false;
+            return true;
         }
-        $actionArea.empty();
-        itemList.forEach(function(item) {
-            $actionArea.append(item);
-        });
-        $commitButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db, true);
-            _this.actionControllerDeleteData(phaseType.complete);
-            const message = "Data deleted successfully";
-            new Notification().complete().open(message);
-        });
-        $logButton.click(function() {
-            _this.downloadLog(transactionId);
-        });
-        $resetButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db);
-            _this.state.deleteData = new Object();
-            $cardContents.html(_this.buildDeleteData());
-        });
-        return null;
-    },
-    deleteData: function() {
-        const _this = this;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const dddt = types.design.deleteData;
-        const phaseType = types.phase.deleteData;
-        const _event = _this.event;
-        const deleteDataEvent = _event.deleteData;
-        const dataCopyExport = _this.export.dataCopy;
-        const deleteDataState = _this.state.deleteData;
-        const transactionId = types.toolId.deleteData;
-        const dbTypes = new DBUtils().getTypes();
-        deleteDataState.log = new Array();
-        const loading = new Loading();
-        loading.on().then(function() {
-            const dmrElement = deleteDataEvent.element;
-            const deleteMode = $(dmrElement.deleteModeChecked).val();
-            const isInclude = deleteMode === dddt.deleteMode.include;
-            const optionStack = new Array();
-            $(dmrElement.optionChecked).each(function() {
-                optionStack.push($(this).val());
-            });
-            const withBackup = optionStack.indexOf(dddt.option.backup) >= 0;
-            const policyNumber = _this.createInfoObject(dmrElement.pn.val(), captions.policyNumber);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const policyNumberLayout = v.getLayout(v.initLayout(policyNumber.value, policyNumber.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-            v.reset().append(policyNumberLayout);
-            const result = v.exec();
-            if(result.error) {
-                throw new Error(result.message);
-            }
-            const pn = policyNumber.value;
-            const pnList = getExistArray(pn.split(SIGN.nl));
-            const deleteGroupStack = new Array();
-            $(dmrElement.deleteGroupChecked).each(function() {
-                deleteGroupStack.push($(this).val());
-            });
-            if(deleteGroupStack.length <= 0) {
-                const egMsg = concatString(captions.deleteGroup, " is required");
-                throw new Error(egMsg);
-            }
-            const extractTableList = _this.getExtractTableListDataCopy(deleteGroupStack);
-            const edsd = dataCopyExport.defineSet.delete;
-            const priorityTableList = _this.getExtractTableListDataCopy(deleteGroupStack, edsd.priorityTableObject);
-            const priorityTableLowCase = priorityTableList.map(mapLowerCase);
-            const deleteTableList = priorityTableList.concat(extractTableList.filter(function(table) {
-                if(priorityTableLowCase.indexOf(lowerCase(table)) < 0) {
-                    return true;
-                }
-            }));
-            const selRegExp = new RegExp("SELECT(.*?)FROM ");
-            const delQueryHead = "DELETE FROM ";
-            const onTransaction = _this.transaction(transactionId);
-            if(onTransaction.error) throw new Error(onTransaction.message);
-            const db = onTransaction.db;
-            let executeTable = SIGN.none;
-            const backupData = new Object();
-            try {
-                let executeFlag = false;
-                deleteTableList.forEach(function(table) {
-                    backupData[table] = new Object();
-                    const selQuery = _this.getDataCopySelectQuery(table, pnList, true, isInclude);
-                    const dataSet = db.executeSelect(selQuery).dataSet;
-                    if(dataSet.count >= 1) {
-                        executeFlag = true;
-                        executeTable = table;
-                        const delQuery = selQuery.replace(selRegExp, delQueryHead);
-                        db.execute(delQuery);
-                        _this.pushQueryLog(deleteDataState.log, delQuery);
-                        backupData[table] = dataSet;
-                    }
-                });
-                if(!executeFlag) {
-                    throw new Error("Nothing delete data");
-                }
-                if(withBackup) {
-                    const fileName = concatString("DELETE_BK_", getFileStamp(), TYPES.file.extension.txt);
-                    const p = getOutputPath(fileName);
-                    new FileSystem(p.modulePath).createFolder();
-                    new FileSystem(p.filePath).createFile(false, true).write(JSON.stringify(backupData));
-                }
-                _this.actionControllerDeleteData(phaseType.commit);
-                loading.off();
-            }
-            catch(e) {
-                const errorType = dbTypes.error;
-                let message = e.message;
-                if(message.indexOf(errorType.uniqueConstraint) >= 0) {
-                    message = concatString(SIGN.abs, executeTable, SIGN.abe, SIGN.br, message);
-                }
-                _this.destroy(transactionId, db);
-                throw new Error(message);
-            }
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    buildCreateUser: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const _event = _this.event;
-        const createUserEvent = _event.createUser;
-        const createUserState = _this.state.createUser;
-        const $container = jqNode("div", { class: seClass.contentsContainer });
-        const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $createButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.create));
-        const $deleteButton = jqNode("button", { class: eClass.buttonColorDeepOrange }).text(upperCase(captions.delete));
-        [$createButton, $deleteButton].forEach(function(item) { $actionArea.append(item); });
-        $container.append($actionArea);
-        const itemList = [
-            {
-                label: captions.userCode,
-                inputType: "input",
-                inputId: seId.userCode
-            },
-            {
-                label: captions.userName,
-                inputType: "input",
-                inputId: seId.userName
-            }
-        ];
-        itemList.forEach(function(item) {
-            const $commandArea = jqNode("div", { class: seClass.commandArea });
-            const $label = jqNode("label").text(item.label);
-            const $input = jqNode(item.inputType, { id: item.inputId });
-            $commandArea.append($label).append($input);
-            $container.append($commandArea);
-            switch(item.inputId) {
-                case seId.userCode: {
-                    createUserEvent.element.userCode = $input;
-                    break;
-                }
-                case seId.userName: {
-                    createUserEvent.element.userName = $input;
-                    break;
-                }
-            }
-        });
-        $createButton.click(function() {
-            createUserState.actionType = types.action.create;
-            _this.createUser();
-        });
-        $deleteButton.click(function() {
-            createUserState.actionType = types.action.delete;
-            _this.createUser();
-        });
-        createUserState.actionType = null;
-        return $container;
-    },
-    actionControllerCreateUser: function(phase) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.createUser;
-        const transactionId = types.toolId.createUser;
-        const _event = _this.event;
-        const createUserEvent = _event.createUser;
-        const $card = jqById(seId.createUserCard);
-        const $cardContents = $card.find(concatString(".", eClass.cardContents));
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
-        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
-        const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
-        const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
-        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
-        const propOption = {
-            disableList: new Array(),
-            readonlyList: new Array()
-        };
-        let itemList = new Array();
-        switch(phase) {
-            case phaseType.commit: {
-                itemList = [$commitButton, $logButton, $resetButton];
-                propOption.readonlyList = ["userCode", "userName"];
-                _this.setElementDisable(createUserEvent.element, propOption);
-                break;
-            }
-            case phaseType.complete: {
-                itemList = [$logButton, $resetButton];
-                break;
-            }
-        }
-        $actionArea.empty();
-        itemList.forEach(function(item) {
-            $actionArea.append(item);
-        });
-        $commitButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db, true);
-            _this.actionControllerCreateUser(phaseType.complete);
-            const message = "Create user successfully";
-            new Notification().complete().open(message);
-        });
-        $logButton.click(function() {
-            _this.downloadLog(transactionId);
-        });
-        $resetButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db);
-            _this.state.createUser = new Object();
-            $cardContents.html(_this.buildCreateUser());
-        });
-        return null;
-    },
-    createUser: function() {
-        const _this = this;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.createUser;
-        const transactionId = types.toolId.createUser;
-        const _event = _this.event;
-        const createUserEvent = _event.createUser;
-        const createUserExport = _this.export.createUser;
-        const createUserState = _this.state.createUser;
-        createUserState.log = new Array();
-        const loading = new Loading();
-        loading.on().then(function() {
-            const createUserElement = createUserEvent.element;
-            const userCode = _this.createInfoObject(createUserElement.userCode.val(), captions.userCode);
-            const userName = _this.createInfoObject(createUserElement.userName.val(), captions.userName);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const userCodeLayout = v.getLayout(v.initLayout(userCode.value, userCode.name, v.getSizeLayout(6, 6)), [vTypes.required, vTypes.notSpace, vTypes.numeric, vTypes.size]);
-            const userNameLayout = v.getLayout(v.initLayout(userName.value, userName.name), [vTypes.required, vTypes.notSpace]);
-            const layoutList = createUserState.actionType === types.action.delete ? [userCodeLayout] : [userCodeLayout, userNameLayout];
-            v.reset().appendList(layoutList);
-            const result = v.exec();
-            if(result.error) {
-                new Notification().error().open(result.message);
-                loading.off();
-                return false;
-            }
-            const info = _this.state.info;
-            const uc = userCode.value;
-            const un = userName.value;
-            const tableList = createUserExport.tableList;
-            const tableCode = createUserExport.tableCode;
-            const keySet = createUserExport.keySet;
-            const querySet = createUserExport.querySet;
-            const rules = createUserExport.rules;
-            const resultFlag = { insert: true, delete: true };
-            const getInsertQuery = function(table) {
-                const insertQueryStack = new Array();
-                const qs = querySet[table];
-                switch(tableCode[table]) {
-                    case "1": {
-                        const base = rules.base[table];
-                        const spec = rules.spec;
-                        let specPw = SIGN.none;
-                        if(info.sid.value === spec.specPassword.sid) {
-                            const db = new DBUtils().connect(info);
-                            const dataSet = db.executeSelect(spec.specPassword.query).onEnd(true).dataSet;
-                            specPw = db.getColumnData(dataSet, spec.specPassword.table, spec.specPassword.column);
-                        }
-                        const iterator = qs[base].length;
-                        for(let i = 0; i < iterator; i++) {
-                            const columnStack = new Array();
-                            const valueStack = new Array();
-                            Object.keys(qs).forEach(function(column) {
-                                let value = qs[column];
-                                if(typeIs(qs[column]).array) {
-                                    value = qs[column][i];
-                                }
-                                else if(typeIs(qs[column]).object) {
-                                    const prop = getProperty(qs[column], info.sid.value);
-                                    if(prop) {
-                                        if(info.sid.value === spec.specPassword.sid) value = specPw;
-                                        else value = prop;
-                                    }
-                                    else {
-                                        value = "1";
-                                    }
-                                }
-                                if(rules.combine.code.indexOf(column) >= 0) {
-                                    value = concatString(uc, value);
-                                }
-                                else if(rules.combine.name.indexOf(column) >= 0) {
-                                    value = concatString(un, "@", value);
-                                }
-                                columnStack.push(column);
-                                valueStack.push(concatString(SIGN.sq, value, SIGN.sq));
-                            });
-                            const n = concatString("(", columnStack.join(SIGN.cw), ")");
-                            const v = concatString("(", valueStack.join(SIGN.cw), ")");
-                            const query = concatString("INSERT INTO ", table, SIGN.ws, n, " VALUES ", v);
-                            insertQueryStack.push(query);
-                        }
-                        break;
-                    }
-                    case "2": {
-                        const iterator = 1;
-                        for(let i = 0; i < iterator; i++) {
-                            const columnStack = new Array();
-                            const valueStack = new Array();
-                            Object.keys(qs).forEach(function(column) {
-                                let value = typeIs(qs[column]).array ? qs[column][i] : qs[column];
-                                if(rules.combine.code.indexOf(column) >= 0) {
-                                    value = concatString(uc, value);
-                                }
-                                else if(rules.combine.name.indexOf(column) >= 0) {
-                                    value = concatString(un, "@", value);
-                                }
-                                columnStack.push(column);
-                                valueStack.push(concatString(SIGN.sq, value, SIGN.sq));
-                            });
-                            const n = concatString("(", columnStack.join(SIGN.cw), ")");
-                            const v = concatString("(", valueStack.join(SIGN.cw), ")");
-                            const query = concatString("INSERT INTO ", table, SIGN.ws, n, " VALUES ", v);
-                            insertQueryStack.push(query);
-                        }
-                        break;
-                    }
-                    case "3": {
-                        const base = rules.base[table];
-                        const getIterator = function(idx) {
-                            return qs[base[Object.keys(base)[idx]]];
-                        };
-                        getIterator(0).forEach(function(a, ai) {
-                            getIterator(1).forEach(function(b, bi) {
-                                getIterator(2).forEach(function(c, ci) {
-                                    const columnStack = new Array();
-                                    const valueStack = new Array();
-                                    Object.keys(qs).forEach(function(column) {
-                                        columnStack.push(column);
-                                    });
-                                    valueStack.push(concatString(SIGN.sq, concatString(uc, a), SIGN.sq));
-                                    valueStack.push(concatString(SIGN.sq, b, SIGN.sq));
-                                    valueStack.push(concatString(SIGN.sq, c, SIGN.sq));
-                                    const n = concatString("(", columnStack.join(SIGN.cw), ")");
-                                    const v = concatString("(", valueStack.join(SIGN.cw), ")");
-                                    const query = concatString("INSERT INTO ", table, SIGN.ws, n, " VALUES ", v);
-                                    insertQueryStack.push(query);
-                                });
-                            });
-                        });
-                        break;
-                    }
-                }
-                return insertQueryStack;
-            };
-            const getDeleteQuery = function(table) {
-                const ks = keySet[table];
-                const code = concatString(SIGN.sq, uc, "%", SIGN.sq);
-                const condition = concatString(ks, " LIKE ", code);
-                const deleteQuery = concatString("DELETE FROM ", table, " WHERE ", condition);
-                return deleteQuery;
-            };
-            const getSelectQuery = function(table) {
-                const ks = keySet[table];
-                const code = concatString(SIGN.sq, uc, "%", SIGN.sq);
-                const condition = concatString(ks, " LIKE ", code);
-                const selectQuery = concatString("SELECT * FROM ", table, " WHERE ", condition);
-                return selectQuery;
-            };
-            const onTransaction = _this.transaction(transactionId);
-            if(onTransaction.error) throw new Error(onTransaction.message);
-            const db = onTransaction.db;
-            try {
-                tableList.forEach(function(table) {
-                    createUserState.log.push(concatString("[[", table, "]]"));
-                    switch(createUserState.actionType) {
-                        case types.action.create: {
-                            const insertQueryList = getInsertQuery(table);
-                            insertQueryList.forEach(function(query) {
-                                db.execute(query);
-                                _this.pushQueryLog(createUserState.log, query);
-                            });
-                            break;
-                        }
-                        case types.action.delete: {
-                            if(!resultFlag.delete) return;
-                            const selectQuery = getSelectQuery(table);
-                            const selectData = db.executeSelect(selectQuery).dataSet;
-                            if(selectData.count <= 0) {
-                                resultFlag.delete = false;
-                                return;
-                            }
-                            const query = getDeleteQuery(table);
-                            db.execute(query);
-                            _this.pushQueryLog(createUserState.log, query);
-                            break;
-                        }
-                    }
-                });
-                if(!resultFlag.delete) throw new Error("Not exists user");
-                _this.actionControllerCreateUser(phaseType.commit);
-            }
-            catch(e) {
-                _this.destroy(transactionId, db);
-                throw new Error(e.message);
-            }
-            loading.off();
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    buildLincErrorResolution: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const _event = _this.event;
-        const lerEvent = _event.lincErrorResolution;
-        const $container = jqNode("div", { class: seClass.contentsContainer });
-        const $actionArea = jqNode("div", { class: seClass.actionArea });
-        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
-        [$execButton].forEach(function(item) { $actionArea.append(item); });
-        $container.append($actionArea);
-        const itemList = [
-            {
-                label: captions.policyNumber,
-                inputType: "textarea",
-                inputId: seId.lincPolicyNumber
-            }
-        ];
-        itemList.forEach(function(item) {
-            const $commandArea = jqNode("div", { class: seClass.commandArea });
-            const $label = jqNode("label").text(item.label);
-            const $input = jqNode(item.inputType, { id: item.inputId });
-            $commandArea.append($label).append($input);
-            $container.append($commandArea);
-            switch(item.inputId) {
-                case seId.lincPolicyNumber: {
-                    lerEvent.element.pn = $input;
-                    break;
-                }
-            }
-        });
-        $execButton.click(function() {
-            _this.solveLincError();
-        });
-        return $container;
-    },
-    actionControllerLincErrorResolution: function(phase) {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const seClass = _this.Define.ELEMENTS.class;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.lincErrorResolution;
-        const transactionId = types.toolId.lincErrorResolution;
-        const _event = _this.event;
-        const lerEvent = _event.lincErrorResolution;
-        const $card = jqById(seId.lincErrorResolutionCard);
-        const $cardContents = $card.find(concatString(".", eClass.cardContents));
-        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
-        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
-        const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
-        const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
-        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
-        const propOption = {
-            disableList: new Array(),
-            readonlyList: new Array()
-        };
-        let itemList = new Array();
-        switch(phase) {
-            case phaseType.commit: {
-                itemList = [$commitButton, $logButton, $resetButton];
-                propOption.readonlyList = ["pn"];
-                _this.setElementDisable(lerEvent.element, propOption);
-                break;
-            }
-            case phaseType.complete: {
-                itemList = [$logButton, $resetButton];
-                break;
-            }
-        }
-        $actionArea.empty();
-        itemList.forEach(function(item) {
-            $actionArea.append(item);
-        });
-        $commitButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db, true);
-            _this.actionControllerLincErrorResolution(phaseType.complete);
-            const message = "Linc error solved successfully";
-            new Notification().complete().open(message);
-        });
-        $logButton.click(function() {
-            _this.downloadLog(transactionId);
-        });
-        $resetButton.click(function() {
-            const db = _this.state.lock[transactionId];
-            _this.destroy(transactionId, db);
-            _this.state.lincErrorResolution = new Object();
-            $cardContents.html(_this.buildLincErrorResolution());
-        });
-        return null;
-    },
-    solveLincError: function() {
-        const _this = this;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const _event = _this.event;
-        const lerEvent = _event.lincErrorResolution;
-        const phaseType = types.phase.lincErrorResolution;
-        const transactionId = types.toolId.lincErrorResolution;
-        const lincErrorExport = _this.export.lincErrorResolution;
-        const lincErrorState = _this.state.lincErrorResolution;
-        lincErrorState.log = new Array();
-        const loading = new Loading();
-        loading.on().then(function() {
-            const lerElement = lerEvent.element;
-            const policyNumber = _this.createInfoObject(lerElement.pn.val(), captions.policyNumber);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const policyNumberLayout = v.getLayout(v.initLayout(policyNumber.value, policyNumber.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-            v.reset().append(policyNumberLayout);
-            const result = v.exec();
-            if(result.error) {
-                throw new Error(result.message);
-            }
-            const pn = policyNumber.value;
-            const pnList = getExistArray(pn.split(SIGN.nl));
-            const onTransaction = _this.transaction(transactionId);
-            if(onTransaction.error) throw new Error(onTransaction.message);
-            const db = onTransaction.db;
-            try {
-                pnList.forEach(function(p) {
-                    lincErrorState.log.push(concatString("-- <", p, ">"));
-                    const mapping = { key: concatString(SIGN.sq, p, SIGN.sq) };
-                    lincErrorExport.queryList.forEach(function(query) {
-                        const bindedQuery = bindQuery(query, mapping);
-                        db.execute(bindedQuery);
-                        _this.pushQueryLog(lincErrorState.log, bindedQuery);
-                    });
-                });
-                _this.actionControllerLincErrorResolution(phaseType.commit);
-            }
-            catch(e) {
-                _this.destroy(transactionId, db);
-                throw new Error(e.message);
-            }
-            loading.off();
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
+        obj[key] = value;
+    });
+    return flag ? obj : null;
+};
+
+function accessObject(obj, keys) {
+    try {
+        return keys.reduce(function(prev, curr) {
+            return prev[curr];
+        }, obj);
+    }
+    catch(e) {
         return null;
     }
 };
 
-const DBUtils = function() {
-    this.Define = {
-        ADODB: {
-            connection: "ADODB.Connection",
-            recordset: "ADODB.Recordset",
-            command: "ADODB.Command"
-        },
-        OLEDB: {
-            provider: "Provider=OraOLEDB.Oracle;",
-            dataSource: "Data Source=",
-            uid: "User ID=",
-            pwd: "Password="
-        },
-        DIRECT: {
-            provider: "Provider=OraOLEDB.Oracle;",
-            cid: "CID=GTU_APP",
-            protocol: "PROTOCOL=",
-            host: "HOST=",
-            port: "PORT=",
-            sid: "SID=",
-            server: "SERVER=",
-            uid: "User Id=",
-            pwd: "Password="
-        },
-        DEFAULT_SET: {
-            protocol: "TCP",
-            host: "192.168.40.206",
-            port: "1521",
-            server: "DEDICATED"
-        },
-        TYPES: {
-            connect: {
-                oledb: "oledb",
-                direct: "direct"
-            },
-            actionType: {
-                query: "q",
-                noneQuery: "nq"
-            },
-            command: {
-                adCmdUnspecified: -1,
-                adCmdText: 1,
-                adCmdTable: 2,
-                adCmdStoredProc: 4,
-                adCmdFile: 256,
-                adCmdTableDirect: 512,
-                adVarWChar: 202,
-                adParamInput: 1,
-            },
-            error: {
-                uniqueConstraint: "ORA-00001"
-            }
-        }
-    };
-    this.driver = null;
-    this.command = null;
-    this.type = null;
-    this.dataSet = null;
+function accessObjectProperty(obj, keys) {
+    try {
+        return keys.reduce(function(prev, curr) {
+            return getProperty(prev, curr);
+        }, obj);
+    }
+    catch(e) {
+        return null;
+    }
 };
-DBUtils.prototype = {
-    getTypes: function() {
-        return this.Define.TYPES;
-    },
-    createConnectString: function(sid, uid, pwd, type) {
-        const OLEDB = this.Define.OLEDB;
-        const DIRECT = this.Define.DIRECT;
-        const DEFAULT_SET = this.Define.DEFAULT_SET;
-        const types = this.Define.TYPES;
-        const connectType = types.connect;
-        const paramType = type ? type : connectType.oledb;
-        const getConnectString = function(name, value) {
-            return name + value + SIGN.sc;
-        };
-        const getDataSourceString = function(name, value) {
-            return SIGN.bs + name + value + SIGN.be;
-        };
-        let str = "";
-        switch(paramType) {
-            case connectType.oledb: {
-                str += OLEDB.provider;
-                str += getConnectString(OLEDB.dataSource, sid);
-                str += getConnectString(OLEDB.uid, uid);
-                str += getConnectString(OLEDB.pwd, pwd);
-                break;
-            }
-            case connectType.direct: {
-                str += DIRECT.provider;
-                str += "Data Source=(";
-                str +=  "DESCRIPTION=";
-                str +=   "(CID=GTU_APP)";
-                str +=   "(ADDRESS_LIST=(ADDRESS="
-                str +=    getDataSourceString(DIRECT.protocol, DEFAULT_SET.protocol);
-                str +=    getDataSourceString(DIRECT.host, DEFAULT_SET.host);
-                str +=    getDataSourceString(DIRECT.port, DEFAULT_SET.port);
-                str +=   "))"
-                str +=   "(CONNECT_DATA=";
-                str +=    getDataSourceString(DIRECT.sid, sid);
-                str +=    getDataSourceString(DIRECT.server, DEFAULT_SET.server);
-                str +=   ")";
-                str += ");";
-                str += getConnectString(DIRECT.uid, uid);
-                str += getConnectString(DIRECT.pwd, pwd);
-                break;
-            }
+
+function setObject(obj, keys, value) {
+    return keys.reduce(function(prev, curr, i, a) {
+        if(a.length === i + 1) return prev[curr] = value;
+        if(isVoid(prev[curr])) return prev[curr] = new Object();
+        return prev[curr];
+    }, obj);
+};
+
+function mergeObject(objA, objB) {
+    try {
+        const imfoA = Immutable.fromJS(objA);
+        const imfoB = Immutable.fromJS(objB);
+        const objMap = imfoA.merge(imfoB);
+        return objMap.toJS();
+    }
+    catch(e) {
+        return new Object();
+    }
+};
+
+function getProperty(obj, key) {
+    let accessKey = null;
+    Object.keys(obj).some(function(k) {
+        if(upperCase(k) === upperCase(key)) {
+            accessKey = k;
+            return true;
         }
-        return str;
-    },
-    connect: function(info) {
-        const ADODB = this.Define.ADODB;
-        const types = this.Define.TYPES;
-        const connectString = this.createConnectString(info.sid.value, info.uid.value, info.pwd.value);
-        this.driver = new ActiveXObject(ADODB.connection);
-        this.driver.Open(connectString);
-        this.type = types.actionType.query;
+    });
+    return obj[accessKey];
+};
+
+function getObjectMaxOrder(o, orderKey) {
+    try {
+        const oKey = orderKey ? orderKey : "order";
+        const result = Object.keys(o).map(function(key) { return o[key] }).reduce(function(prev, curr) {
+            return prev[oKey] >= curr[oKey] ? prev : curr;
+        });
+        return result[oKey];
+    }
+    catch(e) {
+        return -1;
+    }
+};
+
+function getObjectOrderList(o, orderKey) {
+    const oKey = orderKey ? orderKey : "order";
+    const orderList = Object.keys(o).sort(function(a, b) {
+        const ao = o[a][oKey];
+        const bo = o[b][oKey];
+        if(ao < bo) return -1;
+        else if(ao > bo) return 1;
+        return 0;
+    });
+    return orderList;
+};
+
+function sortObjectByOrder(o, orderKey) {
+    const newObject = new Object();
+    const orderList = getObjectOrderList(o, orderKey);
+    orderList.forEach(function(key) {
+        newObject[key] = o[key];
+    });
+    return newObject;
+};
+
+function removeNullObject(obj) {
+    if(!typeIs(obj).object) return false;
+    Object.keys(obj).forEach(function(key) {
+        if(isVoid(obj[key])) delete obj[key];
+        else removeNullObject(obj[key]);
+    });
+};
+
+function getExistArray(list) {
+    return list.filter(function(item) { return item; });
+};
+
+function find(value, array, keys, matchFunc) {
+    const match = function(a, b) {
+        if(matchFunc && typeIs(matchFunc).function) {
+            return matchFunc(a) === matchFunc(b);
+        }
+        return a === b;
+    };
+    const data = array.filter(function(item) {
+        if(!isVoid(keys)) {
+            return match(accessObject(item, keys), value);
+        }
+        return match(item, value);
+    });
+    return {
+        isExist: data.length >= 1,
+        data: data
+    };
+};
+
+function getSelection(e) {
+    const noneObj = {
+        start: e.value.length,
+        end: e.value.length,
+        length: 0,
+        text: SIGN.none
+    };
+    if("selectionStart" in e) {
+        const l = e.selectionEnd - e.selectionStart;
+        return {
+            start: e.selectionStart,
+            end: e.selectionEnd,
+            length: l,
+            text: e.value.substr(e.selectionStart, l)
+        };
+    }
+    else if(document.selection) {
+        e.focus();
+        const r = document.selection.createRange();
+        const tr = e.createTextRange();
+        const tr2 = tr.duplicate();
+        tr2.moveToBookmark(r.getBookmark());
+        tr.setEndPoint("EndToStart", tr2);
+        if (r == null || tr == null) return noneObj;
+        const text_part = r.text.replace(/[\r\n]/g, ".");
+        const text_whole = e.value.replace(/[\r\n]/g, ".");
+        const the_start = text_whole.indexOf(text_part, tr.text.length);
+        return {
+            start: the_start,
+            end: the_start + text_part.length,
+            length: text_part.length,
+            text: r.text
+        };
+    }
+    return noneObj;
+};
+function getSelectionById(id) {
+    const e = document.getElementById(id);
+    return getSelection(e);
+};
+function getSelectionByClass(className) {
+    const e = document.getElementsByClassName(className)[0];
+    return getSelection(e);
+};
+
+function getIterator(size) {
+    return Array.apply(null, new Array(size));
+};
+
+function createMenuItem(itemList, icon, text, func) {
+    const $item = jqNode("li", { class: eClass.menuItem });
+    const $icon = jqNode("span", { class: eClass.menuItemIcon }).append(jqNode("i", { class: icon }));
+    const $text = jqNode("span", { class: eClass.menuItemText }).text(upperCase(text, 0));
+    $item.click(function() {
+        if(typeIs(func).function) {
+            func();
+        }
+    });
+    $item.append($icon).append($text);
+    itemList.push($item);
+};
+
+function createMenuInfo(itemList, info) {
+    if(typeIs(info).object && Object.keys(info).length >= 1) {
+        const $devider = jqNode("li", { class: classes(eClass.menuItem, eClass.menuItemDevider) });
+        $devider.append(jqNode("span").append(jqNode("hr")));
+        itemList.push($devider);
+        Object.keys(info).forEach(function(key) {
+            const obj = info[key];
+            const $item = jqNode("li", { class: classes(eClass.menuItem, eClass.menuItemInfo) });
+            const $text = jqNode("span").text(concatString(obj.name, " : ", obj.value));
+            $item.append($text);
+            itemList.push($item);
+        });
+    }
+};
+
+function copyToClipboard(data) {
+    const result = {
+        error: false,
+        message: SIGN.none
+    };
+    try {
+        window.clipboardData.setData('Text', data);
+        result.error = false;
+    }
+    catch(e) {
+        result.error = true;
+        result.message = e.message;
+    }
+    return result;
+};
+
+function buildCard(cardInfo) {
+    const $card = jqNode("div", { id: cardInfo.id, class: eClass.card });
+    const $cardTitle = jqNode("div", { class: eClass.cardTitle });
+    const $titleIcon = jqNode("span", { class: eClass.cardTitleIcon }).append(jqNode("i", { class: eIcon.wrench }));
+    const $titleText = jqNode("span", { class: eClass.cardTitleText }).text(cardInfo.title);
+    $cardTitle.append($titleIcon).append($titleText);
+    const $cardContentsContainer = jqNode("div", { class: eClass.cardContentsContainer });
+    const $cardContents = jqNode("div", { class: eClass.cardContents }).html(cardInfo.contents);
+    const $cardActions = jqNode("div", { class: eClass.cardActions });
+    const $openIcon = jqNode("i", { class: eIcon.chevronCircleDown });
+    $openIcon.click(function() {
+        const isOpenned = $card.hasClass(eClass.cardContentsOpenned);
+        if(isOpenned) {
+            $card.removeClass(eClass.cardContentsOpenned);
+        }
+        else {
+            $card.addClass(eClass.cardContentsOpenned);
+        }
+    });
+    $cardContentsContainer.append($cardContents);
+    $cardActions.append($openIcon);
+    $card.append($cardTitle).append($cardContentsContainer).append($cardActions);
+    return $card;
+};
+
+function getDialogHeader(type) {
+    let caption, titleClass, icon;
+    switch(type) {
+        case TYPES.dialog.complete: {
+            caption = upperCase(CAPTIONS.complete, 0);
+            titleClass = classes(eClass.dialogIconTitleContainer, eClass.completeColor);
+            icon = eIcon.checkCircle;
+            break;
+        }
+        case TYPES.dialog.error: {
+            caption = upperCase(CAPTIONS.error, 0);
+            titleClass = classes(eClass.dialogIconTitleContainer, eClass.errorColor);
+            icon = eIcon.timesCircle;
+            break;
+        }
+        case TYPES.dialog.warning: {
+            caption = upperCase(CAPTIONS.warning, 0);
+            titleClass = classes(eClass.dialogIconTitleContainer, eClass.warningColor);
+            icon = eIcon.exclamationTriangle;
+            break;
+        }
+    }
+    const $container = jqNode("div", { class: titleClass });
+    const $icon = jqNode("span", { class: eClass.dialogTitleIcon }).append(jqNode("i", { class: icon }));
+    const $titleText = jqNode("span", { class: eClass.dialogTitleText }).text(caption);
+    $container.append($icon).append($titleText);
+    return $container;
+};
+
+const Notification = function () {
+    this.dialogContainer = jqById(eId.notificationContainer);
+    this.dialog = null;
+    this.type = null;
+    this.okButton = null;
+    this.callback = null;
+};
+Notification.prototype = {
+    setContents: function(title, contents) {
+        const _this = this;
+        const isWarningType = _this.type === TYPES.dialog.warning;
+        const $dialog = jqNode("div", { id: eId.notification, class: eClass.dialog });
+        const $title = jqNode("div", { class: eClass.dialogHeader });
+        const $contents = jqNode("div", { class: eClass.dialogContents });
+        const $actions = jqNode("div", { class: eClass.dialogActions });
+        const actionStack = new Array();
+        const $okButton = jqNode("button", { id: eId.notificationOk, class: eClass.dialogButton }).text(upperCase(CAPTIONS.ok));
+        const close = function() { _this.close(); };
+        $okButton.click(function() {
+            if(isWarningType) {
+                _this.callback(close);
+            }
+            else {
+                _this.close();
+            }
+        });
+        actionStack.push($okButton);
+        if(isWarningType) {
+            const $cancelButton = jqNode("button", { id: eId.dialogClose, class: eClass.dialogButton }).text(upperCase(CAPTIONS.cancel));
+            $cancelButton.click(function() {
+                _this.close();
+            });
+            actionStack.push($cancelButton);
+        }
+        const eb = new ElementBuilder();
+        eb.listAppend($actions, actionStack);
+        $title.html(title);
+        $contents.html(contents);
+        [$title, $contents, $actions].forEach(function(item) {
+            $dialog.append(item);
+        });
+        $contents.css({ "max-height": "600px" });
+        this.dialog = $dialog;
+        this.okButton = $okButton;
         return this;
     },
-    connectBegin: function(info) {
-        const types = this.Define.TYPES;
-        this.connect(info);
-        this.type = types.actionType.noneQuery;
-        this.driver.BeginTrans();
+    complete: function() {
+        this.type = TYPES.dialog.complete;
         return this;
     },
-    initCommand: function(query) {
-        const ADODB = this.Define.ADODB;
-        const types = this.Define.TYPES;
-        const commandType = types.command;
-        const command = new ActiveXObject(ADODB.command);
-        command.ActiveConnection = this.driver;
-        command.CommandType = commandType.adCmdText;
-        command.Prepared = true;
-        command.CommandText = query;
-        this.command = command;
-        return command;
+    error: function() {
+        this.type = TYPES.dialog.error;
+        return this;
     },
-    execute: function(query) {
-        const command = this.initCommand(query);
-        command.Execute();
-        this.dataSet = null;
+    warning: function(callback) {
+        this.type = TYPES.dialog.warning;
+        this.callback = callback;
+        return this;
+    },
+    open: function (message) {
+        const _this = this;
+        _this.setContents(getDialogHeader(_this.type), message);
+        if (!_this.dialog) return null;
+        _this.dialogContainer.addClass(eClass.mostTop);
+        _this.dialogContainer.removeClass(eClass.hide);
+        _this.dialogContainer.append(_this.dialog);
+        _this.okButton.focus();
+        return this;
+    },
+    close: function () {
+        const _this = this;
+        if (_this.dialogContainer) {
+            _this.dialogContainer.removeClass(eClass.mostTop);
+            _this.dialogContainer.addClass(eClass.hide);
+            _this.dialogContainer.empty();
+        }
         return null;
     },
-    executeSelect: function(query) {
-        const command = this.initCommand(query);
-        const recordSet = command.Execute();
-        this.dataSet = this.getData(recordSet);
+    exit: function (consoleMsg) {
+        throw new Error(consoleMsg);
+    }
+};
+
+const Dialog = function () {
+    this.dialogContainer = jqById(eId.dialogContainer);
+    this.dialog = null;
+    this.contents = null;
+    this.okButton = null;
+    this.actions = null;
+};
+Dialog.prototype = {
+    setContents: function (title, contents, option) {
+        const _this = this;
+        const $dialog = jqNode("div", { id: eId.dialog, class: eClass.dialog });
+        const $title = jqNode("div", { class: eClass.dialogHeader });
+        const $contents = jqNode("div", { class: eClass.dialogContents });
+        const $actions = jqNode("div", { class: eClass.dialogActions });
+        const $titleContainer = jqNode("div", { class: eClass.dialogIconTitleContainer });
+        const $titleText = jqNode("span", { class: eClass.dialogTitleText }).text(title);
+        $titleContainer.append($titleText);
+        const $okButton = jqNode("button", { id: eId.dialogOk, class: eClass.dialogButton }).text(upperCase(CAPTIONS.ok));
+        const $cancelButton = jqNode("button", { id: eId.dialogClose, class: eClass.dialogButton }).text(upperCase(CAPTIONS.cancel));
+        [$okButton, $cancelButton].forEach(function(item) {
+            $actions.append(item);
+        });
+        $cancelButton.click(function() {
+            _this.close();
+        });
+        $title.html($titleContainer);
+        $contents.html(contents);
+        [$title, $contents, $actions].forEach(function(item) {
+            $dialog.append(item);
+        });
+        if(option) $contents.css(option);
+        this.dialog = $dialog;
+        this.contents = $contents;
+        this.okButton = $okButton;
+        this.actions = $actions;
         return this;
     },
-    executeSelectGrid: function(query) {
-        const command = this.initCommand(query);
-        const recordSet = command.Execute();
-        this.dataSet = this.getGridData(recordSet);
-        return this;
-    },
-    getData: function(rs) {
-        const dataSet = {
-            error: true,
-            count: 0,
-            name: new Array(),
-            data: new Array()
-        };
-        for(let i = 0; i < rs.Fields.Count; i++) {
-            dataSet.name.push(rs.Fields(i).Name);
+    setButton: function(buttonItems) {
+        const _this = this;
+        if(_this.actions) {
+            buttonItems.forEach(function(item) {
+                item.addClass(eClass.dialogButton);
+                _this.actions.append(item);
+            });
         }
-        while(!rs.EOF && dataSet.count <= 1000000) {
-            const valueStack = new Array();
-            for(let i = 0; i < rs.Fields.Count; i++) {
-                valueStack.push(rs.Fields(i).Value);
+        return this;
+    },
+    disableOkButton: function() {
+        this.okButton.remove();
+        return this;
+    },
+    open: function (callback) {
+        const _this = this;
+        if (!_this.dialog) return null;
+        const close = function() {
+            _this.close();
+        };
+        _this.okButton.click(function() {
+            callback(close);
+        });
+        _this.dialogContainer.addClass(classes(eClass.dialogBackdrop, eClass.subTop));
+        _this.dialogContainer.removeClass(eClass.hide);
+        _this.dialogContainer.append(_this.dialog);
+        overflowHide();
+        return this;
+    },
+    close: function () {
+        const _this = this;
+        if (_this.dialogContainer) {
+            _this.dialogContainer.removeClass(classes(eClass.dialogBackdrop, eClass.subTop));
+            _this.dialogContainer.addClass(eClass.hide);
+            _this.dialogContainer.empty();
+            overflowShow();
+        }
+        return null;
+    },
+    render: function(contents) {
+        this.contents.html(contents);
+        return null;
+    }
+};
+
+const SubDialog = function () {
+    this.dialogContainer = jqNode("div", { class: eClass.subDialogContainer });
+    this.dialog = jqNode("div", { class: eClass.subDialog });
+    this.header = jqNode("div", { class: eClass.subDialogHeader });
+    this.contents = jqNode("div", { class: eClass.subDialogContents });
+    this.actionsVisible = true;
+    this.actions = jqNode("div", { class: eClass.dialogActions });
+    this.okButton = null;
+    this.closeButton = null;
+};
+SubDialog.prototype = {
+    setContents: function(title, contents, option) {
+        const _this = this;
+        const eb = new ElementBuilder();
+        const $title = jqNode("span").text(title);
+        _this.header.append($title);
+        _this.contents.html(contents);
+        const $okButton = jqNode("button", { class: eClass.dialogButton }).text(upperCase(CAPTIONS.ok));
+        const $closeButton = jqNode("button", { class: eClass.dialogButton }).text(upperCase(CAPTIONS.cancel));
+        [$okButton, $closeButton].forEach(function(item) {
+            _this.actions.append(item);
+        });
+        $closeButton.click(function() { _this.close(); });
+        _this.okButton = $okButton;
+        _this.closeButton = $closeButton;
+        if(option) _this.contents.css(option);
+        eb.listAppend(_this.dialog, [_this.header, _this.contents, _this.actions]);
+        _this.dialogContainer.append(_this.dialog);
+        return this;
+    },
+    setUserButton: function(okButton, closeButton) {
+        this.okButton.html(okButton);
+        this.closeButton.html(closeButton);
+        return this;
+    },
+    setButton: function(buttonItems) {
+        const _this = this;
+        if(_this.actions) {
+            buttonItems.forEach(function(item) {
+                item.addClass(eClass.dialogButton);
+                _this.actions.append(item);
+            });
+        }
+        return this;
+    },
+    hideActions: function() {
+        this.actionsVisible = false;
+        return this;
+    },
+    disableOkButton: function() {
+        this.okButton.remove();
+        return this;
+    },
+    open: function (callback) {
+        const _this = this;
+        const close = function() {
+            _this.close();
+        };
+        _this.okButton.click(function() {
+            callback(close);
+        });
+        if(!_this.actionsVisible) _this.actions.remove();
+        jqByTag("body").append(_this.dialogContainer);
+        return null;
+    },
+    close: function () {
+        this.dialogContainer.remove();
+        return null;
+    }
+};
+
+const Loading = function() {
+    this.container = jqById(eId.loadingContainer);
+};
+Loading.prototype = {
+    on: function() {
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+            _this.container.empty();
+            _this.container.append(jqNode("div", { class: eClass.loader }));
+            _this.container.addClass(eClass.isVisible);
+            setTimeout(function() {
+                return resolve();
+            });
+        });
+    },
+    off: function() {
+        this.container.removeClass(eClass.isVisible);
+        this.container.empty();
+    }
+};
+
+const FileController = function () {
+    this.readType =  TYPES.file.readType.text;
+    this.listener = null;
+    this.allowed = null;
+};
+FileController.prototype = {
+    setListener: function () {
+        const $listener = jqNode("input", { type: "file", id: eId.fileListener, class: eClass.hide });
+        jqById(eId.fileListener).remove();
+        $("body").append($listener);
+        this.listener = $listener;
+        return this;
+    },
+    setListenerById: function (listenerId) {
+        this.listener = jqById(listenerId);
+        return this;
+    },
+    setReadType: function (type) {
+        this.readType = type ? type : TYPES.file.readType.text;
+        return this;
+    },
+    allowedExtensions: function (allowed) {
+        this.allowed = allowed;
+        return this;
+    },
+    access: function (func) {
+        const _this = this;
+        const allowed = _this.allowed;
+        const $listener = _this.listener;
+        if ($listener) {
+            $listener.change(function(e) {
+                e.stopPropagation();
+                const files = e.target.files;
+                if (files && files.length >= 1) {
+                    const path = e.target.value;
+                    const file = files[0];
+                    const fileType = !isVoid(file.type) ? file.type : new FileSystem(path).getExtension();
+                    if (isNotAllowed(allowed, fileType)) {
+                        $listener.val(SIGN.none);
+                        new Notification().error().open(MESSAGES.not_allowed_extension);
+                        return false;
+                    }
+                    try {
+                        _this.loadFile(file, func, path);
+                    }
+                    catch(e) {
+                        new Notification().error().open(e.message);
+                    }
+                    finally {
+                        $listener.val(SIGN.none);
+                    }
+                }
+                $listener.val(SIGN.none);
+                return false;
+            });
+            $listener.click();
+        }
+        return this;
+    },
+    loadFile: function (file, func, path) {
+        const _this = this;
+        const fr = new FileReader();
+        fr.onload = function(e) {
+            const result = e.target.result;
+            func(result, path);
+            if(!isVoid(_this.listener)) {
+                _this.listener.remove();
             }
-            dataSet.data.push(valueStack);
-            dataSet.count += 1;
-            rs.MoveNext();
-        }
-        rs.Close();
-        dataSet.error = false;
-        return dataSet;
-    },
-    getGridData: function(rs) {
-        const dataSet = {
-            error: true,
-            count: 0,
-            name: new Array(),
-            data: new Array()
         };
-        for(let i = 0; i < rs.Fields.Count; i++) {
-            const columnName = rs.Fields(i).Name;
-            const field = columnName.replace(new RegExp(SIGN.ws, "g"), SIGN.none);
-            const obj = {
-                field: field,
-                caption: columnName,
-                sortable: true
+        readFile(fr, this.readType, file);
+    }
+};
+
+function isNotAllowed(allowed, fileType) {
+    if (!typeIs(allowed).array) return false;
+    let result = true;
+    allowed.some(function(item) {
+        if (item === fileType) {
+            result = false;
+            return true;
+        }
+    });
+    return result;
+};
+
+function readFile(fr, type, file) {
+    if (!file) {
+        return false;
+    }
+    const readType = TYPES.file.readType;
+    switch (type) {
+        case readType.arrayBuffer: {
+            fr.readAsArrayBuffer(file);
+            break;
+        }
+        case readType.binaryString: {
+            fr.readAsBinaryString(file);
+            break;
+        }
+        case readType.dataUrl: {
+            fr.readAsDataURL(file);
+            break;
+        }
+        default: {
+            fr.readAsText(file);
+            break;
+        }
+    }
+};
+
+function saveAsFile(parts, type, fileName) {
+    try {
+        switch(type) {
+            case TYPES.file.mime.CSV: {
+                parts = concatString("\ufeff", parts);
+                break;
+            }
+        }
+        const blob = new Blob([parts], { tpye: type });
+        saveAs(blob, fileName);
+    }
+    catch (e) {
+        new Notification().error().open(MESSAGES.faild_download_file);
+    }
+};
+
+function s2ab(s) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < s.length; i++) {
+        view[i] = s.charCodeAt(i) & 0xFF;
+    }
+    return buf;
+};
+
+function Workbook() {
+    if(!(this instanceof Workbook)) return new Workbook();
+    this.SheetNames = [];
+    this.Sheets = {};
+};
+
+function sheetFromArrayOfArrays(data, callback, parameter) {
+    const ws = new Object();
+    const range = {
+        s: { c: 10000000, r: 10000000 },
+        e: { c: 0, r: 0 }
+    };
+    for(let R = 0; R != data.length; ++R) {
+        for(let C = 0; C != data[R].length; ++C) {
+            if(range.s.r > R) range.s.r = R;
+            if(range.s.c > C) range.s.c = C;
+            if(range.e.r < R) range.e.r = R;
+            if(range.e.c < C) range.e.c = C;
+            const cell = { v: data[R][C] };
+            if(cell.v == null) cell.v = SIGN.none;
+            const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+            if(typeof cell.v === "number") cell.t = "n";
+            else if(typeof cell.v === "boolean") cell.t = "b";
+            else if(cell.v instanceof Date) {
+                cell.t = "n";
+                cell.z = XLSX.SSF._table[14];
+                cell.v = datenum(cell.v);
+            }
+            else cell.t = "s";
+            if(typeIs(callback).function) callback(R, C, cell, parameter);
+            ws[cell_ref] = cell;
+        }
+    }
+    if(range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
+    return ws;
+};
+
+function datenum(v, date1904) {
+    if(date1904) v += 1462;
+    const epoch = Date.parse(v);
+    return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+};
+
+function duplicationCheckForArray(list) {
+    const stack = new Array();
+    const duplicated = new Array();
+    list.forEach(function(item) {
+        if(stack.indexOf(item) >= 0) {
+            if(duplicated.indexOf(item) < 0) {
+                duplicated.push(item);
+            }
+            return;
+        }
+        stack.push(item);
+    });
+    return {
+        has: duplicated.length >= 1,
+        data: duplicated
+    };
+};
+
+function removeDuplicationArray(list) {
+    return isVoid(list) ? list : list.filter(function(item, i) {
+        return list.indexOf(item) === i;
+    });
+};
+
+function bindQuery(query, mapping) {
+    let resultQuery = query;
+    const getBinder = function(key) {
+        return concatString("\\${", key, "}");
+    };
+    Object.keys(mapping).forEach(function(key) {
+        const value = mapping[key];
+        const binder = getBinder(key);
+        resultQuery = resultQuery.replace(new RegExp(binder, "g"), value);
+    });
+    return resultQuery;
+};
+
+const WorkerBuilder = function() {
+    this.windowURL = window.URL || window.webkitURL;
+    this.worker = null;
+    this.blob = null;
+};
+WorkerBuilder.prototype = {
+    stringifyFunction: function(func) {
+        if(!typeIs(func).function) return null;
+        return concatString("(", func.toString(), ")();");
+    },
+    process: function(func) {
+        const code = this.stringifyFunction(func);
+        try {
+            this.blob = new Blob([code], { type: TYPES.file.mime.JAVASCRIPT });
+        }
+        catch(e) {
+            window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+            this.blob = new BlobBuilder();
+            this.blob.append(code);
+            this.blob = this.blob.getBlob();
+        }
+        const objectURL = this.windowURL.createObjectURL(this.blob);
+        this.worker = new Worker(objectURL);
+        return this;
+    }
+};
+
+function threadMessage(module, actionType, params) {
+    return {
+        module: module,
+        type: actionType,
+        params: params
+    };
+};
+
+function getApplicationPath(relativePath) {
+    const rootPath = window.location.pathname;
+    const rootPathList = getExistArray(rootPath.split(SIGN.ssh));
+    rootPathList.pop();
+    const relativePathList = getExistArray(relativePath.split(SIGN.ssh));
+    const pathCollection = rootPathList.concat(relativePathList);
+    return pathCollection.join("\\\\");
+};
+
+function getOutputPath(fileName) {
+    return {
+        modulePath: getApplicationPath([TYPES.path.output, appState.module.id].join(SIGN.ssh)),
+        filePath: getApplicationPath([TYPES.path.output, appState.module.id, fileName].join(SIGN.ssh))
+    };
+};
+
+const ActiveXMLHttpRequest = function() {
+    this.req = null;
+    this.contentType = TYPES.file.mime.TEXT_UTF8;
+    try {
+        this.req = new ActiveXObject(TYPES.client.msxml2);
+    } catch (e) {
+        this.req = new XMLHttpRequest();
+    }
+};
+ActiveXMLHttpRequest.prototype = {
+    setContentType: function(type) {
+        this.contentType = type;
+        return this;
+    },
+    get: function(path, async) {
+        const req = this.req;
+        const contentType = this.contentType;
+        return new Promise(function(resolve, reject) {
+            try {
+                req.open("GET", path, async);
+                if(contentType) req.setRequestHeader("Content-Type", contentType);
+                req.onreadystatechange = function() {
+                    if(req.readyState === 4) {
+                        const data = req.responseText;
+                        return resolve(data);
+                    }
+                }
+                req.send();
+            }
+            catch(e) {
+                return reject(e);
+            }
+        });
+    }
+};
+
+function getJson(path) {
+    return new Promise(function(resolve, reject) {
+        const typeJSON = TYPES.file.mime.JSON;
+        const xhr = new ActiveXMLHttpRequest();
+        xhr.setContentType(typeJSON);
+        xhr.get(path, true).then(function(data) {
+            try {
+                const jsonData = JSON.parse(data);
+                return resolve(jsonData);
+            }
+            catch(e) {
+                return reject(e);
+            }
+        }).catch(function(e) {
+            return reject(e);
+        });
+    });
+};
+
+const FileTree = function(path) {
+    this.absolutePath = null;
+    this.path = path;
+    this.tree = new Object();
+    this.treeSize = 0;
+    this.u = "\\";
+};
+FileTree.prototype = {
+    getAbsolutePath: function() {
+        const path = this.path.split(this.u).filter(function(item, i, a) { return a.length > i + 1; }).join(this.u);
+        return path + this.u;
+    },
+    getRootPath: function(path) {
+        const oPath = path.replace(this.absolutePath, "");
+        const pathList = oPath.split(this.u);
+        const size = pathList.length;
+        const rootObj = { key: oPath, reference: "", size: size };
+        if(size >= 1) rootObj.reference = pathList.slice(0, size - 1).join(this.u);
+        return rootObj;
+    },
+    getAccessKey: function(path) {
+        return getExistArray(path.replace(this.absolutePath, "").split(this.u));
+    },
+    setTreeObject: function(obj, root, fileName) {
+        const key = root.key;
+        const reference = root.reference;
+        if(!obj[key]) {
+            obj[key] = { root: reference, files: [fileName] };
+        }
+        else {
+            obj[key].files.push(fileName);
+        }
+    },
+    setFilesTree: function(fileObj, _this) {
+        const folder = fileObj.folder;
+        const path = fileObj.path;
+        const file = fileObj.file;
+        const root = _this.getRootPath(path);
+        const key = root.key;
+        const reference = root.reference;
+        const rootSize = root.size;
+        _this.treeSize = _this.treeSize >= rootSize ? _this.treeSize : rootSize;
+        const obj = _this.tree;
+        if(!obj[key]) {
+            obj[key] = { root: reference, folder: folder, files: [file.Name] };
+        }
+        else {
+            obj[key].files.push(file.Name);
+        }
+    },
+    iterateFiles: function(path, folder, recursive, actionPerFileCallback) {
+        const _this = this;
+        const fso = new ActiveXObject(TYPES.client.fileSystemObject);
+        const folderObj = fso.GetFolder(path);
+        const fileEnum = new Enumerator(folderObj.Files);
+        for(; !fileEnum.atEnd(); fileEnum.moveNext()){
+            const fileObj = {
+                path: path,
+                folder: folder ? folder : "",
+                file: fso.GetFile(fileEnum.item())
             };
-            dataSet.name.push(obj);
+            actionPerFileCallback(fileObj, _this);
         }
-        while(!rs.EOF && dataSet.count <= 1000000) {
-            const valueObj = new Object();
-            valueObj.recid = dataSet.count + 1;
-            for(let i = 0; i < rs.Fields.Count; i++) {
-                valueObj[dataSet.name[i].field] = rs.Fields(i).Value;
+        if(recursive){
+            const subFolderEnum = new Enumerator(folderObj.SubFolders);
+            for(; !subFolderEnum.atEnd(); subFolderEnum.moveNext()){
+                var subFolderObj = fso.GetFolder(subFolderEnum.item());
+                this.iterateFiles(subFolderObj.Path, subFolderObj.Name, true, actionPerFileCallback);
             }
-            dataSet.data.push(valueObj);
-            dataSet.count += 1;
-            rs.MoveNext();
         }
-        rs.Close();
-        dataSet.error = false;
-        return dataSet;
     },
-    commit: function() {
-        this.driver.CommitTrans();
-        this.close();
+    build: function() {
+        this.absolutePath = this.getAbsolutePath(this.path);
+        this.iterateFiles(this.path, null, true, this.setFilesTree);
+        const target = this.path.replace(this.absolutePath, SIGN.none);
+        return {
+            tree: this.tree,
+            size: this.treeSize,
+            target: target
+        };
+    }
+};
+
+const FileSystem = function(path) {
+    const io = TYPES.file.io;
+    this.path = path;
+    this.mode = io.mode.forWriting;
+    this.option = false;
+    this.format = io.format.os;
+    this.data = null;
+    this.u = "\\";
+};
+FileSystem.prototype = {
+    init: function() {
+        const fso = new ActiveXObject(TYPES.client.fileSystemObject);
+        return fso;
+    },
+    toJsonPath: function() {
+        if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("\\\\", "g"), "/");
         return this;
     },
-    rollback: function() {
-        this.driver.RollbackTrans();
-        this.close();
+    toFilePath: function() {
+        if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("/", "g"), "\\");
         return this;
     },
-    cancel: function() {
-        this.command.Cancel();
-        this.close();
+    toSystemPath: function() {
+        if(typeIs(this.path).string) this.path = this.path.replace(new RegExp("\\\\", "g"), "\\\\");
+        return this;
+    },
+    getPath: function() {
+        return this.path;
+    },
+    getExtension: function() {
+        try {
+            const path = this.path;
+            const pathArray = path.split(this.u);
+            const pathSize = pathArray.length;
+            const target = pathArray[pathSize - 1];
+            const targetArray = target.split(".");
+            const targetSize = targetArray.length;
+            const extension = concatString(".", targetArray[targetSize - 1]);
+            return extension;
+        }
+        catch(e) {
+            return SIGN.none;
+        }
+    },
+    setFormat: function(format) {
+        this.format = format;
+        return this;
+    },
+    createNotExists: function() {
+        this.option = true;
+        return this;
+    },
+    setData: function(data) {
+        this.data = data;
+        return this;
+    },
+    getData: function() {
+        return this.data;
+    },
+    read: function() {
+        const fileTypes = TYPES.file.io;
+        const mode = fileTypes.mode;
+        const fso = this.init();
+        const stream = fso.OpenTextFile(this.path, mode.forReading, this.option, this.format);
+        this.data = stream.ReadAll();
+        stream.Close();
+        return this;
+    },
+    write: function(data) {
+        const fileTypes = TYPES.file.io;
+        const mode = fileTypes.mode;
+        const fso = this.init();
+        const stream = fso.OpenTextFile(this.path, mode.forWriting, this.option, this.format);
+        stream.Write(data);
+        stream.Close();
+        return this;
+    },
+    createFile: function(overwrite, unicode) {
+        overwrite = overwrite ? true : false;
+        unicode = unicode ? true : false;
+        const fso = this.init();
+        const stream = fso.CreateTextFile(this.path, overwrite, unicode);
+        stream.Close();
+        return this;
+    },
+    deleteFile: function() {
+        const fso = this.init();
+        const file = fso.GetFile(this.path);
+        file.Delete();
+        return this;
+    },
+    createFolder: function(existCheck) {
+        const fso = this.init();
+        const exec = function(path, isRecursiveFunc) {
+            if(!fso.FolderExists(path)) {
+                const parentPath = fso.GetParentFolderName(path);
+                if(parentPath) {
+                    exec(parentPath, true);
+                    fso.CreateFolder(path);
+                }
+                else if(!isRecursiveFunc) {
+                    throw new Error("Invalid path");
+                }
+            }
+            else if(!isRecursiveFunc && existCheck) {
+                throw new Error("Already exists folder");
+            }
+        };
+        exec(this.path);
+        return this;
+    },
+    deleteFolder: function(force) {
+        const fso = this.init();
+        fso.DeleteFolder(this.path, force ? force : false);
+        return this;
+    },
+    copyFile: function(source, destination, isOverwrite) {
+        const fso = this.init();
+        fso.CopyFile(source, destination, isOverwrite);
+        return this;
+    },
+    copyFolder: function(source, destination, isOverwrite) {
+        const fso = this.init();
+        fso.CopyFolder(source, destination, isOverwrite);
+        return this;
+    }
+};
+
+const ElementBuilder = function(element) {
+    this.elements = new Array();
+    this.element = element;
+    this.vertical = false;
+};
+ElementBuilder.prototype = {
+    setVertical: function() {
+        this.vertical = true;
+        return this;
+    },
+    setHorizontal: function() {
+        this.vertical = false;
+        return this;
+    },
+    setListener: function(listener) {
+        this.listener = listener;
+        return this;
+    },
+    getItem: function() {
+        const _this = this;
+        const arrayStack = new Array();
+        _this.elements.forEach(function(itemUnit) {
+            if(_this.vertical) {
+                const $div = jqNode("div");
+                itemUnit.forEach(function(item) { $div.append(item); });
+                arrayStack.push($div);
+            }
+            else {
+                itemUnit.forEach(function(item) {
+                    arrayStack.push(item);
+                });
+            }
+        });
+        return arrayStack;
+    },
+    setItem: function($container) {
+        const elements = this.getItem();
+        elements.forEach(function(item) {
+            $container.append(item);
+        });
+        return null;
+    },
+    createRadio: function(itemList) {
+        const _this = this;
+        _this.elements = new Array();
+        const builder = function(label, attributes, isChecked, optionClass) {
+            optionClass = optionClass ? optionsClass : eClass.rcColorDefault;
+            const $input = jqNode("input", { type: "radio", name: attributes.name, id: attributes.id, value: attributes.value });
+            if(isChecked) $input.prop({ checked: true });
+            const $label = jqNode("label", { for: attributes.id, class: classes(eClass.radio, optionClass) }).text(label);
+            return [$input, $label];
+        }
+        itemList.forEach(function(item) {
+            const elm = builder(item.label, item.attributes, item.isChecked, item.optionClass);
+            _this.elements.push(elm);
+        });
+        return this;
+    },
+    createCheckbox: function(itemList) {
+        const _this = this;
+        _this.elements = new Array();
+        const builder = function(label, attributes, isChecked, optionClass) {
+            optionClass = optionClass ? optionsClass : eClass.rcColorDefault;
+            const $input = jqNode("input", { type: "checkbox", name: attributes.name, id: attributes.id, value: attributes.value });
+            if(isChecked) $input.prop({ checked: true });
+            const $label = jqNode("label", { for: attributes.id, class: classes(eClass.checkbox, optionClass) }).text(label);
+            return [$input, $label];
+        }
+        itemList.forEach(function(item) {
+            const elm = builder(item.label, item.attributes, item.isChecked, item.optionClass);
+            _this.elements.push(elm);
+        });
+        return this;
+    },
+    getFontAwesomeIcon: function(icon, classOption) {
+        const $icon = jqNode("i", { class: icon });
+        if(classes) $icon.addClass(classOption);
+        return $icon;
+    },
+    listAppend: function(target, list) {
+        list.forEach(function(item) {
+            target.append(item);
+        });
+        return target;
+    },
+    setReadonly: function() {
+        this.element.addClass(eClass.readonly);
+        this.element.prop("readonly", true);
+        return this;
+    },
+    removeReadonly: function() {
+        this.element.removeClass(eClass.readonly);
+        this.element.prop("readonly", false);
+        return this;
+    },
+    setDisable: function() {
+        this.element.addClass(eClass.disable);
+        this.element.prop("disabled", true);
+        return this;
+    },
+    removeDisable: function() {
+        this.element.removeClass(eClass.disable);
+        this.element.prop("disabled", false);
+        return this;
+    },
+    setDisplayNone: function() {
+        this.element.addClass(eClass.hide);
+        return this;
+    },
+    removeDisplayNone: function() {
+        this.element.removeClass(eClass.hide);
+        return this;
+    }
+};
+
+const EventHandler = function(listener) {
+    this.listener = listener;
+    this.stateValue = "";
+};
+EventHandler.prototype = {
+    addEvent: function(eventType, callback) {
+        this.listener.on(eventType, callback);
+        return this;
+    },
+    addInputEvent: function(callback) {
+        const _this = this;
+        this.listener.on("input", function(e) {
+            const result = callback(e, this.value);
+            if(typeIs(result).boolean && result === false) {
+                this.value = _this.stateValue;
+            }
+            else {
+                _this.stateValue = this.value;
+            }
+        });
+    },
+};
+
+const Encryption = function() {
+    this.data = null;
+};
+Encryption.prototype = {
+    getSerialNumber: function() {
+        const seed = SERIAL.seed;
+        const size = SERIAL.size;
+        const seedLength = seed.length;
+        let serialNumber = SIGN.none;
+        for (var i = 0; i < size; i++) {
+            serialNumber += seed[Math.floor(Math.random() * seedLength)];
+        }
+        return serialNumber;
+    },
+    getData: function() {
+        return this.data;
+    },
+    encode: function(data) {
+        const serialNumber = this.getSerialNumber();
+        this.data = CryptoJS.AES.encrypt(data, serialNumber).toString();
+        this.data = this.data + serialNumber;
+        return this;
+    },
+    decode: function(data) {
+        const size = SERIAL.size;
+        const pos = data.length - size;
+        const serialNumber = data.substr(pos);
+        const trueData = data.substring(0, pos);
+        const bytes = CryptoJS.AES.decrypt(trueData, serialNumber);
+        this.data = bytes.toString(CryptoJS.enc.Utf8);
+        this.data = this.data.replace(new RegExp("\\\\\"", "g"), "\"");
+        this.data = this.data.replace(new RegExp("âª", "g"), SIGN.none);
+        return this;
+    }
+};
+
+const Store = function(state) {
+    this.path = "storage/db.dat";
+    this.toState = state;
+    this.fromState = state.data;
+    this.state = null;
+    this.map = new Array();
+};
+Store.prototype = {
+    load: function() {
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+            const xhr = new ActiveXMLHttpRequest();
+            xhr.get(_this.path, true).then(function(data) {
+                if(!isVoid(data)) {
+                    const aes = new Encryption();
+                    const dec = aes.decode(data).getData();
+                    const jsData = JSON.parse(dec);
+                    _this.toState.data = jsData;
+                }
+                return resolve();
+            }).catch(function(e) {
+                return reject(e);
+            });
+        });
+    },
+    init: function() {
+        return this.fromState;
+    },
+    connect: function(map) {
+        this.state = Immutable.fromJS(this.fromState);
+        this.map = map ? map : new Array();
+        return this;
+    },
+    select: function() {
+        if (!this.fromState) return null;
+        return Immutable.fromJS(this.fromState).getIn(this.map).toJS();
+    },
+    set: function(data) {
+        if (!this.fromState || !this.state || !this.map) return null;
+        const modified = this.state.setIn(this.map, data);
+        this.fromState = modified.toJS();
+        return this;
+    },
+    update: function(data) {
+        if (!this.fromState || !this.state || !this.map) return null;
+        const updated = this.state.updateIn(this.map, function(item) {
+            const itemType = typeIs(item);
+            if(itemType.object) {
+                return item.merge(data);
+            }
+            else if(itemType.array) {
+                return item.push(data);
+            }
+            else {
+                return data;
+            }
+        });
+        this.fromState = updated.toJS();
+        return this;
+    },
+    delete: function() {
+        if (!this.fromState || !this.state || !this.map) return null;
+        const deleted = this.state.deleteIn(this.map);
+        this.fromState = deleted.toJS();
+        removeNullObject(this.fromState);
+        return this;
+    },
+    apply: function() {
+        this.toState.data = this.fromState;
+        return this;
+    },
+    sync: function() {
+        const data = JSON.stringify(this.toState.data);
+        const aes = new Encryption();
+        const enc = aes.encode(data).getData();
+        const fs = new FileSystem(getApplicationPath(this.path));
+        fs.write(enc);
+        return null;
+    }
+};
+
+const Interface = function(structure) {
+    this.structure = structure;
+    this.root = null;
+};
+Interface.prototype = {
+    setRoot: function(root) {
+        this.root = root;
+        return this;
+    },
+    getKey: function() {
+        return this.structure.key;
+    },
+    getType: function() {
+        return this.structure.type;
+    },
+    getData: function() {
+        return this.structure.data;
+    },
+    create: function(store) {
+        const _this = this;
+        store.connect([_this.getKey()]).set(_this.getType()).apply();
+        return this;
+    },
+    getInjectData: function() {
+        const argumentsList = Array.prototype.slice.call(arguments);
+        const applied = this.getData().apply(null, argumentsList);
+        return applied;
+    },
+    inject: function(store, injectData, key) {
+        const _this = this;
+        if(isVoid(store.init()[_this.getKey()])) _this.create(store);
+        store.connect([_this.getKey(), key]).set(injectData).apply();
+        return null;
+    }
+};
+
+const Calendar = function() {
+    this.def = {
+        mode: {
+            ymd: "ymd",
+            ym: "ym",
+            y: "y",
+            s: "s"
+        },
+        days: [
+            { id: 0, en: "sun", jp: "日" },
+            { id: 1, en: "mon", jp: "月" },
+            { id: 2, en: "tue", jp: "火" },
+            { id: 3, en: "wed", jp: "水" },
+            { id: 4, en: "thu", jp: "木" },
+            { id: 5, en: "fri", jp: "金" },
+            { id: 6, en: "sat", jp: "土" }
+        ],
+        year: {
+            start: 1900,
+            end: 2199
+        },
+        month: {
+            start: 0,
+            end: 11
+        },
+        date: {
+            start: 1,
+            col: 7,
+            row: 6
+        },
+        col: 4,
+        pagePer: 12
+    };
+    this.elements = {
+        year: null,
+        month: null,
+        calendar: null,
+        container: jqNode("div")
+    };
+    this.state = {
+        mode: null,
+        year: null,
+        month: null,
+        date: null,
+        pages: new Array(),
+        currentPage: 0,
+        selected: new Object()
+    };
+    this.callback = null;
+};
+Calendar.prototype = {
+    setYear: function(year) {
+        this.state.year = year;
+        return this;
+    },
+    setMonth: function(month) {
+        this.state.month = month;
+        return this;
+    },
+    setDate: function(date) {
+        this.state.date = date;
+        return this;
+    },
+    setMode: function(mode) {
+        this.state.mode = mode;
+        return this;
+    },
+    setCallback: function(callback) {
+        this.callback = callback;
+        return this;
+    },
+    initDateObj: function(dateObj) {
+        this.setYear(dateObj.y);
+        this.setMonth(dateObj.m);
+        this.setDate(dateObj.d);
+        this.state.selected = dateObj;
+        return this;
+    },
+    createMonth: function() {
+        const _this = this;
+        const def = _this.def;
+        const $table = jqNode("div", { class: classes(eClass.table, eClass.calendarPlate) });
+        const col = def.col;
+        let m = def.month.start;
+        const getRow = function() { return jqNode("div", { class: eClass.tableRow }); };
+        let $row = getRow();
+        while(m <= def.month.end) {
+            const monthString = setCharPadding(m + 1, 2);
+            const $cell = jqNode("div", { class: classes(eClass.tableCell, eClass.calendarPannel) }).text(monthString);
+            $cell.click(function() {
+                _this.setMonth(monthString).setMode(def.mode.ymd).build();
+            });
+            $cell.css({ width: "50px" });
+            $row.append($cell);
+            m++;
+            if(m % col === 0) {
+                $table.append($row);
+                $row = getRow();
+            }
+        }
+        _this.elements.month = $table;
+        return this;
+    },
+    getMonthElement: function() {
+        return this.elements.month;
+    },
+    createYear: function() {
+        const _this = this;
+        const def = _this.def;
+        const $tab = jqNode("div", { class: eClass.calendarTab });
+        const pagePer = def.pagePer;
+        const col = def.col;
+        let y = def.year.start;
+        let p = 0;
+        let page = 1;
+        const getTable = function() {
+            const pageId = _this.getPageId(page);
+            const $table = jqNode("div", { id: pageId, class: classes(eClass.table, eClass.calendarPlate, eClass.hide) });
+            page++;
+            _this.state.pages.push({ id: pageId, node: $table });
+            return $table;
+        };
+        const getRow = function() { return jqNode("div", { class: eClass.tableRow }); };
+        let $table = getTable();
+        let $row = getRow();
+        while(y <= def.year.end) {
+            const yearString = String(y);
+            const $cell = jqNode("div", { class: classes(eClass.tableCell, eClass.calendarPannel) }).text(yearString);
+            $cell.click(function() {
+                _this.setYear(yearString).setMode(def.mode.y).build();
+            });
+            $cell.css({ width: "50px" });
+            $row.append($cell);
+            y++;
+            p++;
+            if(y > def.year.end) {
+                $table.append($row).appendTo($tab);
+                continue;
+            }
+            if(p % col === 0) {
+                $table.append($row);
+                $row = getRow();
+            }
+            if(p === pagePer) {
+                p = 0;
+                $tab.append($table);
+                $table = getTable();
+            }
+        }
+        _this.elements.year = $tab;
+        return this;
+    },
+    getYearElement: function() {
+        return this.elements.year;
+    },
+    getPageId: function(page) {
+        return concatString("calendar-page-", page);
+    },
+    setPage: function(page) {
+        this.state.currentPage = page;
+        return this;
+    },
+    paging: function() {
+        const def = this.def;
+        const state = this.state;
+        const pages = state.pages;
+        if(state.currentPage < 1 || state.currentPage > pages.length) {
+            const page = Math.ceil((Number(state.year ? state.year : 0) - (def.year.start - 1)) / def.pagePer);
+            if(page < 1) return false;
+            this.setPage(page);
+        }
+        const currentPageId = this.getPageId(state.currentPage);
+        pages.forEach(function(po) {
+            if(currentPageId === po.id) po.node.removeClass(eClass.hide);
+            else po.node.addClass(eClass.hide);
+        });
+        return this;
+    },
+    checkHoliday: function(date, lieuDay) {
+        const holidayData = JapaneseHolidays.isHoliday(date, lieuDay);
+        const holidayObj = {
+            holidayName: isVoid(holidayData) ? SIGN.none : holidayData,
+            isHoliday: !isVoid(holidayData)
+        };
+        return holidayObj;
+    },
+    createCalendarApi: function() {
+        const _this = this;
+        const def = _this.def;
+        const state = _this.state;
+        const eb = new ElementBuilder();
+        const y = state.year;
+        const m = state.month;
+        const col = def.date.col;
+        const row = def.date.row;
+        const setStyle = function(target, dayIndex, isHoliday, isPreview) {
+            if(isPreview) target.addClass(eClass.greyColor);
+            else if(isHoliday) target.addClass(eClass.redColor);
+            else if(dayIndex === 0) target.addClass(eClass.redColor);
+            else if(dayIndex === 6) target.addClass(eClass.blueColor);
+            else target.addClass(eClass.whiteColor);
+        };
+        const isSelected = function(d, isPreview) {
+            const selected = state.selected;
+            if(isVoid(selected) || isPreview || !(state.mode == def.mode.ymd || state.mode === null)) return false;
+            return selected.y === state.year && selected.m === state.month && Number(selected.d) === d;
+        };
+        const $table = jqNode("div", { class: classes(eClass.table, eClass.calendarApi) });
+        const $tableHeader = jqNode("div", { class: eClass.tableHeader });
+        const $tableBody = jqNode("div", { class: eClass.tableBody });
+        const $headerRow = jqNode("div", { class: eClass.tableRow });
+        def.days.forEach(function(item) {
+            const $cell = jqNode("div", { class: eClass.tableCell }).text(upperCase(item.en));
+            setStyle($cell, item.id);
+            $headerRow.append($cell);
+        });
+        $tableHeader.append($headerRow);
+        const startDay = new Date(y, Number(m) - 1, 1).getDay();
+        const startDiff = col - (col - startDay);
+        const prevEnd = new Date(y, Number(m) - 1, 0).getDate();
+        const endDate = new Date(y, m, 0).getDate();
+        let nextDate = 1;
+        let dateCount = def.date.start;
+        const moveDate = function() { dateCount++; };
+        const getDateObj = function(date, pass) {
+            const dateObj = {
+                date: date,
+                dayIndex: -1,
+                isSaturday: false,
+                isSunday: false,
+                isHoliday: false,
+                holidayName: SIGN.none,
+                name_en: SIGN.none,
+                name_jp: SIGN.none,
+                isPreview: pass
+            };
+            if(pass) return dateObj;
+            const systemDate = new Date(y, Number(m) - 1, date);
+            const day = systemDate.getDay();
+            const fd = find(day, def.days, ["id"]).data[0];
+            const holidayObj = _this.checkHoliday(systemDate, true);
+            dateObj.dayIndex = fd.id;
+            dateObj.isSaturday = fd.id === 6;
+            dateObj.isSunday = fd.id === 0;
+            dateObj.isHoliday = holidayObj.isHoliday;
+            dateObj.holidayName = holidayObj.holidayName;
+            dateObj.name_en = fd.en;
+            dateObj.name_jp = fd.jp;
+            return dateObj;
+        };
+        const getRow = function() { return jqNode("div", { class: eClass.tableRow }); };
+        let $row = getRow();
+        getIterator(col * row).forEach(function(c, i) {
+            c = i + 1;
+            const subtraction = startDiff - i;
+            let vd;
+            let isPreview = false;
+            if(subtraction > 0) {
+                vd = prevEnd - subtraction + 1;
+                isPreview = true;
+            }
+            else if(dateCount > endDate) {
+                vd = nextDate;
+                nextDate++;
+                isPreview = true;
+            }
+            else {
+                vd = dateCount;
+                moveDate();
+                isPreview = false;
+            }
+            const dateObj = getDateObj(vd, isPreview);
+            const $cell = jqNode("div", { class: eClass.tableCell }).text(dateObj.date);
+            setStyle($cell, dateObj.dayIndex, dateObj.isHoliday, dateObj.isPreview);
+            if(isSelected(dateObj.date, dateObj.isPreview)) $cell.addClass(eClass.calendarSelected);
+            $row.append($cell);
+            if(!dateObj.isPreview) {
+                $cell.click(function() {
+                    _this.setDate(setCharPadding(dateObj.date, 2));
+                    if(typeIs(_this.callback).function) _this.callback(_this.getDateStamp());
+                });
+            }
+            if(c % col === 0) {
+                $tableBody.append($row);
+                $row = getRow();
+            }
+        });
+        eb.listAppend($table, [$tableHeader, $tableBody]);
+        _this.elements.calendar = $table;
+        return this;
+    },
+    getCalendar: function() {
+        return this.elements.calendar;
+    },
+    getLabel: function() {
+        const def = this.def;
+        const state = this.state;
+        if(state.mode === def.mode.y) {
+            return state.year;
+        }
+        else {
+            return [state.year, state.month].join(SIGN.ssh);
+        }
+    },
+    build: function() {
+        const _this = this;
+        const def = _this.def;
+        const state = _this.state;
+        const elements = _this.elements;
+        const $container = elements.container;
+        $container.empty();
+        const eb = new ElementBuilder();
+        const $label = jqNode("div", { class: eClass.calendarLabel });
+        let $contents = null;
+        if(state.mode === def.mode.s) {
+            _this.createYear().paging();
+            const getLabel = function() {
+                const rate = def.pagePer * state.currentPage - 1;
+                const maxYearPerPage = def.year.start + rate;
+                const minYearPerPage = maxYearPerPage - (def.pagePer - 1);
+                const label = [minYearPerPage, maxYearPerPage].join(SIGN.dash);
+                return label;
+            };
+            const $labelText = jqNode("div");
+            const $actions = jqNode("div");
+            const $up = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronUp));
+            const $down = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronDown));
+            const initActions = function() {
+                if(state.currentPage <= 1) $up.addClass(eClass.hide);
+                else if(state.currentPage >= state.pages.length) $down.addClass(eClass.hide);
+                else {
+                    $up.removeClass(eClass.hide);
+                    $down.removeClass(eClass.hide);
+                }
+                $labelText.text(getLabel());
+            };
+            initActions();
+            $up.click(function() {
+                _this.setPage(state.currentPage - 1).paging();
+                initActions();
+            });
+            $down.click(function() {
+                _this.setPage(state.currentPage + 1).paging();
+                initActions();
+            });
+            eb.listAppend($label, [$labelText, eb.listAppend($actions, [$up, $down])]);
+            $contents = _this.getYearElement();
+        }
+        else if(state.mode === def.mode.y) {
+            const $labelText = jqNode("div").addClass(eClass.calendarLabelEvent);
+            $labelText.click(function() {
+                _this.setMode(def.mode.s);
+                _this.build();
+            });
+            const $actions = jqNode("div");
+            const $up = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronUp));
+            const $down = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronDown));
+            const initActions = function() {
+                if(state.year <= def.year.start) $up.addClass(eClass.hide);
+                else if(state.year >= def.year.end) $down.addClass(eClass.hide);
+                else {
+                    $up.removeClass(eClass.hide);
+                    $down.removeClass(eClass.hide);
+                }
+                $labelText.text(state.year);
+            };
+            initActions();
+            $up.click(function() {
+                const year = String(Number(state.year) - 1);
+                _this.setYear(year).build();
+            });
+            $down.click(function() {
+                const year = String(Number(state.year) + 1);
+                _this.setYear(year).build();
+            });
+            eb.listAppend($label, [$labelText, eb.listAppend($actions, [$up, $down])]);
+            $contents = _this.createMonth().getMonthElement();
+        }
+        else {
+            const $labelText = jqNode("div").addClass(eClass.calendarLabelEvent);
+            $labelText.click(function() {
+                _this.setMode(def.mode.y);
+                _this.build();
+            });
+            const $actions = jqNode("div");
+            const $up = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronUp));
+            const $down = jqNode("div").addClass(eClass.calendarLabelEvent).append(eb.getFontAwesomeIcon(eIcon.chevronDown));
+            const initActions = function() {
+                if(state.year <= def.year.start && Number(state.month) <= def.month.start + 1) $up.addClass(eClass.hide);
+                else if(state.year >= def.year.end && Number(state.month) >= def.month.end + 1) $down.addClass(eClass.hide);
+                else {
+                    $up.removeClass(eClass.hide);
+                    $down.removeClass(eClass.hide);
+                }
+                const label = [state.year, state.month].join(SIGN.ssh);
+                $labelText.text(label);
+            };
+            initActions();
+            $up.click(function() {
+                const systemDate = new Date(state.year, Number(state.month) - 2, 1);
+                const year = String(systemDate.getFullYear());
+                const month = setCharPadding(systemDate.getMonth() + 1, 2);
+                _this.setYear(year).setMonth(month).build();
+            });
+            $down.click(function() {
+                const systemDate = new Date(state.year, Number(state.month), 1);
+                const year = String(systemDate.getFullYear());
+                const month = setCharPadding(systemDate.getMonth() + 1, 2);
+                _this.setYear(year).setMonth(month).build();
+            });
+            eb.listAppend($label, [$labelText, eb.listAppend($actions, [$up, $down])]);
+            $contents = _this.createCalendarApi().getCalendar();
+        }
+        eb.listAppend($container, [$label, $contents]);
+        return this;
+    },
+    getContents: function() {
+        return this.elements.container;
+    },
+    getDateStamp: function() {
+        const state = this.state;
+        return [state.year, state.month, state.date].join(SIGN.ssh);
+    }
+};
+
+const Viewer = function() {
+    this.viewer = jqNode("div", { id: eId.viewerContainer });
+    this.title = null;
+    this.contents = null;
+    this.tools = new Array();
+    this.executerVisible = true;
+    this.done = null;
+};
+Viewer.prototype = {
+    setContents: function(title, contents) {
+        this.title = title;
+        this.contents = contents;
+        return this;
+    },
+    setTools: function() {
+        const argumentsList = Array.prototype.slice.call(arguments);
+        this.tools = argumentsList;
+        return this;
+    },
+    hideExecuter: function() {
+        this.executerVisible = false;
+        return this;
+    },
+    open: function(callback) {
+        const _this = this;
+        const eb = new ElementBuilder();
+        const $header = jqNode("div", { class: eClass.viewerHeader });
+        const $headerWrapper = jqNode("div", { class: eClass.viewerHeaderWrapper });
+        const $headerContext = jqNode("div", { class: eClass.viewerHeaderContext });
+        const $closer = jqNode("div", { class: eClass.viewerHeaderCloser }).append(eb.getFontAwesomeIcon(eIcon.arrowLeft));
+        $closer.click(function() { _this.close(); });
+        const $title = jqNode("div", { class: eClass.viewerHeaderTitle }).text(_this.title);
+        eb.listAppend($headerContext, [$closer, $title]);
+        const $headerTools = jqNode("div", { class: eClass.viewerHeaderTools });
+        const getToolsItem = function(item) {
+            const $toolsItem = jqNode("div", { class: eClass.viewerToolsItem });
+            $toolsItem.append(item);
+            return $toolsItem;
+        };
+        if(_this.executerVisible) {
+            const $executer = jqNode("div", { class: eClass.toolsItemDone }).text(upperCase(CAPTIONS.done));
+            const close = function() { _this.close(); };
+            $executer.click(function() {
+                if(typeIs(callback).function) callback(close);
+            });
+            _this.tools.unshift($executer);
+        }
+        _this.tools.forEach(function(item) {
+            $headerTools.append(getToolsItem(item));
+        });
+        eb.listAppend($headerWrapper, [$headerContext, $headerTools]);
+        $header.append($headerWrapper);
+        const $contentsWrapper = jqNode("div", { class: eClass.viewerContentsWrapper });
+        const $overflowContainer = jqNode("div", { class: eClass.overflowContainer });
+        const $contents = jqNode("div", { class: eClass.overflowContents }).append(_this.contents);
+        $overflowContainer.append($contents).appendTo($contentsWrapper);
+        eb.listAppend(_this.viewer, [$header, $contentsWrapper]);
+        jqByTag("body").append(_this.viewer);
+
+        const headerToolsSize = $headerTools.width();
+        $headerContext.css({ width: "calc(100% - " + Math.ceil(headerToolsSize) + "px)" });
+        setTimeout(function() {
+            _this.viewer.addClass(eClass.viewerVisible);
+        });
+        overflowHide();
         return this;
     },
     close: function() {
-        this.driver.Close();
-        this.driver = null;
-        this.command = null;
-        this.type = null;
+        const _this = this;
+        _this.viewer.removeClass(eClass.viewerVisible);
+        setTimeout(function() {
+            _this.viewer.remove();
+        }, 500);
+        overflowShow();
         return null;
     },
-    onEnd: function(condition, callback, bindParam) {
-        if(condition) {
-            if(!callback) {
-                this.close();
+    onLoad: function(func) {
+        func();
+        return null;
+    }
+};
+
+const RegExpUtil = function(value) {
+    this.value = value;
+};
+RegExpUtil.prototype = {
+    isEnter: function() {
+        const regExp = /\r\n|\n/;
+        return regExp.test(this.value);
+    },
+    isNumber: function() {
+        const regExp = /^\d*$/;
+        return regExp.test(this.value);
+    },
+    isNumberWithFullWidth: function() {
+        const regExp = /^[0-9０-９]*$/;
+        return regExp.test(this.value);
+    },
+    isNumberWithLineBreak: function() {
+        const regExp = /^[\n0-9]*$/;
+        return regExp.test(this.value);
+    },
+    isOverflow: function(size) {
+        return this.value.length > size;
+    },
+    isYYYYMMDD: function() {
+        const regExp = new RegExp("^((19|20|21)[0-9]{2})((0[1-9])|(1[0-2]))((0[1-9])|([1-2][0-9])|([3][0-1]))$", "g");
+        return regExp.test(this.value);
+    },
+    isNot: function(regExp) {
+        return !regExp.test(this.value);
+    },
+    includeSpace: function() {
+        const regExp = new RegExp(" |　", "g");
+        return regExp.test(this.value);
+    }
+};
+
+const Validation = function() {
+    this.types = {
+        required: "required",
+        requiredWithLineBreak: "requiredWithLineBreak",
+        notSpace: "notSpace",
+        numeric: "numeric",
+        numericWithLineBreak: "numericWithLineBreak",
+        size: "size"
+    };
+    this.checkList = new Array();
+    this.transfer = {
+        size: new Object()
+    };
+    this.state = {
+        error: false,
+        message: new Array()
+    };
+};
+Validation.prototype = {
+    getTypes: function() {
+        return this.types;
+    },
+    initLayout: function(value, label, bind) {
+        const layout = {
+            value: value,
+            label: label,
+            types: new Array(),
+            actions: new Object(),
+            bind: bind
+        };
+        return layout;
+    },
+    getLayout: function(initData, types, actions) {
+        const layout = initData;
+        layout.types = types;
+        if(actions) layout.actions = actions;
+        return layout;
+    },
+    getActionLayout: function() {
+        const layout = {
+            error: false,
+            message: SIGN.none
+        };
+        return layout;
+    },
+    getSizeLayout: function(min, max, separator) {
+        const layout = {
+            size: {
+                min: min ? min : 0,
+                max: max ? max : 1000,
+                separator: separator
             }
-            else {
-                callback(bindParam);
+        };
+        return layout;
+    },
+    getMessage: function(type, label, bind) {
+        const types = this.types;
+        let message = SIGN.none;
+        switch(type) {
+            case types.required: {
+                message = concatString(label, " is required");
+                break;
+            }
+            case types.requiredWithLineBreak: {
+                message = concatString(label, " is required");
+                break;
+            }
+            case types.notSpace: {
+                message = concatString(label, " : Space is not allowed");
+                break;
+            }
+            case types.numeric: {
+                message = concatString(label, " : ", MESSAGES.allowedOnlyNumeric);
+                break;
+            }
+            case types.numericWithLineBreak: {
+                message = concatString(label, " : ", MESSAGES.allowedOnlyNumeric);
+                break;
+            }
+            case types.size: {
+                const sizeObj = accessObject(bind, ["size"]);
+                if(!isVoid(sizeObj)) {
+                    message = concatString(label, " : Invalid size ", SIGN.bs, "min:", sizeObj.min, SIGN.c, SIGN.ws, "max:", sizeObj.max ,SIGN.be);
+                }
+                break;
             }
         }
+        return message;
+    },
+    check: function(type, value, bind) {
+        const types = this.types;
+        let result = true;
+        switch(type) {
+            case types.required: {
+                if(!value) {
+                    result = false;
+                }
+                break;
+            }
+            case types.requiredWithLineBreak: {
+                if(!value || isVoid(getExistArray(value.split(SIGN.nl)))) {
+                    result = false;
+                }
+                break;
+            }
+            case types.notSpace: {
+                if(new RegExpUtil(value).includeSpace()) {
+                    result = false;
+                }
+                break;
+            }
+            case types.numeric: {
+                if(!new RegExpUtil(value).isNumber()) {
+                    result = false;
+                }
+                break;
+            }
+            case types.numericWithLineBreak: {
+                if(!new RegExpUtil(value).isNumberWithLineBreak()) {
+                    result = false;
+                }
+                break;
+            }
+            case types.size: {
+                const sizeObj = accessObject(bind, ["size"]);
+                if(!isVoid(sizeObj)) {
+                    if(!isVoid(sizeObj.separator)) {
+                        getExistArray(value.split(sizeObj.separator)).some(function(v) {
+                            if(v.length < sizeObj.min || v.length > sizeObj.max) {
+                                result = false;
+                                return true;
+                            }
+                        });
+                    }
+                    else if(value.length < sizeObj.min || value.length > sizeObj.max) {
+                        result = false;
+                    }
+                }
+                break;
+            }
+        }
+        return result;
+    },
+    reset: function() {
+        this.checkList = new Array();
         return this;
     },
-    setParameter: function() {
+    append: function(layoutData) {
+        this.checkList.push(layoutData);
+        return this;
+    },
+    appendList: function(list) {
+        this.checkList = this.checkList.concat(list);
+        return this;
+    },
+    exec: function() {
         const _this = this;
-        const types = _this.Define.TYPES;
-        const commandType = types.command;
-        const command = _this.command;
-        const argumentsList = Array.prototype.slice.call(arguments);
-        command.Parameters.Refresh();
-        argumentsList.forEach(function(item, i) {
-            command.Parameters.Append(command.CreateParameter("?", commandType.adVarWChar, commandType.adParamInput, 100, item));
+        const state = _this.state;
+        state.error = false;
+        state.message = new Array();
+        _this.checkList.forEach(function(layout) {
+            const value = layout.value;
+            const label = layout.label;
+            const types = layout.types;
+            const actions = layout.actions;
+            const bind = layout.bind;
+            if(types.indexOf(_this.types.required) < 0 && types.indexOf(_this.types.requiredWithLineBreak) < 0 && isVoid(value)) return;
+            types.some(function(type) {
+                const action = getProperty(actions, type);
+                if(action && typeIs(action).function) {
+                    const result = action(layout);
+                    if(result.error) {
+                        state.error = true;
+                        state.message.push(result.message);
+                        return true;
+                    }
+                }
+                else {
+                    const result = _this.check(type, value, bind);
+                    if(!result) {
+                        const message = _this.getMessage(type, label, bind);
+                        state.error = true;
+                        state.message.push(message);
+                        return true;
+                    }
+                }
+            });
         });
+        if(state.error) state.message = state.message.join(SIGN.br);
+        return state;
+    }
+};
+
+const Encoder = function(data) {
+    this.data = data;
+    this.converted = null;
+};
+Encoder.prototype = {
+    toStringFromSJISArrayBuffer: function() {
+        const codes = new Uint8Array(this.data);
+        const encoding = Encoding.detect(codes);
+        const unicodeString = Encoding.convert(codes, { to: "unicode", from: encoding, type: "string" });
+        return unicodeString;
+    }
+};
+
+function getToday() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const milliseconds = setCharPadding(String(d.getMilliseconds()), 3);
+    return {
+        year: year,
+        month: month,
+        date: date,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: milliseconds
+    };
+};
+
+function getSystemDate() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    return concatString(year, month, date);
+};
+
+function getSystemDateTime(dateSep, timeSep) {
+    const ds = dateSep ? dateSep : SIGN.ssh;
+    const ts = timeSep ? timeSep : SIGN.gc;
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const fullDate = [year, month, date].join(ds);
+    const fullTime = [hours, minutes, seconds].join(ts);
+    return [fullDate, fullTime].join(SIGN.ws);
+};
+
+function getSystemDateTimeMilliseconds(dateSep, timeSep) {
+    const ds = dateSep ? dateSep : SIGN.ssh;
+    const ts = timeSep ? timeSep : SIGN.gc;
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const milliseconds = String(d.getMilliseconds());
+    const fullDate = [year, month, date].join(ds);
+    const fullTime = concatString([hours, minutes, seconds].join(ts), ".", milliseconds);
+    return [fullDate, fullTime].join(SIGN.ws);
+};
+
+const DateUtil = function(year, month, date, hours, minutes, seconds, milliseconds) {
+    this.data = {
+        year: year,
+        month: month,
+        date: date,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: milliseconds ? milliseconds : 0
+    };
+    this.format = {
+        type1: function(o) {
+            const ymd = [o.year, setCharPadding(o.month, 2), setCharPadding(o.date, 2)].join(SIGN.ssh);
+            const hms = [setCharPadding(o.hours, 2), setCharPadding(o.minutes, 2), setCharPadding(o.seconds, 2)].join(SIGN.gc);
+            return concatString(ymd, SIGN.ws, hms);
+        },
+        type2: function(o) {
+            const m = [o.month, o.date, o.hours, o.minutes, o.seconds].map(function(item) {
+                return setCharPadding(item, 2);
+            });
+            return concatString(o.year, m.join(SIGN.none));
+        },
+        dateParam: function(o) {
+            return {
+                year: o.year,
+                month: setCharPadding(Number(o.month) - 1, 2),
+                date: setCharPadding(o.date, 2),
+                hours: setCharPadding(o.hours, 2),
+                minutes: setCharPadding(o.minutes, 2),
+                seconds: setCharPadding(o.seconds, 2),
+                milliseconds: setCharPadding(o.milliseconds, 3)
+            };
+        },
+        joinAll: function(o) {
+            const m = [o.month, o.date, o.hours, o.minutes, o.seconds].map(function(item) {
+                return setCharPadding(item, 2);
+            });
+            const ms = setCharPadding(o.milliseconds, 3);
+            return concatString(o.year, m.join(SIGN.none), ms);
+        }
+    };
+};
+DateUtil.prototype = {
+    init: function(format) {
+        return new Date(format);
+    },
+    initParam: function(o) {
+        return new Date(o.year, o.month, o.date, o.hours, o.minutes, o.seconds, o.milliseconds);
+    },
+    getDateObject: function(d) {
+        return {
+            year: d.getFullYear(),
+            month: d.getMonth() + 1,
+            date: d.getDate(),
+            hours: d.getHours(),
+            minutes: d.getMinutes(),
+            seconds: d.getSeconds(),
+            milliseconds: d.getMilliseconds()
+        };
+    },
+    calcDate: function(calcObj) {
+        const d = this.initParam(this.format.dateParam(this.data));
+        const cYear = calcObj.year ? calcObj.yaer : 0;
+        const cMonth = calcObj.month ? calcObj.month : 0;
+        const cDate = calcObj.date ? calcObj.date : 0;
+        const cHours = calcObj.hours ? calcObj.hours : 0;
+        const cMinutes = calcObj.minutes ? calcObj.minutes : 0;
+        const cSeconds = calcObj.seconds ? calcObj.seconds : 0;
+        const cMilliseconds = calcObj.milliseconds ? calcObj.milliseconds : 0;
+        d.setFullYear(d.getFullYear() + cYear);
+        d.setMonth(d.getMonth() + cMonth);
+        d.setDate(d.getDate() + cDate);
+        d.setHours(d.getHours() + cHours);
+        d.setMinutes(d.getMinutes() + cMinutes);
+        d.setSeconds(d.getSeconds() + cSeconds);
+        d.setMilliseconds(d.getMilliseconds() + cMilliseconds);
+        return this.getDateObject(d);
+    }
+};
+
+const StringBuilder = function() {
+};
+StringBuilder.prototype = {
+    sq: function(v) {
+        return concatString(SIGN.sq, v, SIGN.sq);
+    },
+    dq: function(v) {
+        return concatString(SIGN.dq, v, SIGN.dq)
+    },
+    equalSameCase: function(a, b) {
+        return lowerCase(String(a)) === lowerCase(String(b));
+    },
+    setQuery: function(list) {
+        return list.join(SIGN.ws);
+    }
+};
+
+const PromiseUtil = function() {
+    this.task = new Array();
+};
+PromiseUtil.prototype = {
+    push: function(exec) {
+        this.task = new Array();
+        const pro = new Promise(function(resolve, reject) {
+            exec();
+            return resolve();
+        });
+        this.task.push(pro);
         return this;
     },
-    getColumnData: function(data, table, column) {
-        const prop = getProperty(data, table);
-        const tableData = prop ? prop : data;
-        if(!tableData) return null;
-        const index = tableData.name.map(mapUpperCase).indexOf(upperCase(column));
-        return tableData.data[0][index];
-    },
-    convertToObject: function(name, data) {
-        const dataObject = {
-            count: data.length,
-            ref: new Object()
-        };
-        name.forEach(function(n, i) {
-            dataObject.ref[n] = data.map(function(item) {
-                return item[i];
-            });
+    executeAll: function(successFunc, errorFunc) {
+        Promise.all(this.task).then(function(res) {
+            successFunc(res);
+        }).catch(function(e) {
+            errorFunc(e);
         });
-        return dataObject;
-    },
-    where: function(o, table, expression) {
-        const prop = getProperty(o, table);
-        if(!prop) return null;
-        const name = prop.name;
-        const data = prop.data;
-        const getIndex = function(column) {
-            return name.map(mapUpperCase).indexOf(upperCase(column));
-        };
-        const getDataList = function(func) {
-            return data.filter(function(record) {
-                return func(record);
-            });
-        };
-        return this.convertToObject(name, typeIs(expression).function ? expression(getIndex, getDataList) : this.expressionLayout(getIndex, getDataList));
-    },
-    expressionLayout: function(getIndex, getDataList) {
-        const con = function(record) {
-            return true;
-        };
-        return getDataList(con);
     }
 };
