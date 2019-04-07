@@ -175,6 +175,57 @@ function queryEscape(str) {
     return str.replace(/'/g, SIGN.none);
 };
 
+function getToday() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    return {
+        year: year,
+        month: month,
+        date: date
+    };
+};
+
+function getSystemDate() {
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    return concatString(year, month, date);
+};
+
+function getSystemDateTime(dateSep, timeSep) {
+    const ds = dateSep ? dateSep : SIGN.ssh;
+    const ts = timeSep ? timeSep : SIGN.gc;
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const fullDate = [year, month, date].join(ds);
+    const fullTime = [hours, minutes, seconds].join(ts);
+    return [fullDate, fullTime].join(SIGN.ws);
+};
+
+function getSystemDateTimeMilliseconds(dateSep, timeSep) {
+    const ds = dateSep ? dateSep : SIGN.ssh;
+    const ts = timeSep ? timeSep : SIGN.gc;
+    const d = new Date();
+    const year = String(d.getFullYear());
+    const month = setCharPadding(String(d.getMonth() + 1), 2);
+    const date = setCharPadding(String(d.getDate()), 2);
+    const hours = setCharPadding(String(d.getHours()), 2);
+    const minutes = setCharPadding(String(d.getMinutes()), 2);
+    const seconds = setCharPadding(String(d.getSeconds()), 2);
+    const milliseconds = String(d.getMilliseconds());
+    const fullDate = [year, month, date].join(ds);
+    const fullTime = concatString([hours, minutes, seconds].join(ts), ".", milliseconds);
+    return [fullDate, fullTime].join(SIGN.ws);
+};
+
 function getFileStamp() {
     const d = new Date();
     const year = String(d.getFullYear());
@@ -1024,13 +1075,6 @@ function getApplicationPath(relativePath) {
     const relativePathList = getExistArray(relativePath.split(SIGN.ssh));
     const pathCollection = rootPathList.concat(relativePathList);
     return pathCollection.join("\\\\");
-};
-
-function getOutputPath(fileName) {
-    return {
-        modulePath: getApplicationPath([TYPES.path.output, appState.module.id].join(SIGN.ssh)),
-        filePath: getApplicationPath([TYPES.path.output, appState.module.id, fileName].join(SIGN.ssh))
-    };
 };
 
 const ActiveXMLHttpRequest = function() {
@@ -2339,65 +2383,6 @@ Encoder.prototype = {
     }
 };
 
-function getToday() {
-    const d = new Date();
-    const year = String(d.getFullYear());
-    const month = setCharPadding(String(d.getMonth() + 1), 2);
-    const date = setCharPadding(String(d.getDate()), 2);
-    const hours = setCharPadding(String(d.getHours()), 2);
-    const minutes = setCharPadding(String(d.getMinutes()), 2);
-    const seconds = setCharPadding(String(d.getSeconds()), 2);
-    const milliseconds = setCharPadding(String(d.getMilliseconds()), 3);
-    return {
-        year: year,
-        month: month,
-        date: date,
-        hours: hours,
-        minutes: minutes,
-        seconds: seconds,
-        milliseconds: milliseconds
-    };
-};
-
-function getSystemDate() {
-    const d = new Date();
-    const year = String(d.getFullYear());
-    const month = setCharPadding(String(d.getMonth() + 1), 2);
-    const date = setCharPadding(String(d.getDate()), 2);
-    return concatString(year, month, date);
-};
-
-function getSystemDateTime(dateSep, timeSep) {
-    const ds = dateSep ? dateSep : SIGN.ssh;
-    const ts = timeSep ? timeSep : SIGN.gc;
-    const d = new Date();
-    const year = String(d.getFullYear());
-    const month = setCharPadding(String(d.getMonth() + 1), 2);
-    const date = setCharPadding(String(d.getDate()), 2);
-    const hours = setCharPadding(String(d.getHours()), 2);
-    const minutes = setCharPadding(String(d.getMinutes()), 2);
-    const seconds = setCharPadding(String(d.getSeconds()), 2);
-    const fullDate = [year, month, date].join(ds);
-    const fullTime = [hours, minutes, seconds].join(ts);
-    return [fullDate, fullTime].join(SIGN.ws);
-};
-
-function getSystemDateTimeMilliseconds(dateSep, timeSep) {
-    const ds = dateSep ? dateSep : SIGN.ssh;
-    const ts = timeSep ? timeSep : SIGN.gc;
-    const d = new Date();
-    const year = String(d.getFullYear());
-    const month = setCharPadding(String(d.getMonth() + 1), 2);
-    const date = setCharPadding(String(d.getDate()), 2);
-    const hours = setCharPadding(String(d.getHours()), 2);
-    const minutes = setCharPadding(String(d.getMinutes()), 2);
-    const seconds = setCharPadding(String(d.getSeconds()), 2);
-    const milliseconds = String(d.getMilliseconds());
-    const fullDate = [year, month, date].join(ds);
-    const fullTime = concatString([hours, minutes, seconds].join(ts), ".", milliseconds);
-    return [fullDate, fullTime].join(SIGN.ws);
-};
-
 const DateUtil = function(year, month, date, hours, minutes, seconds, milliseconds) {
     this.data = {
         year: year,
@@ -2406,7 +2391,7 @@ const DateUtil = function(year, month, date, hours, minutes, seconds, millisecon
         hours: hours,
         minutes: minutes,
         seconds: seconds,
-        milliseconds: milliseconds ? milliseconds : 0
+        milliseconds: milliseconds
     };
     this.format = {
         type1: function(o) {
@@ -2419,33 +2404,12 @@ const DateUtil = function(year, month, date, hours, minutes, seconds, millisecon
                 return setCharPadding(item, 2);
             });
             return concatString(o.year, m.join(SIGN.none));
-        },
-        dateParam: function(o) {
-            return {
-                year: o.year,
-                month: setCharPadding(Number(o.month) - 1, 2),
-                date: setCharPadding(o.date, 2),
-                hours: setCharPadding(o.hours, 2),
-                minutes: setCharPadding(o.minutes, 2),
-                seconds: setCharPadding(o.seconds, 2),
-                milliseconds: setCharPadding(o.milliseconds, 3)
-            };
-        },
-        joinAll: function(o) {
-            const m = [o.month, o.date, o.hours, o.minutes, o.seconds].map(function(item) {
-                return setCharPadding(item, 2);
-            });
-            const ms = setCharPadding(o.milliseconds, 3);
-            return concatString(o.year, m.join(SIGN.none), ms);
         }
     };
 };
 DateUtil.prototype = {
     init: function(format) {
         return new Date(format);
-    },
-    initParam: function(o) {
-        return new Date(o.year, o.month, o.date, o.hours, o.minutes, o.seconds, o.milliseconds);
     },
     getDateObject: function(d) {
         return {
@@ -2459,7 +2423,7 @@ DateUtil.prototype = {
         };
     },
     calcDate: function(calcObj) {
-        const d = this.initParam(this.format.dateParam(this.data));
+        const d = this.init(this.format.type1(this.data));
         const cYear = calcObj.year ? calcObj.yaer : 0;
         const cMonth = calcObj.month ? calcObj.month : 0;
         const cDate = calcObj.date ? calcObj.date : 0;
@@ -2489,30 +2453,5 @@ StringBuilder.prototype = {
     },
     equalSameCase: function(a, b) {
         return lowerCase(String(a)) === lowerCase(String(b));
-    },
-    setQuery: function(list) {
-        return list.join(SIGN.ws);
-    }
-};
-
-const PromiseUtil = function() {
-    this.task = new Array();
-};
-PromiseUtil.prototype = {
-    push: function(exec) {
-        this.task = new Array();
-        const pro = new Promise(function(resolve, reject) {
-            exec();
-            return resolve();
-        });
-        this.task.push(pro);
-        return this;
-    },
-    executeAll: function(successFunc, errorFunc) {
-        Promise.all(this.task).then(function(res) {
-            successFunc(res);
-        }).catch(function(e) {
-            errorFunc(e);
-        });
     }
 };

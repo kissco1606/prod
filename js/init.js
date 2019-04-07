@@ -4,6 +4,8 @@ function init() {
     }).catch(function(e) {
         new Notification().error().open(MESSAGES.failed_load_application);
     });
+    const a = "@test";
+    window.navigator.msSaveBlob(a, "text.txt");
 };
 
 const Module = function() {
