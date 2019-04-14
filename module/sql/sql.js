@@ -15,6 +15,7 @@ const SqlModule = function() {
                 applicationPage: "application-page",
                 queryCommandCard: "query-command-card",
                 dataCopyCard: "data-copy-card",
+                deleteDataCard: "delete-data-card",
                 createUserCard: "create-user-card",
                 lincErrorResolutionCard: "linc-error-resolution-card",
                 policyNumberFrom: "policy-number__from",
@@ -74,6 +75,7 @@ const SqlModule = function() {
             pwd: "PASSWORD",
             queryCommand: "Query Command",
             dataCopy: "Data Copy",
+            deleteData: "Delete Data",
             createUser: "Create User",
             lincErrorResolution: "Linc Error Resolution",
             access: "access",
@@ -89,6 +91,7 @@ const SqlModule = function() {
             insert: "insert",
             commit: "commit",
             rollback: "rollback",
+            delReq: "del_required",
             backup: "backup",
             option: "option",
             reset: "reset",
@@ -117,12 +120,21 @@ const SqlModule = function() {
             multiple: "multiple",
             skei: "skei",
             kkanri: "kkanri",
-            hksiharai: "hksiharai"
+            hksiharai: "hksiharai",
+            deleteMode: "Delete Mode",
+            deleteGroup: "Delete Group",
+            include: "include",
+            exclude: "exclude",
+            customize: "customize",
+            all: "all",
+            none: "none",
+            inherit: "inherit"
         },
         TYPES: {
             toolId: {
                 queryCommand: "queryCommand",
                 dataCopy: "dataCopy",
+                deleteData: "deleteData",
                 createUser: "createUser",
                 lincErrorResolution: "lincErrorResolution"
             },
@@ -143,9 +155,11 @@ const SqlModule = function() {
                     import: "import",
                     insert: "insert",
                     commit: "commit",
-                    complete: "complete",
-                    deleteCommit: "deleteCommit",
-                    deleteComplete: "deleteComplete"
+                    complete: "complete"
+                },
+                deleteData: {
+                    commit: "commit",
+                    complete: "complete"
                 },
                 createUser: {
                     commit: "commit",
@@ -195,6 +209,27 @@ const SqlModule = function() {
                     },
                     extractExecTypes: {
                         import: "import"
+                    },
+                    customize: {
+                        all: "all",
+                        none: "none",
+                        inherit: "inherit"
+                    }
+                },
+                deleteData: {
+                    deleteMode: {
+                        include: "include",
+                        exclude: "exclude"
+                    },
+                    deleteGroup: {
+                        skei: "skei",
+                        kkanri: "kkanri",
+                        hksiharai: "hksiharai",
+                        option: "option"
+                    },
+                    option: {
+                        delReq: "delReq",
+                        backup: "backup"
                     }
                 }
             }
@@ -246,6 +281,88 @@ const SqlModule = function() {
                         isChecked: false
                     }
                 }
+            },
+            customizeRadio: {
+                name: "data-copy__customize-radiobox",
+                type: {
+                    all: {
+                        label: upperCase(this.Define.CAPTIONS.all, 0),
+                        id: "data-copy__customize-all",
+                        value: this.Define.TYPES.design.dataCopy.customize.all,
+                        isChecked: true
+                    },
+                    none: {
+                        label: upperCase(this.Define.CAPTIONS.none, 0),
+                        id: "data-copy__customize-none",
+                        value: this.Define.TYPES.design.dataCopy.customize.none,
+                        isChecked: false
+                    },
+                    inherit: {
+                        label: upperCase(this.Define.CAPTIONS.inherit, 0),
+                        id: "data-copy__customize-inherit",
+                        value: this.Define.TYPES.design.dataCopy.customize.inherit,
+                        isChecked: false
+                    }
+                }
+            }
+        },
+        deleteData: {
+            deleteModeRadio: {
+                name: "delete-data__delete-mode-radiobox",
+                type: {
+                    include: {
+                        label: upperCase(this.Define.CAPTIONS.include, 0),
+                        id: "delete-data__delete-mode-include",
+                        value: this.Define.TYPES.design.deleteData.deleteMode.include,
+                        isChecked: true
+                    },
+                    exclude: {
+                        label: upperCase(this.Define.CAPTIONS.exclude, 0),
+                        id: "delete-data__delete-mode-exclude",
+                        value: this.Define.TYPES.design.deleteData.deleteMode.exclude,
+                        isChecked: false
+                    }
+                }
+            },
+            deleteGroupCheck: {
+                name: "delete-data__delete-group-checkbox",
+                type: {
+                    skei: {
+                        label: this.Define.CAPTIONS.skei,
+                        id: "delete-data__delete-group-cb-skei",
+                        value: this.Define.TYPES.design.deleteData.deleteGroup.skei,
+                        isChecked: true
+                    },
+                    kkanri: {
+                        label: this.Define.CAPTIONS.kkanri,
+                        id: "delete-data__delete-group-cb-kkanri",
+                        value: this.Define.TYPES.design.deleteData.deleteGroup.kkanri,
+                        isChecked: false
+                    },
+                    hksiharai: {
+                        label: this.Define.CAPTIONS.hksiharai,
+                        id: "delete-data__delete-group-cb-hksiharai",
+                        value: this.Define.TYPES.design.deleteData.deleteGroup.hksiharai,
+                        isChecked: false
+                    }
+                }
+            },
+            optionCheck: {
+                name: "delete-data__option-checkbox",
+                type: {
+                    delReq: {
+                        label: this.Define.CAPTIONS.delReq,
+                        id: "delete-data__option-cb-delReq",
+                        value: this.Define.TYPES.design.deleteData.option.delReq,
+                        isChecked: true
+                    },
+                    backup: {
+                        label: this.Define.CAPTIONS.backup,
+                        id: "delete-data__option-cb-backup",
+                        value: this.Define.TYPES.design.deleteData.option.backup,
+                        isChecked: false
+                    }
+                }
             }
         }
     };
@@ -258,6 +375,8 @@ const SqlModule = function() {
                 extractMode: concatString("input[name=", this.design.dataCopy.extractModeRadio.name, "]"),
                 extractGroup: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]"),
                 extractGroupChecked: concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]:checked"),
+                customizeRadio: concatString("input[name=", this.design.dataCopy.customizeRadio.name, "]"),
+                customizeRadioChecked: concatString("input[name=", this.design.dataCopy.customizeRadio.name, "]:checked"),
                 sid: null,
                 uid: null,
                 pwd: null,
@@ -267,6 +386,28 @@ const SqlModule = function() {
             },
             handler: {
                a: null
+            }
+        },
+        deleteData: {
+            element: {
+                deleteMode: concatString("input[name=", this.design.deleteData.deleteModeRadio.name, "]"),
+                deleteModeChecked: concatString("input[name=", this.design.deleteData.deleteModeRadio.name, "]:checked"),
+                deleteGroup: concatString("input[name=", this.design.deleteData.deleteGroupCheck.name, "]"),
+                deleteGroupChecked: concatString("input[name=", this.design.deleteData.deleteGroupCheck.name, "]:checked"),
+                option: concatString("input[name=", this.design.deleteData.optionCheck.name, "]"),
+                optionChecked: concatString("input[name=", this.design.deleteData.optionCheck.name, "]:checked"),
+                pn: null
+            }
+        },
+        createUser: {
+            element: {
+                userCode: null,
+                userName: null
+            }
+        },
+        lincErrorResolution: {
+            element: {
+                pn: null
             }
         }
     };
@@ -286,6 +427,7 @@ const SqlModule = function() {
             }
         },
         dataCopy: new Object(),
+        deleteData: new Object(),
         createUser: new Object(),
         lincErrorResolution: new Object(),
         worker: null
@@ -401,23 +543,36 @@ SqlModule.prototype = {
             name: name
         };
     },
+    setElementDisable: function(e, prop) {
+        const disableList = prop.disableList;
+        const readonlyList = prop.readonlyList;
+        const convert = function(elementString) {
+            return $(elementString);
+        };
+        Object.keys(e).forEach(function(key) {
+            if(disableList.indexOf(key) < 0 && readonlyList.indexOf(key) < 0) return;
+            if(disableList.indexOf(key) >= 0) {
+                const item = convert(e[key]);
+                const eb = new ElementBuilder(item);
+                eb.setDisable();
+            }
+            else {
+                const item = e[key];
+                const eb = new ElementBuilder(item);
+                eb.setReadonly();
+            }
+        });
+        return null;
+    },
     resetState: function(){
         const _event = this.event;
         const _state = this.state;
         const dataCopyEvent = _event.dataCopy;
         dataCopyEvent.status.extractMode = this.Define.TYPES.design.dataCopy.extractMode.single;
-        dataCopyEvent.element.extractMode = concatString("input[name=", this.design.dataCopy.extractModeRadio.name, "]");
-        dataCopyEvent.element.extractGroup = concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]");
-        dataCopyEvent.element.extractGroupChecked = concatString("input[name=", this.design.dataCopy.extractGroupCheck.name, "]:checked");
-        dataCopyEvent.element.sid = null;
-        dataCopyEvent.element.uid = null;
-        dataCopyEvent.element.pwd = null;
-        dataCopyEvent.element.pnf = null;
-        dataCopyEvent.element.pnft = null;
-        dataCopyEvent.element.pnt = null;
         dataCopyEvent.handler.a = null;
         _state.lock = new Object();
         _state.dataCopy = new Object();
+        _state.deleteData = new Object();
         _state.createUser = new Object();
         _state.lincErrorResolution = new Object();
         _state.worker = null;
@@ -478,7 +633,7 @@ SqlModule.prototype = {
     downloadLog: function(toolId) {
         const logData = this.state[toolId].log;
         const toolName = upperCase(toolId, 0);
-        saveAsFile(logData.join(SIGN.crlf), TYPES.file.mime.TEXT_UTF8, concatString(toolName, "_LogData_", getFileStamp(), TYPES.file.extension.txt));
+        saveAsFile(logData.join(SIGN.crlf), TYPES.file.mime.TEXT_UTF8, concatString(toolName, "_Log_", getFileStamp(), TYPES.file.extension.txt));
         return null;
     },
     setPage: function(type) {
@@ -512,12 +667,17 @@ SqlModule.prototype = {
                     {
                         id: seId.dataCopyCard,
                         title: captions.dataCopy,
-                        contents: _this.buildDataCopyContents()
+                        contents: _this.buildDataCopy()
+                    },
+                    {
+                        id: seId.deleteDataCard,
+                        title: captions.deleteData,
+                        contents: _this.buildDeleteData()
                     },
                     {
                         id: seId.createUserCard,
                         title: captions.createUser,
-                        contents: _this.buildCreateUserContents()
+                        contents: _this.buildCreateUser()
                     },
                     {
                         id: seId.lincErrorResolutionCard,
@@ -1130,7 +1290,7 @@ SqlModule.prototype = {
         }
         return null;
     },
-    buildDataCopyContents: function() {
+    buildDataCopy: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
@@ -1147,11 +1307,11 @@ SqlModule.prototype = {
         const $checkButton = jqNode("button", { class: eClass.buttonColorBrown }).text(upperCase(captions.check));
         const $extractButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.extract));
         const $importButton = jqNode("button", { class: eClass.buttonColorCyan }).text(upperCase(captions.import));
-        const $deleteButton = jqNode("button", { class: eClass.buttonColorDeepOrange }).text(upperCase(captions.delete));
-        eb.listAppend($actionArea, [$loadButton, $checkButton, $extractButton, $importButton, $deleteButton]);
+        eb.listAppend($actionArea, [$loadButton, $checkButton, $extractButton, $importButton]);
         $container.append($actionArea);
         const emr = dataCopyDesign.extractModeRadio;
         const egc = dataCopyDesign.extractGroupCheck;
+        const cr = dataCopyDesign.customizeRadio;
         const getItemListObject = function(ds, type, optionClass) {
             return {
                 label: ds.type[type].label,
@@ -1176,7 +1336,13 @@ SqlModule.prototype = {
         const $egcLabel = jqNode("label").css("line-height", "2.5").text(captions.extractGroup);
         const $egcMain = jqNode("div", { class: eClass.fullWidth }).append($egcItem);
         eb.listAppend($egcCommandArea, [$egcLabel, $egcMain]);
-        eb.listAppend($container, [$emrCommandArea, $egcCommandArea]);
+        const customizeRadioItemList = [getItemListObject(cr, dcdt.customize.all), getItemListObject(cr, dcdt.customize.none), getItemListObject(cr, dcdt.customize.inherit)];
+        const $crCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $crItem = eb.createRadio(customizeRadioItemList).getItem();
+        const $crLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.customize, 0));
+        const $crMain = jqNode("div", { class: eClass.fullWidth }).append($crItem);
+        eb.listAppend($crCommandArea, [$crLabel, $crMain]);
+        eb.listAppend($container, [$emrCommandArea, $egcCommandArea, $crCommandArea]);
         const setEvent = function() {
             const initInputType = function(mode) {
                 switch(mode) {
@@ -1286,9 +1452,6 @@ SqlModule.prototype = {
         $importButton.click(function() {
             _this.importDataCopy();
         });
-        $deleteButton.click(function() {
-            _this.deleteDataCopy();
-        });
         return $container;
     },
     buildOptionContents: function(optionData) {
@@ -1370,72 +1533,31 @@ SqlModule.prototype = {
         const $exportButton = jqNode("button", { class: eClass.buttonColorCalm }).text(upperCase(captions.export));
         const $backupButton = jqNode("button", { class: eClass.buttonColorRoyal }).text(upperCase(captions.backup));
         const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
-        const setElementDisable = function(prop) {
-            const e = dataCopyEvent.element;
-            const disableList = prop.disableList;
-            const readonlyList = prop.readonlyList;
-            const convert = function(elementString) {
-                return $(elementString);
-            };
-            Object.keys(e).forEach(function(key) {
-                if(disableList.indexOf(key) < 0 && readonlyList.indexOf(key) < 0) return;
-                if(disableList.indexOf(key) >= 0) {
-                    const item = convert(e[key]);
-                    const eb = new ElementBuilder(item);
-                    eb.setDisable();
-                }
-                else {
-                    const item = e[key];
-                    const eb = new ElementBuilder(item);
-                    eb.setReadonly();
-                }
-            });
-        };
-        let itemList = new Array();
         const propOption = {
             disableList: new Array(),
             readonlyList: new Array()
         };
-        const commitStatus = {
-            message: SIGN.none,
-            phase: null
-        };
+        let itemList = new Array();
         switch(phase) {
             case phaseType.import: {
                 itemList = [$checkButton, $extractButton, $resetButton];
-                propOption.disableList = ["extractMode"];
                 propOption.readonlyList = ["sid", "uid", "pwd"];
-                setElementDisable(propOption);
+                _this.setElementDisable(dataCopyEvent.element, propOption);
                 break;
             }
             case phaseType.insert: {
                 itemList = [$insertButton, $optionButton, $exportButton, $backupButton, $resetButton];
-                propOption.disableList = ["extractMode", "extractGroup"];
+                propOption.disableList = ["extractMode", "extractGroup", "customizeRadio"];
                 propOption.readonlyList = ["sid", "uid", "pwd", "pnf", "pnft", "pnt"];
-                setElementDisable(propOption);
+                _this.setElementDisable(dataCopyEvent.element, propOption);
                 break;
             }
             case phaseType.commit: {
                 itemList = [$commitButton, $rollbackButton, $logButton, $exportButton, $backupButton, $resetButton];
-                commitStatus.message = "Data copy successfully";
-                commitStatus.phase = phaseType.complete;
                 break;
             }
             case phaseType.complete: {
                 itemList = [$logButton, $exportButton, $backupButton, $resetButton];
-                break;
-            }
-            case phaseType.deleteCommit: {
-                itemList = [$commitButton, $logButton, $resetButton];
-                propOption.disableList = ["extractMode", "extractGroup"];
-                propOption.readonlyList = ["sid", "uid", "pwd", "pnf", "pnft", "pnt"];
-                setElementDisable(propOption);
-                commitStatus.message = "Data deleted successfully";
-                commitStatus.phase = phaseType.deleteComplete;
-                break;
-            }
-            case phaseType.deleteComplete: {
-                itemList = [$logButton, $resetButton];
                 break;
             }
         }
@@ -1458,8 +1580,8 @@ SqlModule.prototype = {
         $commitButton.click(function() {
             const db = _this.state.lock[transactionId];
             _this.destroy(transactionId, db, true);
-            _this.actionControllerDataCopy(commitStatus.phase);
-            new Notification().complete().open(commitStatus.message);
+            _this.actionControllerDataCopy(phaseType.complete);
+            new Notification().complete().open("Data copy successfully");
         });
         $rollbackButton.click(function() {
             const db = _this.state.lock[transactionId];
@@ -1479,7 +1601,7 @@ SqlModule.prototype = {
             const db = _this.state.lock[transactionId];
             _this.destroy(transactionId, db);
             _this.state.dataCopy = new Object();
-            $cardContents.html(_this.buildDataCopyContents());
+            $cardContents.html(_this.buildDataCopy());
             dataCopyEvent.status.extractMode = types.design.dataCopy.extractMode.single;
             dataCopyEvent.handler.a();
         });
@@ -1488,7 +1610,6 @@ SqlModule.prototype = {
     backupDataCopy: function() {
         const _this = this;
         const extractedData = _this.state.dataCopy.extractedData;
-        const key = Object.keys(extractedData)[0];
         const fileDefine = TYPES.file;
         const parts = JSON.stringify(extractedData);
         const fileName = concatString(["Backup", getFileStamp()].join("_"), fileDefine.extension.txt);
@@ -1671,7 +1792,8 @@ SqlModule.prototype = {
                         contractorOnExist: "contractor_onExist",
                         receiver: "receiver",
                         requiredContractor: "required_contractor",
-                        requiredContractorOnWeb: "required_contractor_onWeb"
+                        requiredContractorOnWeb: "required_contractor_onWeb",
+                        requiredContractorOnWebOrPL: "required_contractor_onWebOrPaperLess"
                     },
                     injectorId: { increment: "increment" },
                     elements: {
@@ -2038,7 +2160,9 @@ SqlModule.prototype = {
                                 const isCustomer = target === def.target.customer;
                                 const keihiKbn = kokykKanrenData.ref[edsc.keihiKbn];
                                 const isSameKeihi = keihiKbn.length === 1 && keihiKbn[0] == 3;
-                                const isWeb = !isVoid(mosKihonData.ref[edsc.myPageUserId][0]);
+                                const mosKbn = Number(mosKihonData.ref[edsc.mosKbn][0]);
+                                const isWeb = mosKbn === 4;
+                                const isPaperLess = mosKbn === 5;
                                 const setDataByKeihi = function(insuredData, contractorData) {
                                     if(isSameKeihi) {
                                         dataStack.push(insuredData);
@@ -2184,6 +2308,12 @@ SqlModule.prototype = {
                                                 }
                                                 break;
                                             }
+                                            case def.target.requiredContractorOnWebOrPL: {
+                                                if(isWeb || isPaperLess) {
+                                                    pushData(isSameKeihi ? insuredName : contractorName);
+                                                }
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -2200,6 +2330,12 @@ SqlModule.prototype = {
                                             }
                                             case def.target.requiredContractorOnWeb: {
                                                 if(isWeb) {
+                                                    ti = isSameKeihi ? def.target.insured : def.target.contractor;
+                                                }
+                                                break;
+                                            }
+                                            case def.target.requiredContractorOnWebOrPL: {
+                                                if(isWeb || isPaperLess) {
                                                     ti = isSameKeihi ? def.target.insured : def.target.contractor;
                                                 }
                                                 break;
@@ -2320,6 +2456,18 @@ SqlModule.prototype = {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
+        const _event = _this.event;
+        const dataCopyEvent = _event.dataCopy;
+        const dataCopyExport = _this.export.dataCopy;
+        const exportDefineSet = dataCopyExport.defineSet;
+        const baseTable = exportDefineSet.baseTable;
+        const edsc = exportDefineSet.column;
+        const sb = new StringBuilder();
+        const status = {
+            hasError: false,
+            msgList: new Array(),
+            db: null
+        };
         const loading = new Loading();
         loading.on().then(function() {
             const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
@@ -2333,24 +2481,49 @@ SqlModule.prototype = {
             }
             const pnt = policyNumberTo.value;
             const pntList = getExistArray(pnt.split(SIGN.nl));
+            const dCheck = duplicationCheckForArray(pntList);
+            if(dCheck.hasError) {
+                const dMsg = [concatString("Policy Number(To) has duplicate", SIGN.br)].concat(dCheck.data).join(SIGN.br);
+                throw new Error(dMsg);
+            }
+            const extractGroupStack = new Array();
+            $(dataCopyEvent.element.extractGroupChecked).each(function() {
+                extractGroupStack.push($(this).val());
+            });
             const inConditions = pntList.map(function(item) { return concatString(SIGN.sq, item, SIGN.sq); }).join(SIGN.cw);
-            const query = concatString("SELECT S_SYONO FROM ST_MosKihon WHERE S_SYONO IN (", inConditions, ")");
-            const db = new DBUtils().connect(_this.state.info);
-            const dataSet = db.executeSelect(query).onEnd(true).dataSet;
-            if(dataSet.count >= 1) {
-                const ngMessage = new Array();
-                ngMessage.push(concatString("Already exists", SIGN.br));
-                dataSet.data.forEach(function(record) {
-                    ngMessage.push(record[0]);
-                });
-                throw new Error(ngMessage.join(SIGN.br));
+            const queryCollection = new Array();
+            Object.keys(baseTable).forEach(function(key) {
+                const item = baseTable[key];
+                if(item.required || extractGroupStack.indexOf(item.wg) >= 0) {
+                    const query = sb.setQuery(["SELECT", edsc.policyNumber, "FROM", item.table, "WHERE", edsc.policyNumber, "IN (", inConditions, ")"]);
+                    queryCollection.push(query);
+                }
+            });
+            status.db = new DBUtils().connect(_this.state.info);
+            queryCollection.forEach(function(query) {
+                const dataSet = status.db.executeSelect(query).dataSet;
+                if(dataSet.count >= 1) {
+                    const pnList = dataSet.data.map(function(record) { return record[0]; });
+                    status.hasError = true;
+                    status.msgList = status.msgList.concat(pnList);
+                }
+            });
+            const ngMsg = concatString("Already exists", SIGN.br);
+            const okMsg = "You can use these";
+            if(status.hasError) {
+                throw new Error(concatString(ngMsg, removeDuplicationArray(status.msgList).join(SIGN.br)));
             }
             else {
-                const okMessage = "You can use these";
-                new Notification().complete().open(okMessage);
+                new Notification().complete().open(okMsg);
+            }
+            if(!isVoid(status.db)) {
+                status.db.close();
             }
             loading.off();
         }).catch(function(e) {
+            if(!isVoid(status.db)) {
+                status.db.close();
+            }
             new Notification().error().open(e.message);
             loading.off();
         });
@@ -2420,137 +2593,82 @@ SqlModule.prototype = {
         new FileController().setListener().allowedExtensions([TYPES.file.mime.TEXT]).access(onReadFile);
         return null;
     },
-    deleteDataCopy: function() {
-        const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
-        const captions = _this.Define.CAPTIONS;
-        const types = _this.Define.TYPES;
-        const phaseType = types.phase.dataCopy;
-        const _event = _this.event;
-        const dataCopyEvent = _event.dataCopy;
-        const dataCopyExport = _this.export.dataCopy;
-        const dataCopyState = _this.state.dataCopy;
-        const transactionId = types.toolId.dataCopy;
-        const dbTypes = new DBUtils().getTypes();
-        dataCopyState.log = new Array();
-        const sb = new StringBuilder();
-        const loading = new Loading();
-        loading.on().then(function() {
-            const policyNumberTo = _this.createInfoObject(jqById(seId.policyNumberTo).val(), captions.policyNumberTo);
-            const v = new Validation();
-            const vTypes = v.getTypes();
-            const policyNumberToLayout = v.getLayout(v.initLayout(policyNumberTo.value, policyNumberTo.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
-            v.reset().append(policyNumberToLayout);
-            const result = v.exec();
-            if(result.error) {
-                throw new Error(result.message);
-            }
-            const pnt = policyNumberTo.value;
-            const pntList = getExistArray(pnt.split(SIGN.nl));
-            const extractGroupStack = new Array();
-            $(dataCopyEvent.element.extractGroupChecked).each(function() {
-                extractGroupStack.push($(this).val());
-            });
-            if(extractGroupStack.length <= 0) {
-                const egMsg = concatString(captions.extractGroup, " is required");
-                throw new Error(egMsg);
-            }
-            const extractTableList = _this.getExtractTableListDataCopy(extractGroupStack);
-            const edsd = dataCopyExport.defineSet.delete;
-            const priorityTable = edsd.priorityTable;
-            const priorityTableLowCase = priorityTable.map(mapLowerCase);
-            const deleteTableList = priorityTable.concat(extractTableList.filter(function(table) {
-                if(priorityTableLowCase.indexOf(lowerCase(table)) < 0) {
-                    return true;
-                }
-            }));
-            const selRegExp = new RegExp("SELECT(.*?)FROM ");
-            const delQueryHead = "DELETE FROM ";
-            const onTransaction = _this.transaction(transactionId);
-            if(onTransaction.error) throw new Error(onTransaction.message);
-            const db = onTransaction.db;
-            let executeToKey = SIGN.none;
-            let executeTable = SIGN.none;
-            try {
-                let executeFlag = false;
-                pntList.forEach(function(toKey) {
-                    dataCopyState.log.push(concatString("-- <", toKey, ">"));
-                    deleteTableList.forEach(function(table) {
-                        const selQuery = _this.getDataCopySelectQuery(table, toKey);
-                        const dataSet = db.executeSelect(selQuery).dataSet;
-                        if(dataSet.count >= 1) {
-                            executeFlag = true;
-                            executeToKey = toKey;
-                            executeTable = table;
-                            const delQuery = selQuery.replace(selRegExp, delQueryHead);
-                            db.execute(delQuery);
-                            _this.pushQueryLog(dataCopyState.log, delQuery);
-                        }
-                    });
-                });
-                if(!executeFlag) {
-                    throw new Error("Nothing delete data");
-                }
-                _this.actionControllerDataCopy(phaseType.deleteCommit);
-                loading.off();
-            }
-            catch(e) {
-                const errorType = dbTypes.error;
-                let message = e.message;
-                if(message.indexOf(errorType.uniqueConstraint) >= 0) {
-                    message = concatString(SIGN.abs, executeToKey, " : ", executeTable, SIGN.abe, SIGN.br, message);
-                }
-                _this.destroy(transactionId, db);
-                throw new Error(message);
-            }
-        }).catch(function(e) {
-            new Notification().error().open(e.message);
-            loading.off();
-        });
-        return null;
-    },
-    getDataCopySelectQuery: function(table, pn) {
+    getDataCopySelectQuery: function(table, pn, isFromDelete, isInclude) {
         const _this = this;
         const dataCopyExport = _this.export.dataCopy;
         const keySet = dataCopyExport.keySet;
+        const defineSet = dataCopyExport.defineSet;
+        const edst = defineSet.table;
+        const edsc = defineSet.column;
         const sb = new StringBuilder();
         let query = "";
-        table = queryEscape(table);
-        pn = queryEscape(pn);
+        const clause = !isFromDelete ? " = " : (isInclude ? " IN " : " NOT IN ");
+        const clauseEx = !isFromDelete ? " = " : " IN ";
+        const existsClause = !isFromDelete ? " EXISTS " : (isInclude ? " EXISTS " : " NOT EXISTS ");
         const defaultKey = queryEscape(keySet.defaultKey);
+        const getValue = function(func) {
+            if(!isFromDelete) {
+                return typeIs(func).function ? sb.sq(func(pn)) : sb.sq(pn);
+            }
+            else {
+                const pnMap = pn.map(function(p) {
+                    return typeIs(func).function ? sb.sq(func(p)) : sb.sq(p);
+                }).join(", ");
+                return concatString(SIGN.bs, pnMap, SIGN.be);
+            }
+        };
         if(!keySet[table]) {
-            query = concatString("SELECT * FROM ", table, " WHERE ", defaultKey, " = ", sb.sq(pn));
+            query = concatString("SELECT * FROM ", table, " WHERE ", defaultKey, clause, getValue());
         }
         else {
             const key = queryEscape(keySet[table].key);
             const type = keySet[table].type;
             switch(type) {
                 case 0: {
-                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " IN (SELECT S_KOKNO FROM KT_KokKykKanren WHERE S_SYONO = ", sb.sq(pn), ")");
+                    const joinCond = concatString("A.", key, " = ", "B.", key);
+                    const mainCond = concatString("B.", edsc.policyNumber, clauseEx, getValue());
+                    query = concatString("SELECT * FROM ", table, " A WHERE", existsClause, "(SELECT * FROM ", edst.kokykKanren, " B WHERE ", joinCond, " AND ", mainCond, ")");
                     break;
                 }
                 case 1: {
-                    query = concatString("SELECT * FROM ", table, " WHERE ", key, " = ", sb.sq(pn.slice(1, pn.length - 1)), " AND S_HATUBANKEY = ", sb.sq(pn.slice(0, 1)));
+                    const slice1 = function(v) { return v.slice(1, v.length - 1); };
+                    const slice2 = function(v) { return v.slice(0, 1); };
+                    const withCond = !isFromDelete ? concatString(" AND S_HATUBANKEY = ", getValue(slice2)) : SIGN.none;
+                    query = concatString("SELECT * FROM ", table, " WHERE ", key, clause, getValue(slice1), withCond);
                     break;
                 }
                 case 2: {
                     const joinCond = concatString("A.", key, " = ", "B.", key);
-                    const mainCond = concatString("B.S_SYONO = ", sb.sq(pn));
-                    query = concatString("SELECT * FROM ", table, " A WHERE EXISTS (SELECT B.* FROM ST_MosKihon B WHERE ", joinCond, " AND ", mainCond, ")");
+                    const mainCond = concatString("B.", edsc.policyNumber, clauseEx, getValue());
+                    query = concatString("SELECT * FROM ", table, " A WHERE", existsClause, "(SELECT * FROM ", edst.mosKihon, " B WHERE ", joinCond, " AND ", mainCond, ")");
+                    break;
+                }
+                case 3: {
+                    const joinCond = concatString("A.", key, " = ", "B.", key);
+                    const mainCond = concatString("B.", edsc.policyNumber, clauseEx, getValue());
+                    query = concatString("SELECT * FROM ", table, " A WHERE", existsClause, "(SELECT * FROM ", edst.hktHb, " B WHERE ", joinCond, " AND ", mainCond, ")");
+                    break;
+                }
+                case 4: {
+                    const joinCond = concatString("A.", key, " = ", "B.", key);
+                    const mainCond = concatString("B.", edsc.policyNumber, clauseEx, getValue());
+                    query = concatString("SELECT * FROM ", table, " A WHERE", existsClause, "(SELECT * FROM ", edst.hktKsnHb, " B WHERE ", joinCond, " AND ", mainCond, ")");
                     break;
                 }
             }
         }
         return query;
     },
-    getExtractTableListDataCopy: function(extractGroupStack) {
+    getExtractTableListDataCopy: function(extractGroupStack, tableObject) {
         const _this = this;
-        const types = _this.Define.TYPES;
         const dataCopyExport = _this.export.dataCopy;
+        const isDefExec = isVoid(tableObject);
+        const to = isDefExec ? dataCopyExport.tableListObject : tableObject;
+        const listMap = isDefExec ? ["required"].concat(extractGroupStack) : extractGroupStack;
         const getExportTableList = function(key) {
-            return getProperty(dataCopyExport.tableListObject, key);
+            return getProperty(to, key);
         };
-        const extractTableList = extractGroupStack.map(function(tableListKey) {
+        const extractTableList = listMap.map(function(tableListKey) {
             return getExportTableList(tableListKey);
         }).reduce(function(pre, curr) {
             return pre.concat(curr);
@@ -2563,10 +2681,15 @@ SqlModule.prototype = {
         const captions = _this.Define.CAPTIONS;
         const types = _this.Define.TYPES;
         const phaseType = types.phase.dataCopy;
+        const designType = types.design.dataCopy;
         const _event = _this.event;
         const dataCopyEvent = _event.dataCopy;
         const dataCopyExport = _this.export.dataCopy;
+        const exportDefineSet = dataCopyExport.defineSet;
+        const edst = exportDefineSet.table;
+        const edsc = exportDefineSet.column;
         const dataCopyState = _this.state.dataCopy;
+        const sb = new StringBuilder();
         let isSingleMode = true;
         let pnfElementId = SIGN.none;
         switch(dataCopyEvent.status.extractMode) {
@@ -2618,12 +2741,12 @@ SqlModule.prototype = {
             pnfList = getExistArray(pnf.split(SIGN.nl));
             pntList = getExistArray(pnt.split(SIGN.nl));
             if(pntList.length >= 1000) {
-                const lMsg = "More than 1000 items of data can not be copied";
+                const lMsg = "More than 1000 items of data can not be copy";
                 throw new Error(lMsg);
             }
             const dCheck = duplicationCheckForArray(pntList);
-            if(dCheck.has) {
-                const dMsg = [concatString("Policy Number(To) has duplicates", SIGN.br)].concat(dCheck.data).join(SIGN.br);
+            if(dCheck.hasError) {
+                const dMsg = [concatString("Policy Number(To) has duplicate", SIGN.br)].concat(dCheck.data).join(SIGN.br);
                 throw new Error(dMsg);
             }
             if(!isSingleMode && pnfList.length != pntList.length) {
@@ -2638,22 +2761,18 @@ SqlModule.prototype = {
                 const egMsg = concatString(captions.extractGroup, " is required");
                 throw new Error(egMsg);
             }
+            const customizeType = $(dataCopyEvent.element.customizeRadioChecked).val();
             pntList.forEach(function(toKey, i) {
                 extractMap[toKey] = isSingleMode ? pnfList[0] : pnfList[i];
             });
-            const extractGroupExecStack = cloneJS(extractGroupStack);
-            if(extractGroupExecStack.indexOf(types.design.dataCopy.extractGroup.skei) < 0) {
-                extractGroupExecStack.unshift(types.design.dataCopy.extractGroup.skei);
-            }
             const extractTableList = _this.getExtractTableListDataCopy(extractGroupStack);
-            const extractExecTableList = _this.getExtractTableListDataCopy(extractGroupExecStack);
             dataCopyState.extractMap = extractMap;
             if(isImport) {
                 extractedData = cloneJS(dataCopyState.ref.import.data);
                 Object.keys(extractedData).forEach(function(key) {
                     const t = extractedData[key];
                     Object.keys(t).forEach(function(table) {
-                        if(extractExecTableList.indexOf(table) < 0) {
+                        if(extractTableList.indexOf(table) < 0) {
                             delete t[table];
                         }
                     });
@@ -2679,7 +2798,7 @@ SqlModule.prototype = {
                         extractedData[fromKey] = new Object();
                     }
                     const countStack = new Array();
-                    extractExecTableList.some(function(table, i, a) {
+                    extractTableList.some(function(table, i, a) {
                         const query = _this.getDataCopySelectQuery(table, fromKey);
                         const dataSet = subDB.executeSelect(query).dataSet;
                         extractedData[fromKey][table] = dataSet;
@@ -2704,10 +2823,31 @@ SqlModule.prototype = {
             const rules = dataCopyExport.rules;
             const defaultKey = dataCopyExport.keySet.defaultKey;
             const insertData = new Object();
-            dataCopyState.dataKey = { to: new Object() };
             dataCopyState.applyInfo = new Object();
             const extactTableLowerList = extractTableList.map(mapLowerCase);
-            Object.keys(dataCopyState.extractMap).forEach(function(toKey, idUpdIndex) {
+            const du = new DateUtil();
+            const todayObj = getToday();
+            const cnQuery = sb.setQuery(["SELECT", edsc.kokNo, "FROM", edst.kokykKanren]);
+            const hrkmKkQuery = sb.setQuery(["SELECT", edsc.kouzaNo, "FROM", edst.stHrkmKouzaKanri]);
+            const mpQuery = sb.setQuery(["SELECT", edsc.myPageUserId, "FROM", edst.dtMypageUser]);
+            const applyIdList = [
+                { query: cnQuery, key: "customerNumber", rand: true },
+                { query: hrkmKkQuery, key: "accountNumber", rand: true },
+                { query: mpQuery, key: "myPageUser", rand: false },
+                { query: null, key: "timeStamp", rand: false }
+            ];
+            applyIdList.forEach(function(item, i) {
+                const dataSet = !isVoid(item.query) ? db.executeSelect(item.query).dataSet : { data: [] };
+                const setId = item.rand ? Math.floor(Math.random() * 9999) + (i === 0 ? 10000000 : 1000000) : todayObj;
+                dataCopyState.applyInfo[item.key] = {
+                    id: setId,
+                    data: dataSet.data.map(function(row) { return toString(row[0]); }),
+                    idList: new Array(),
+                    idMap: new Object(),
+                    table: new Object()
+                }
+            });
+            Object.keys(dataCopyState.extractMap).forEach(function(toKey) {
                 const fromKey = dataCopyState.extractMap[toKey];
                 Object.keys(extractedData[fromKey]).forEach(function(table) {
                     if(extactTableLowerList.indexOf(lowerCase(table)) < 0) {
@@ -2716,11 +2856,9 @@ SqlModule.prototype = {
                     const dataSet = extractedData[fromKey][table];
                     const count = dataSet.count;
                     if(count >= 1) {
-                        dataCopyState.keys = new Array();
                         const name = dataSet.name;
                         const data = dataSet.data;
                         const applyData = new Array();
-                        dataCopyState.dataKey.to[table] = new Array();
                         const keyIndex = name.map(mapUpperCase).indexOf(upperCase(defaultKey));
                         data.forEach(function(record) {
                             const applyRecord = cloneJS(record);
@@ -2728,15 +2866,31 @@ SqlModule.prototype = {
                                 applyRecord[keyIndex] = toKey;
                             }
                             applyData.push(applyRecord);
-                            dataCopyState.keys.push(toKey);
-                            dataCopyState.dataKey.to[table].push(toKey);
                         });
                         if(!isVoid(rules[table])) {
                             Object.keys(rules[table]).forEach(function(column) {
                                 const applyType = rules[table][column];
-                                const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
-                                dataCopyState.applyIndex = applyIndex;
-                                _this.applyRulesDataCopy(applyType, applyData, table, db, name, extractedData[fromKey], idUpdIndex);
+                                if(applyType.enable) {
+                                    const expInherit = applyType.parameter.inherit;
+                                    const expNoneExcept = applyType.parameter.noneExcept;
+                                    switch(customizeType) {
+                                        case designType.customize.none: {
+                                            if(!expNoneExcept) {
+                                                return;
+                                            }
+                                            break;
+                                        }
+                                        case designType.customize.inherit: {
+                                            if(expInherit) {
+                                                return;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    const applyIndex = name.map(mapUpperCase).indexOf(upperCase(column));
+                                    dataCopyState.applyIndex = applyIndex;
+                                    _this.applyRulesDataCopy(applyType, applyData, table, column, db, name, extractedData[fromKey], toKey);
+                                }
                             });
                         }
                         const dataObj = {
@@ -2758,7 +2912,6 @@ SqlModule.prototype = {
             dataCopyState.insertDataStatic = cloneJS(insertData);
             dataCopyState.ref.isSingleMode = isSingleMode;
             dataCopyState.ref.extractGroupStack = extractGroupStack;
-            dataCopyState.ref.extractGroupExecStack = extractGroupExecStack;
             dataCopyState.toList = pntList;
             _this.actionControllerDataCopy(phaseType.insert);
             loading.off();
@@ -2768,208 +2921,160 @@ SqlModule.prototype = {
         });
         return null;
     },
-    applyRulesDataCopy: function(applyType, applyData, table, db, nameData, exd, idUpdIndex) {
+    applyRulesDataCopy: function(applyType, applyData, table, column, db, nameData, exd, toKey) {
         const _this = this;
         const dataCopyExport = _this.export.dataCopy;
         const defineSet = dataCopyExport.defineSet;
+        const edst = defineSet.table;
+        const edsc = defineSet.column;
         const state = _this.state.dataCopy;
-        switch(applyType) {
+        const applyInfo = state.applyInfo;
+        const sb = new StringBuilder();
+        switch(applyType.name) {
             case "identifyCustomerNumber": {
-                state.customerNumberIdentifier = new Array();
-                let numberCollection = new Array();
-                let checkStack = new Array();
-                if(isVoid(state[applyType])) {
-                    const query = "SELECT S_KOKNO FROM KT_KokKykKanren";
-                    const dataSet = db.executeSelect(query).dataSet;
-                    if(dataSet.count >= 1) {
-                        numberCollection = dataSet.data.map(function(row) { return toString(row[0]); });
-                    }
-                    state[applyType] = createObject("numberCollection", numberCollection);
-                    state[applyType].checkStack = new Array();
-                }
-                else {
-                    numberCollection = state[applyType].numberCollection;
-                    checkStack = state[applyType].checkStack;
-                }
-                let identifier = 10000;
+                let identifier = applyInfo.customerNumber.id;
                 let recordIdx = 0;
-                while(state.customerNumberIdentifier.length < applyData.length && identifier <= 99999999) {
+                while(applyInfo.customerNumber.idList.length < applyData.length && identifier <= 99999999) {
                     const idStr = toString(identifier);
-                    if(numberCollection.indexOf(idStr) < 0 && checkStack.indexOf(idStr) < 0) {
-                        state.customerNumberIdentifier.push(idStr);
+                    if(applyInfo.customerNumber.data.indexOf(idStr) < 0 && applyInfo.customerNumber.idList.indexOf(idStr) < 0) {
+                        applyInfo.customerNumber.idList.push(idStr);
                         applyData[recordIdx][state.applyIndex] = idStr;
                         recordIdx++;
                     }
                     identifier++;
                 }
-                state[applyType].checkStack = checkStack.concat(state.customerNumberIdentifier);
-                break;
-            }
-            case "changeToOne": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "1";
-                });
-                break;
-            }
-            case "changeToZero": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "0";
-                });
-                break;
-            }
-            case "changeUpdateFunction": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "mousikomisyo";
-                });
-                break;
-            }
-            case "changeUpdateUser": {
-                applyData.forEach(function(record) {
-                    record[state.applyIndex] = "80563901";
-                });
                 break;
             }
             case "getIdentifierCustomerNumber": {
                 applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.customerNumberIdentifier[i];
+                    record[state.applyIndex] = applyInfo.customerNumber.idList[i];
                 });
                 break;
             }
-            case "identifyTimeStamp": {
-                const d = new Date();
-                const year = String(d.getFullYear());
-                const month = setCharPadding(String(d.getMonth() + 1), 2);
-                const date = setCharPadding(String(d.getDate()), 2);
-                const hours = setCharPadding(String(d.getHours()), 2);
-                const minutes = setCharPadding(String(d.getMinutes()), 2);
-                const seconds = setCharPadding(String(d.getSeconds()), 2);
-                const du = new DateUtil(year, month, date, hours, minutes, seconds);
-                const calcDate = du.calcDate({ seconds: idUpdIndex });
-                state.timeStampIdentifier = du.format.type2(calcDate);
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = concatString(state.timeStampIdentifier, setCharPadding(String(i + 1), 3));
-                });
+            case "identifyAccountNumber": {
+                let identifier = applyInfo.accountNumber.id;
+                let recordIdx = 0;
+                while(applyInfo.accountNumber.idList.length < applyData.length && identifier <= 9999999) {
+                    const idStr = toString(identifier);
+                    if(applyInfo.accountNumber.data.indexOf(idStr) < 0 && applyInfo.accountNumber.idList.indexOf(idStr) < 0) {
+                        applyInfo.accountNumber.idList.push(idStr);
+                        applyData[recordIdx][state.applyIndex] = idStr;
+                        recordIdx++;
+                    }
+                    identifier++;
+                }
                 break;
             }
-            case "getIdentifierTimeStamp": {
-                applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = concatString(state.timeStampIdentifier, setCharPadding(String(i + 1), 3));
+            case "changeTo": {
+                applyData.forEach(function(record) {
+                    record[state.applyIndex] = applyType.parameter.to;
                 });
                 break;
             }
             case "deleteExceptByAdProcedure": {
                 let i = applyData.length;
-                const adProcedureCodeStack = ["skei", "skwb", "skmd", "sksk", "sktg"];
+                const adProcedureList = applyType.parameter.adProcedureList;
                 while(i--) {
                     const rowData = applyData[i][state.applyIndex];
-                    if(adProcedureCodeStack.indexOf(rowData) < 0) {
+                    if(adProcedureList.indexOf(rowData) < 0) {
                         applyData.splice(i, 1);
-                        state.dataKey.to[table].splice(i, 1);
                     }
                 }
                 break;
             }
             case "setPolicyNumberHead": {
                 applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.keys[i].slice(0, 1);
+                    record[state.applyIndex] = toKey.slice(0, 1);
                 });
                 break;
             }
             case "slicePolicyNumber": {
                 applyData.forEach(function(record, i) {
-                    record[state.applyIndex] = state.keys[i].slice(1, state.keys[i].length - 1);
+                    record[state.applyIndex] = toKey.slice(1, toKey.length - 1);
                 });
                 break;
             }
-            case "identifyAccountNumber": {
-                state.accountNumberIdentifier = new Array();
-                let numberCollection = new Array();
-                let checkStack = new Array();
-                if(isVoid(state[applyType])) {
-                    const query = "SELECT S_KOUZANO FROM ST_HrkmKouzaKanri";
+            case "getIdentifierTimeStamp": {
+                const tableState = applyInfo.timeStamp.table;
+                if(isVoid(tableState[table])) {
+                    const query = sb.setQuery(["SELECT", column, "FROM", table]);
                     const dataSet = db.executeSelect(query).dataSet;
-                    if(dataSet.count >= 1) {
-                        numberCollection = dataSet.data.map(function(row) { return toString(row[0]); });
+                    applyInfo.timeStamp.table[table] = {
+                        data: dataSet.data.map(function(row) { return toString(row[0]); }),
+                        idList: new Array(),
+                        pointer: 0
+                    };
+                }
+                const o = applyInfo.timeStamp.id;
+                o.milliseconds = String(0);
+                const du = new DateUtil().setDateObject(o);
+                const status = { p: tableState[table].pointer };
+                applyData.forEach(function(record, i) {
+                    let count = 0;
+                    while(count <= 99999999) {
+                        status.p = status.p + count;
+                        const idStr = du.format.joinAll(du.calcDate({ milliseconds: status.p }));
+                        if(tableState[table].data.indexOf(idStr) < 0 && tableState[table].idList.indexOf(idStr) < 0) {
+                            tableState[table].idList.push(idStr);
+                            record[state.applyIndex] = idStr;
+                            status.p++;
+                            break;
+                        }
+                        count++;
                     }
-                    state[applyType] = createObject("numberCollection", numberCollection);
-                    state[applyType].checkStack = new Array();
-                }
-                else {
-                    numberCollection = state[applyType].numberCollection;
-                    checkStack = state[applyType].checkStack;
-                }
-                let identifier = 1000000;
-                let recordIdx = 0;
-                while(state.accountNumberIdentifier.length < applyData.length && identifier <= 9999999) {
-                    const idStr = toString(identifier);
-                    if(numberCollection.indexOf(idStr) < 0 && checkStack.indexOf(idStr) < 0) {
-                        state.accountNumberIdentifier.push(idStr);
-                        applyData[recordIdx][state.applyIndex] = idStr;
-                        recordIdx++;
-                    }
-                    identifier++;
-                }
-                state[applyType].checkStack = checkStack.concat(state.accountNumberIdentifier);
+                });
+                tableState[table].pointer = status.p;
                 break;
             }
             case "identifyMyPageUserId": {
-                const d = new Date();
-                const year = String(d.getFullYear());
-                const month = setCharPadding(String(d.getMonth() + 1), 2);
-                const date = setCharPadding(String(d.getDate()), 2);
-                const hours = setCharPadding(String(d.getHours()), 2);
-                const minutes = setCharPadding(String(d.getMinutes()), 2);
-                const seconds = setCharPadding(String(d.getSeconds()), 2);
-                const du = new DateUtil(year, month, date, hours, minutes, seconds);
-                const calcDate = du.calcDate({ seconds: idUpdIndex });
                 const oDB = new DBUtils();
-                const exMyPageUserId = oDB.getColumnData(exd, defineSet.table.mosKihon, defineSet.column.myPageUserId);
-                state.myPageUserIdInfo = {
-                    isWeb: !isVoid(exMyPageUserId),
-                    identifier: du.format.type2(calcDate),
-                    policyNumberMap: new Object()
-                };
-                if(state.myPageUserIdInfo.isWeb) {
-                    const rowPnIndex = nameData.map(mapUpperCase).indexOf(upperCase(defineSet.column.policyNumber));
+                const ref = oDB.where(exd, table).ref;
+                const myPageUserId = ref[edsc.myPageUserId][0];
+                applyInfo.myPageUser.isWeb = !isVoid(myPageUserId);
+                if(applyInfo.myPageUser.isWeb) {
+                    const o = applyInfo.myPageUser.id;
+                    o.milliseconds = String(0);
+                    const du = new DateUtil(o.year, o.month, o.date, o.hours, o.minutes, o.seconds, o.milliseconds);
+                    const status = { idStr: SIGN.none };
+                    let count = 0;
+                    while(count < 99999999) {
+                        const idStr = du.format.joinAll(du.calcDate({ milliseconds: count }));
+                        if(applyInfo.myPageUser.data.indexOf(idStr) < 0 && applyInfo.myPageUser.idList.indexOf(idStr) < 0) {
+                            applyInfo.myPageUser.idList.push(idStr);
+                            status.idStr = idStr;
+                            break;
+                        }
+                        count++;
+                    }
                     applyData.forEach(function(record, i) {
-                        const rowPn = record[rowPnIndex];
-                        const id = concatString(state.myPageUserIdInfo.identifier, setCharPadding(String(i + 1), 3));
-                        state.myPageUserIdInfo.policyNumberMap[rowPn] = id;
-                        record[state.applyIndex] = id;
+                        record[state.applyIndex] = status.idStr;
                     });
+                    applyInfo.myPageUser.idMap[toKey] = cloneJS(applyInfo.myPageUser.idList);
                 }
                 break;
             }
             case "getIdentifierMyPageUserId": {
-                if(state.myPageUserIdInfo.isWeb) {
+                if(applyInfo.myPageUser.isWeb) {
                     applyData.forEach(function(record, i) {
-                        record[state.applyIndex] = concatString(state.myPageUserIdInfo.identifier, setCharPadding(String(i + 1), 3));
-                    });
-                }
-                break;
-            }
-            case "getIdentifierMyPageUserIdByPolicyNumber": {
-                if(state.myPageUserIdInfo.isWeb) {
-                    const rowPnIndex = nameData.map(mapUpperCase).indexOf(upperCase(defineSet.column.policyNumber));
-                    applyData.forEach(function(record, i) {
-                        const rowPn = record[rowPnIndex];
-                        record[state.applyIndex] = state.myPageUserIdInfo.policyNumberMap[rowPn];
+                        record[state.applyIndex] = applyInfo.myPageUser.idMap[toKey][0];
                     });
                 }
                 break;
             }
             case "setMyPageLoginId": {
-                applyData.forEach(function(record, i) {
-                    const pn = state.toList[i];
-                    record[state.applyIndex] = concatString("a", pn);
-                });
+                if(applyInfo.myPageUser.isWeb) {
+                    applyData.forEach(function(record, i) {
+                        record[state.applyIndex] = concatString("a", toKey);
+                    });
+                }
                 break;
             }
             case "setMyPageMail": {
-                applyData.forEach(function(record, i) {
-                    const pn = state.toList[i];
-                    record[state.applyIndex] = concatString("a", pn, "@direct.test.com");
-                });
+                if(applyInfo.myPageUser.isWeb) {
+                    applyData.forEach(function(record, i) {
+                        record[state.applyIndex] = concatString("a", toKey, "@direct.test.com");
+                    });
+                }
                 break;
             }
         }
@@ -2979,10 +3084,8 @@ SqlModule.prototype = {
         const _this = this;
         const fileDefine = TYPES.file;
         const dataCopyState = _this.state.dataCopy;
-        const ref = dataCopyState.ref;
         const extractMap = dataCopyState.extractMap;
         const extractedData = dataCopyState.extractedData;
-        const fromList = Object.keys(extractedData);
         const insertData = dataCopyState.insertData;
         const headerStyle = {
             fill: {
@@ -3210,39 +3313,295 @@ SqlModule.prototype = {
         const loading = new Loading();
         loading.on().then(function() {
             const insertData = dataCopyState.insertData;
-            const insertQuery = new Object();
             const getQuery = function(table, columns, values) {
                 return concatString("INSERT INTO ", table, " (", columns, ") VALUES (", values, ")");
             };
-            Object.keys(insertData).forEach(function(table) {
-                insertQuery[table] = new Array();
-                Object.keys(insertData[table]).forEach(function(toKey) {
-                    const name = insertData[table][toKey].name;
-                    const data = insertData[table][toKey].data;
-                    const columns = name.join(SIGN.cw);
-                    data.forEach(function(record) {
-                        const values = record.map(function(item) {
-                            const v = item || item == 0 ? item : "";
-                            return concatString(SIGN.sq, v, SIGN.sq);
-                        }).join(SIGN.cw);
-                        insertQuery[table].push(getQuery(table, columns, values));
+            const onTransaction = _this.transaction(transactionId);
+            if(onTransaction.error) throw new Error(onTransaction.message);
+            const db = onTransaction.db;
+            const promise = new PromiseUtil();
+            const status = {
+                executeTable: SIGN.none,
+                hasError: false
+            };
+            const successFunc = function() {
+                _this.actionControllerDataCopy(phaseType.commit);
+                loading.off();
+            };
+            const errorFunc = function(e) {
+                const errorType = dbTypes.error;
+                let message = e.message;
+                if(message.indexOf(errorType.uniqueConstraint) >= 0) {
+                    message = concatString(SIGN.abs, status.executeTable, SIGN.abe, SIGN.br, message);
+                }
+                _this.destroy(transactionId, db);
+                new Notification().error().open(message);
+                loading.off();
+            };
+            try {
+                Object.keys(insertData).forEach(function(table) {
+                    status.executeTable = table;
+                    dataCopyState.log.push(concatString("-- <", table, ">"));
+                    Object.keys(insertData[table]).forEach(function(toKey) {
+                        const name = insertData[table][toKey].name;
+                        const data = insertData[table][toKey].data;
+                        const columns = name.join(SIGN.cw);
+                        data.forEach(function(record) {
+                            const values = record.map(function(item) {
+                                const v = item || item == 0 ? item : "";
+                                return concatString(SIGN.sq, v, SIGN.sq);
+                            }).join(SIGN.cw);
+                            const query = getQuery(table, columns, values);
+                            const exec = function() {
+                                db.execute(query);
+                                _this.pushQueryLog(dataCopyState.log, query);
+                            };
+                            promise.push(exec);
+                        });
                     });
                 });
+                promise.executeAll(successFunc, errorFunc);
+            }
+            catch(e) {
+                errorFunc(e);
+            }
+        }).catch(function(e) {
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+        return null;
+    },
+    buildDeleteData: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const dddt = types.design.deleteData;
+        const deleteDataDesign = _this.design.deleteData;
+        const _event = _this.event;
+        const deleteDataEvent = _event.deleteData;
+        const eb = new ElementBuilder();
+        const $container = jqNode("div", { class: seClass.contentsContainer });
+        const $actionArea = jqNode("div", { class: seClass.actionArea });
+        const $deleteButton = jqNode("button", { class: eClass.buttonColorDeepOrange }).text(upperCase(captions.delete));
+        eb.listAppend($actionArea, [$deleteButton]);
+        $container.append($actionArea);
+        const dmr = deleteDataDesign.deleteModeRadio;
+        const dgc = deleteDataDesign.deleteGroupCheck;
+        const dopt = deleteDataDesign.optionCheck;
+        const getItemListObject = function(ds, type, optionClass) {
+            return {
+                label: ds.type[type].label,
+                attributes: {
+                    id: ds.type[type].id,
+                    name: ds.name,
+                    value: ds.type[type].value
+                },
+                isChecked: ds.type[type].isChecked,
+                optionClass: optionClass ? optionClass : SIGN.none
+            };
+        };
+        const deleteModeRadioItemList = [getItemListObject(dmr, dddt.deleteMode.include), getItemListObject(dmr, dddt.deleteMode.exclude)];
+        const $dmrCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $dmrItem = eb.createRadio(deleteModeRadioItemList).getItem();
+        const $dmrLabel = jqNode("label").css("line-height", "2.5").text(captions.deleteMode);
+        const $dmrMain = jqNode("div", { class: eClass.fullWidth }).append($dmrItem);
+        eb.listAppend($dmrCommandArea, [$dmrLabel, $dmrMain]);
+        const deleteGroupCheckItemList = [getItemListObject(dgc, dddt.deleteGroup.skei), getItemListObject(dgc, dddt.deleteGroup.kkanri), getItemListObject(dgc, dddt.deleteGroup.hksiharai)];
+        const $dgcCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $dgcItem = eb.createCheckbox(deleteGroupCheckItemList).getItem();
+        const $dgcLabel = jqNode("label").css("line-height", "2.5").text(captions.deleteGroup);
+        const $dgcMain = jqNode("div", { class: eClass.fullWidth }).append($dgcItem);
+        eb.listAppend($dgcCommandArea, [$dgcLabel, $dgcMain]);
+        const optionCheckItemList = [getItemListObject(dopt, dddt.option.delReq), getItemListObject(dopt, dddt.option.backup)];
+        const $doptCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $doptItem = eb.createCheckbox(optionCheckItemList).getItem();
+        const $doptLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.option, 0));
+        const $doptMain = jqNode("div", { class: eClass.fullWidth }).append($doptItem);
+        eb.listAppend($doptCommandArea, [$doptLabel, $doptMain]);
+        eb.listAppend($container, [$dmrCommandArea, $dgcCommandArea, $doptCommandArea]);
+        const itemList = [
+            {
+                label: captions.policyNumber,
+                inputType: "textarea",
+                inputId: seId.policyNumber
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: seClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+            switch(item.inputId) {
+                case seId.policyNumber: {
+                    deleteDataEvent.element.pn = $input;
+                    break;
+                }
+            }
+        });
+        $deleteButton.click(function() {
+            _this.deleteData();
+        });
+        return $container;
+    },
+    actionControllerDeleteData: function(phase) {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const seClass = _this.Define.ELEMENTS.class;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.deleteData;
+        const transactionId = types.toolId.deleteData;
+        const _event = _this.event;
+        const deleteDataEvent = _event.deleteData;
+        const $card = jqById(seId.deleteDataCard);
+        const $cardContents = $card.find(concatString(".", eClass.cardContents));
+        const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
+        const $actionArea = $contentsContainer.children(concatString(".", seClass.actionArea));
+        const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
+        const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
+        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+        const propOption = {
+            disableList: new Array(),
+            readonlyList: new Array()
+        };
+        let itemList = new Array();
+        switch(phase) {
+            case phaseType.commit: {
+                itemList = [$commitButton, $logButton, $resetButton];
+                propOption.disableList = ["deleteMode", "deleteGroup", "option"];
+                propOption.readonlyList = ["pn"];
+                _this.setElementDisable(deleteDataEvent.element, propOption);
+                break;
+            }
+            case phaseType.complete: {
+                itemList = [$logButton, $resetButton];
+                break;
+            }
+        }
+        $actionArea.empty();
+        itemList.forEach(function(item) {
+            $actionArea.append(item);
+        });
+        $commitButton.click(function() {
+            const db = _this.state.lock[transactionId];
+            _this.destroy(transactionId, db, true);
+            _this.actionControllerDeleteData(phaseType.complete);
+            const message = "Data deleted successfully";
+            new Notification().complete().open(message);
+        });
+        $logButton.click(function() {
+            _this.downloadLog(transactionId);
+        });
+        $resetButton.click(function() {
+            const db = _this.state.lock[transactionId];
+            _this.destroy(transactionId, db);
+            _this.state.deleteData = new Object();
+            $cardContents.html(_this.buildDeleteData());
+        });
+        return null;
+    },
+    deleteData: function() {
+        const _this = this;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const dddt = types.design.deleteData;
+        const phaseType = types.phase.deleteData;
+        const _event = _this.event;
+        const deleteDataEvent = _event.deleteData;
+        const dataCopyExport = _this.export.dataCopy;
+        const deleteDataState = _this.state.deleteData;
+        const transactionId = types.toolId.deleteData;
+        const dbTypes = new DBUtils().getTypes();
+        deleteDataState.log = new Array();
+        const loading = new Loading();
+        loading.on().then(function() {
+            const dmrElement = deleteDataEvent.element;
+            const deleteMode = $(dmrElement.deleteModeChecked).val();
+            const isInclude = deleteMode === dddt.deleteMode.include;
+            const optionStack = new Array();
+            $(dmrElement.optionChecked).each(function() {
+                optionStack.push($(this).val());
             });
+            const isDelReq = optionStack.indexOf(dddt.option.delReq) >= 0;
+            const withBackup = optionStack.indexOf(dddt.option.backup) >= 0;
+            const policyNumber = _this.createInfoObject(dmrElement.pn.val(), captions.policyNumber);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const policyNumberLayout = v.getLayout(v.initLayout(policyNumber.value, policyNumber.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
+            v.reset().append(policyNumberLayout);
+            const result = v.exec();
+            if(result.error) {
+                throw new Error(result.message);
+            }
+            const pn = policyNumber.value;
+            const pnList = getExistArray(pn.split(SIGN.nl));
+            const dCheck = duplicationCheckForArray(pnList);
+            if(dCheck.hasError) {
+                const dMsg = [concatString("Policy Number has duplicate", SIGN.br)].concat(dCheck.data).join(SIGN.br);
+                throw new Error(dMsg);
+            }
+            const deleteGroupStack = new Array();
+            $(dmrElement.deleteGroupChecked).each(function() {
+                deleteGroupStack.push($(this).val());
+            });
+            if(deleteGroupStack.length <= 0) {
+                const egMsg = concatString(captions.deleteGroup, " is required");
+                throw new Error(egMsg);
+            }
+            const extractTableList = _this.getExtractTableListDataCopy(deleteGroupStack);
+            const edsd = dataCopyExport.defineSet.delete;
+            const priorityTableList = _this.getExtractTableListDataCopy(deleteGroupStack, edsd.priorityTableObject);
+            const priorityTableLowCase = priorityTableList.map(mapLowerCase);
+            const deleteTableList = priorityTableList.concat(extractTableList.filter(function(table) {
+                if(priorityTableLowCase.indexOf(lowerCase(table)) < 0) {
+                    return true;
+                }
+            }));
+            if(!isDelReq) {
+                const requiredTableList = dataCopyExport.tableListObject.required;
+                let i = deleteTableList.length;
+                while(i--) {
+                    if(requiredTableList.indexOf(deleteTableList[i]) >= 0) {
+                        deleteTableList.splice(i, 1);
+                    }
+                }
+            }
+            const selRegExp = new RegExp("SELECT(.*?)FROM ");
+            const delQueryHead = "DELETE FROM ";
             const onTransaction = _this.transaction(transactionId);
             if(onTransaction.error) throw new Error(onTransaction.message);
             const db = onTransaction.db;
             let executeTable = SIGN.none;
+            const backupData = new Object();
             try {
-                Object.keys(insertQuery).forEach(function(table) {
-                    executeTable = table;
-                    dataCopyState.log.push(concatString("-- <", table, ">"));
-                    insertQuery[table].forEach(function(query) {
-                        db.execute(query);
-                        _this.pushQueryLog(dataCopyState.log, query);
-                    });
+                let executeFlag = false;
+                deleteTableList.forEach(function(table) {
+                    backupData[table] = new Object();
+                    const selQuery = _this.getDataCopySelectQuery(table, pnList, true, isInclude);
+                    const dataSet = db.executeSelect(selQuery).dataSet;
+                    if(dataSet.count >= 1) {
+                        executeFlag = true;
+                        executeTable = table;
+                        const delQuery = selQuery.replace(selRegExp, delQueryHead);
+                        db.execute(delQuery);
+                        _this.pushQueryLog(deleteDataState.log, delQuery);
+                        backupData[table] = dataSet;
+                    }
                 });
-                _this.actionControllerDataCopy(phaseType.commit);
+                if(!executeFlag) {
+                    throw new Error("Nothing delete data");
+                }
+                if(withBackup) {
+                    const fileName = concatString("DELETE_BK_", getFileStamp(), TYPES.file.extension.txt);
+                    const p = getOutputPath(fileName);
+                    new FileSystem(p.modulePath).createFolder();
+                    new FileSystem(p.filePath).createFile(false, true).write(JSON.stringify(backupData));
+                }
+                _this.actionControllerDeleteData(phaseType.commit);
+                loading.off();
             }
             catch(e) {
                 const errorType = dbTypes.error;
@@ -3253,19 +3612,20 @@ SqlModule.prototype = {
                 _this.destroy(transactionId, db);
                 throw new Error(message);
             }
-            loading.off();
         }).catch(function(e) {
             new Notification().error().open(e.message);
             loading.off();
         });
         return null;
     },
-    buildCreateUserContents: function() {
+    buildCreateUser: function() {
         const _this = this;
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
         const types = _this.Define.TYPES;
+        const _event = _this.event;
+        const createUserEvent = _event.createUser;
         const createUserState = _this.state.createUser;
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
@@ -3291,6 +3651,16 @@ SqlModule.prototype = {
             const $input = jqNode(item.inputType, { id: item.inputId });
             $commandArea.append($label).append($input);
             $container.append($commandArea);
+            switch(item.inputId) {
+                case seId.userCode: {
+                    createUserEvent.element.userCode = $input;
+                    break;
+                }
+                case seId.userName: {
+                    createUserEvent.element.userName = $input;
+                    break;
+                }
+            }
         });
         $createButton.click(function() {
             createUserState.actionType = types.action.create;
@@ -3311,6 +3681,8 @@ SqlModule.prototype = {
         const types = _this.Define.TYPES;
         const phaseType = types.phase.createUser;
         const transactionId = types.toolId.createUser;
+        const _event = _this.event;
+        const createUserEvent = _event.createUser;
         const $card = jqById(seId.createUserCard);
         const $cardContents = $card.find(concatString(".", eClass.cardContents));
         const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
@@ -3318,10 +3690,16 @@ SqlModule.prototype = {
         const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
         const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
         const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+        const propOption = {
+            disableList: new Array(),
+            readonlyList: new Array()
+        };
         let itemList = new Array();
         switch(phase) {
             case phaseType.commit: {
                 itemList = [$commitButton, $logButton, $resetButton];
+                propOption.readonlyList = ["userCode", "userName"];
+                _this.setElementDisable(createUserEvent.element, propOption);
                 break;
             }
             case phaseType.complete: {
@@ -3347,24 +3725,26 @@ SqlModule.prototype = {
             const db = _this.state.lock[transactionId];
             _this.destroy(transactionId, db);
             _this.state.createUser = new Object();
-            $cardContents.html(_this.buildCreateUserContents());
+            $cardContents.html(_this.buildCreateUser());
         });
         return null;
     },
     createUser: function() {
         const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
         const types = _this.Define.TYPES;
         const phaseType = types.phase.createUser;
         const transactionId = types.toolId.createUser;
+        const _event = _this.event;
+        const createUserEvent = _event.createUser;
         const createUserExport = _this.export.createUser;
         const createUserState = _this.state.createUser;
         createUserState.log = new Array();
         const loading = new Loading();
         loading.on().then(function() {
-            const userCode = _this.createInfoObject(jqById(seId.userCode).val(), captions.userCode);
-            const userName = _this.createInfoObject(jqById(seId.userName).val(), captions.userName);
+            const createUserElement = createUserEvent.element;
+            const userCode = _this.createInfoObject(createUserElement.userCode.val(), captions.userCode);
+            const userName = _this.createInfoObject(createUserElement.userName.val(), captions.userName);
             const v = new Validation();
             const vTypes = v.getTypes();
             const userCodeLayout = v.getLayout(v.initLayout(userCode.value, userCode.name, v.getSizeLayout(6, 6)), [vTypes.required, vTypes.notSpace, vTypes.numeric, vTypes.size]);
@@ -3548,6 +3928,8 @@ SqlModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
+        const _event = _this.event;
+        const lerEvent = _event.lincErrorResolution;
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
         const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
@@ -3556,7 +3938,7 @@ SqlModule.prototype = {
         const itemList = [
             {
                 label: captions.policyNumber,
-                inputType: "input",
+                inputType: "textarea",
                 inputId: seId.lincPolicyNumber
             }
         ];
@@ -3566,6 +3948,12 @@ SqlModule.prototype = {
             const $input = jqNode(item.inputType, { id: item.inputId });
             $commandArea.append($label).append($input);
             $container.append($commandArea);
+            switch(item.inputId) {
+                case seId.lincPolicyNumber: {
+                    lerEvent.element.pn = $input;
+                    break;
+                }
+            }
         });
         $execButton.click(function() {
             _this.solveLincError();
@@ -3580,6 +3968,8 @@ SqlModule.prototype = {
         const types = _this.Define.TYPES;
         const phaseType = types.phase.lincErrorResolution;
         const transactionId = types.toolId.lincErrorResolution;
+        const _event = _this.event;
+        const lerEvent = _event.lincErrorResolution;
         const $card = jqById(seId.lincErrorResolutionCard);
         const $cardContents = $card.find(concatString(".", eClass.cardContents));
         const $contentsContainer = $card.find(concatString(".", seClass.contentsContainer));
@@ -3587,10 +3977,16 @@ SqlModule.prototype = {
         const $commitButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.commit));
         const $logButton = jqNode("button", { class: eClass.buttonColorPositive }).text(upperCase(captions.log));
         const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+        const propOption = {
+            disableList: new Array(),
+            readonlyList: new Array()
+        };
         let itemList = new Array();
         switch(phase) {
             case phaseType.commit: {
                 itemList = [$commitButton, $logButton, $resetButton];
+                propOption.readonlyList = ["pn"];
+                _this.setElementDisable(lerEvent.element, propOption);
                 break;
             }
             case phaseType.complete: {
@@ -3622,9 +4018,10 @@ SqlModule.prototype = {
     },
     solveLincError: function() {
         const _this = this;
-        const seId = _this.Define.ELEMENTS.id;
         const captions = _this.Define.CAPTIONS;
         const types = _this.Define.TYPES;
+        const _event = _this.event;
+        const lerEvent = _event.lincErrorResolution;
         const phaseType = types.phase.lincErrorResolution;
         const transactionId = types.toolId.lincErrorResolution;
         const lincErrorExport = _this.export.lincErrorResolution;
@@ -3632,25 +4029,35 @@ SqlModule.prototype = {
         lincErrorState.log = new Array();
         const loading = new Loading();
         loading.on().then(function() {
-            const policyNumber = _this.createInfoObject(jqById(seId.lincPolicyNumber).val(), captions.policyNumber);
+            const lerElement = lerEvent.element;
+            const policyNumber = _this.createInfoObject(lerElement.pn.val(), captions.policyNumber);
             const v = new Validation();
             const vTypes = v.getTypes();
-            const policyNumberLayout = v.getLayout(v.initLayout(policyNumber.value, policyNumber.name, v.getSizeLayout(11, 11)), [vTypes.required, vTypes.notSpace, vTypes.numeric, vTypes.size]);
+            const policyNumberLayout = v.getLayout(v.initLayout(policyNumber.value, policyNumber.name, v.getSizeLayout(11, 11, SIGN.nl)), [vTypes.required, vTypes.notSpace, vTypes.numericWithLineBreak, vTypes.size]);
             v.reset().append(policyNumberLayout);
             const result = v.exec();
             if(result.error) {
                 throw new Error(result.message);
             }
             const pn = policyNumber.value;
+            const pnList = getExistArray(pn.split(SIGN.nl));
+            const dCheck = duplicationCheckForArray(pnList);
+            if(dCheck.hasError) {
+                const dMsg = [concatString("Policy Number has duplicate", SIGN.br)].concat(dCheck.data).join(SIGN.br);
+                throw new Error(dMsg);
+            }
             const onTransaction = _this.transaction(transactionId);
             if(onTransaction.error) throw new Error(onTransaction.message);
             const db = onTransaction.db;
             try {
-                const mapping = { key: concatString(SIGN.sq, pn, SIGN.sq) };
-                lincErrorExport.queryList.forEach(function(query) {
-                    const bindedQuery = bindQuery(query, mapping);
-                    db.execute(bindedQuery);
-                    _this.pushQueryLog(lincErrorState.log, bindedQuery);
+                pnList.forEach(function(p) {
+                    lincErrorState.log.push(concatString("-- <", p, ">"));
+                    const mapping = { key: concatString(SIGN.sq, p, SIGN.sq) };
+                    lincErrorExport.queryList.forEach(function(query) {
+                        const bindedQuery = bindQuery(query, mapping);
+                        db.execute(bindedQuery);
+                        _this.pushQueryLog(lincErrorState.log, bindedQuery);
+                    });
                 });
                 _this.actionControllerLincErrorResolution(phaseType.commit);
             }
