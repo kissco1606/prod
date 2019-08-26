@@ -604,7 +604,7 @@ SqlModule.prototype = {
                 uid: uid,
                 pwd: pwd
             };
-            new DBUtils().connect(info).close();
+            // new DBUtils().connect(info).close();
             _this.state.isConnecting = true;
             _this.state.info = info;
             _this.transition(pageType.application);

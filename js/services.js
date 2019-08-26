@@ -14,6 +14,11 @@ function jqByTag(tagName) {
     return $(tagName);
 };
 
+function jqByGroupName(name, isChecked) {
+    const item = concatString("input[name=", name, "]", (isChecked ? ":checked" : SIGN.none));
+    return $(item);
+};
+
 function classes() {
     const argumentsList = Array.prototype.slice.call(arguments);
     const classes = new Array();
@@ -105,6 +110,10 @@ function mapLowerCase(str) {
     return str.toLowerCase();
 };
 
+function compareIndexOf(list, value) {
+    return list.map(mapUpperCase).indexOf(upperCase(value));
+};
+
 function toString(value) {
     return String(value);
 };
@@ -175,7 +184,7 @@ function queryEscape(str) {
     return str.replace(/'/g, SIGN.none);
 };
 
-function getFileStamp() {
+function getFileStamp(fileName) {
     const d = new Date();
     const year = String(d.getFullYear());
     const month = setCharPadding(String(d.getMonth() + 1), 2);
@@ -183,7 +192,8 @@ function getFileStamp() {
     const hours = setCharPadding(String(d.getHours()), 2);
     const minutes = setCharPadding(String(d.getMinutes()), 2);
     const seconds = setCharPadding(String(d.getSeconds()), 2);
-    return concatString(year, month, date, hours,minutes, seconds);
+    const timeStamp = concatString(year, month, date, hours,minutes, seconds);
+    return isVoid(fileName) ? timeStamp : [fileName, timeStamp].join(SIGN.ub);
 };
 
 function convertPath(path) {
@@ -243,6 +253,17 @@ function createMultipleObject(setter) {
         obj[key] = value;
     });
     return flag ? obj : null;
+};
+
+function getObjectKeyByValue(obj, value) {
+    let key = null;
+    Object.keys(obj).some(function(k) {
+        if(obj[k] === value) {
+            key = k;
+            return true;
+        }
+    });
+    return key;
 };
 
 function accessObject(obj, keys) {
@@ -412,6 +433,25 @@ function getIterator(size) {
     return Array.apply(null, new Array(size));
 };
 
+function getBinary(data) {
+    const bytes = new Uint8Array(data);
+    let binary = new String();
+    const size = bytes.byteLength;
+    for(let i = 0; i < size; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return binary;
+};
+
+function getNextChar(c) {
+    return String.fromCharCode(c.charCodeAt(0) + 1);
+};
+
+function calcAlphabet(int) {
+    const a = "A";
+    return String.fromCharCode(a.charCodeAt(0) + int);
+};
+
 function createMenuItem(itemList, icon, text, func) {
     const $item = jqNode("li", { class: eClass.menuItem });
     const $icon = jqNode("span", { class: eClass.menuItemIcon }).append(jqNode("i", { class: icon }));
@@ -510,6 +550,19 @@ function getDialogHeader(type) {
     return $container;
 };
 
+function getItemListObject(ds, type, optionClass) {
+    return {
+        label: ds.type[type].label,
+        attributes: {
+            id: ds.type[type].id,
+            name: ds.name,
+            value: ds.type[type].value
+        },
+        isChecked: ds.type[type].isChecked,
+        optionClass: optionClass ? optionClass : SIGN.none
+    };
+};
+
 const Notification = function () {
     this.dialogContainer = jqById(eId.notificationContainer);
     this.dialog = null;
@@ -528,8 +581,9 @@ Notification.prototype = {
         const actionStack = new Array();
         const $okButton = jqNode("button", { id: eId.notificationOk, class: eClass.dialogButton }).text(upperCase(CAPTIONS.ok));
         const close = function() { _this.close(); };
+        const isCallbackFunc = typeIs(_this.callback).function;
         $okButton.click(function() {
-            if(isWarningType) {
+            if(isWarningType && isCallbackFunc) {
                 _this.callback(close);
             }
             else {
@@ -537,7 +591,7 @@ Notification.prototype = {
             }
         });
         actionStack.push($okButton);
-        if(isWarningType) {
+        if(isWarningType && isCallbackFunc) {
             const $cancelButton = jqNode("button", { id: eId.dialogClose, class: eClass.dialogButton }).text(upperCase(CAPTIONS.cancel));
             $cancelButton.click(function() {
                 _this.close();
@@ -831,7 +885,7 @@ FileController.prototype = {
         const fr = new FileReader();
         fr.onload = function(e) {
             const result = e.target.result;
-            func(result, path);
+            func(result, path, file);
             if(!isVoid(_this.listener)) {
                 _this.listener.remove();
             }
@@ -877,7 +931,7 @@ function readFile(fr, type, file) {
     }
 };
 
-function saveAsFile(parts, type, fileName, isMs) {
+function saveAsFile(parts, type, fileName, isNotMs) {
     try {
         switch(type) {
             case TYPES.file.mime.CSV: {
@@ -886,12 +940,21 @@ function saveAsFile(parts, type, fileName, isMs) {
             }
         }
         const blob = new Blob([parts], { tpye: type });
-        if(isMs) {
+        if(!isNotMs) {
             window.navigator.msSaveBlob(blob, fileName);
         }
         else {
             saveAs(blob, fileName);
         }
+    }
+    catch (e) {
+        new Notification().error().open(MESSAGES.faild_download_file);
+    }
+};
+
+function saveAsZipFile(blob, fileName) {
+    try {
+        saveAs(blob, fileName);
     }
     catch (e) {
         new Notification().error().open(MESSAGES.faild_download_file);
@@ -1022,6 +1085,11 @@ function threadMessage(module, actionType, params) {
     };
 };
 
+function convertInputPath(path) {
+    const pathList = getExistArray(path.split(SIGN.ssh));
+    return pathList.join("\\\\");
+};
+
 function getApplicationPath(relativePath) {
     const rootPath = window.location.pathname;
     const rootPathList = getExistArray(rootPath.split(SIGN.ssh));
@@ -1031,10 +1099,19 @@ function getApplicationPath(relativePath) {
     return pathCollection.join("\\\\");
 };
 
-function getOutputPath(fileName) {
+function getRootPath(path) {
+    const rootPathList = getExistArray(path.split("\\"));
+    rootPathList.pop();
+    return rootPathList.join("\\");
+};
+
+function getOutputPath(fileName, subPath) {
+    const root = [TYPES.path.output, appState.module.id];
+    const sub = !isVoid(subPath) ? subPath : new Array();
+    const moduleList = root.concat(sub);
     return {
-        modulePath: getApplicationPath([TYPES.path.output, appState.module.id].join(SIGN.ssh)),
-        filePath: getApplicationPath([TYPES.path.output, appState.module.id, fileName].join(SIGN.ssh))
+        modulePath: getApplicationPath(moduleList.join(SIGN.ssh)),
+        filePath: getApplicationPath(moduleList.concat([fileName]).join(SIGN.ssh))
     };
 };
 
@@ -1339,6 +1416,12 @@ ElementBuilder.prototype = {
         });
         return arrayStack;
     },
+    getPropOptionLayout: function() {
+        return {
+            disableList: new Array(),
+            readonlyList: new Array()
+        };
+    },
     setItem: function($container) {
         const elements = this.getItem();
         elements.forEach(function(item) {
@@ -1389,6 +1472,14 @@ ElementBuilder.prototype = {
         });
         return target;
     },
+    setHidden: function() {
+        this.element.addClass(eClass.hide);
+        return this;
+    },
+    removeHidden: function() {
+        this.element.removeClass(eClass.hide);
+        return this;
+    },
     setReadonly: function() {
         this.element.addClass(eClass.readonly);
         this.element.prop("readonly", true);
@@ -1416,6 +1507,28 @@ ElementBuilder.prototype = {
     removeDisplayNone: function() {
         this.element.removeClass(eClass.hide);
         return this;
+    },
+    setElementDisable: function(e, prop) {
+        const _this = this;
+        const disableList = prop.disableList;
+        const readonlyList = prop.readonlyList;
+        const convert = function(elementString) {
+            return $(elementString);
+        };
+        Object.keys(e).forEach(function(key) {
+            if(disableList.indexOf(key) < 0 && readonlyList.indexOf(key) < 0) return;
+            if(disableList.indexOf(key) >= 0) {
+                const item = convert(e[key]);
+                _this.element = item;
+                _this.setDisable();
+            }
+            else {
+                const item = e[key];
+                _this.element = item;
+                _this.setReadonly();
+            }
+        });
+        return null;
     }
 };
 
@@ -2494,6 +2607,9 @@ DateUtil.prototype = {
 };
 
 const StringBuilder = function() {
+    this.str = SIGN.none;
+    this.strList = new Array();
+    this.partition = SIGN.none;
 };
 StringBuilder.prototype = {
     sq: function(v) {
@@ -2502,32 +2618,251 @@ StringBuilder.prototype = {
     dq: function(v) {
         return concatString(SIGN.dq, v, SIGN.dq)
     },
+    setAround: function(v, s) {
+        return concatString(s, v, s);
+    },
     equalSameCase: function(a, b) {
         return lowerCase(String(a)) === lowerCase(String(b));
     },
     setQuery: function(list) {
         return list.join(SIGN.ws);
+    },
+    reset: function() {
+        this.str = SIGN.none;
+        this.strList = new Array();
+        return this;
+    },
+    copy: function(v, c) {
+        const list = new Array();
+        for(let i = 0; i < c; i++) {
+            list.push(v);
+        }
+        return list.join(SIGN.none);
+    },
+    push: function(v) {
+        this.strList.push(v);
+        return this;
+    },
+    setList: function(list) {
+        this.strList = list;
+        return this;
+    },
+    setPartition: function(p) {
+        this.partition = p;
+        return this;
+    },
+    get: function() {
+        return this.strList.join(this.partition);
     }
 };
 
 const PromiseUtil = function() {
     this.task = new Array();
+    this.recursiveTask = new Array();
 };
 PromiseUtil.prototype = {
-    push: function(exec) {
+    init: function() {
         this.task = new Array();
-        const pro = new Promise(function(resolve, reject) {
-            exec();
-            return resolve();
-        });
-        this.task.push(pro);
+        return this;
+    },
+    push: function(exec) {
+        this.task.push(exec);
+        return this;
+    },
+    appendToRecursiveTask: function(idx, per, arry) {
+        if((isVoid(idx) && isVoid(per) && isVoid(arry)) || (((idx + 1) % per === 0) || ((idx + 1) === arry.length))) {
+            this.recursiveTask.push(this.task);
+            this.init();
+        }
         return this;
     },
     executeAll: function(successFunc, errorFunc) {
-        Promise.all(this.task).then(function(res) {
+        Promise.all(this.task.map(function(exec) {
+            return new Promise(function(resolve, reject) {
+                return resolve(exec());
+            });
+        })).then(function(res) {
             successFunc(res);
         }).catch(function(e) {
             errorFunc(e);
         });
+    },
+    recursiveAll: function(successFunc, errorFunc) {
+        const _this = this;
+        const recursive = function(arry) {
+            /** phase start */
+            Promise.all(arry.map(function(exec) {
+                return new Promise(function(resolve, reject) {
+                    return resolve(exec());
+                });
+            })).then(function(res) {
+                _this.recursiveTask.shift();
+                if(_this.recursiveTask.length <= 0) {
+                    /** all phases end */
+                    successFunc(res);
+                }
+                else {
+                    /** phase end */
+                    recursive(_this.recursiveTask[0]);
+                }
+            }).catch(function(e) {
+                /** phase on error */
+                errorFunc(e);
+            });
+        }
+        recursive(_this.recursiveTask[0]);
+        return null;
+    }
+};
+
+const ExcelUtil = function() {
+    this.def = {
+        execTypes: {
+            read: "read"
+        }
+    };
+    this.workbook = null;
+    this.sheetNames = new Array();
+    this.readExec = null;
+    this.execType = null;
+};
+ExcelUtil.prototype = {
+    getWorkbook: function() {
+        return this.workbook;
+    },
+    getSheetNames: function() {
+        const _this = this;
+        if(!isVoid(_this.workbook)) {
+            _this.workbook.SheetNames.forEach(function(sheetName) {
+                _this.sheetNames.push(sheetName);
+            });
+        }
+        return _this.sheetNames;
+    },
+    getRange: function(ws) {
+        const ref = ws["!ref"];
+        const range = XLSX.utils.decode_range(ref);
+        return {
+            c: { s: range.s.c, e: range.e.c },
+            r: { s: range.s.r, e: range.e.r }
+        };
+    },
+    getCellData: function(ws, ref) {
+        const cell = ws[ref];
+        const v = isVoid(cell) ? SIGN.none : cell.v;
+        return v;
+    },
+    sheetToCsv: function(ws, option) {
+        let csvData = SIGN.none;
+        if(isVoid(option)) {
+            csvData = XLSX.utils.sheet_to_csv(ws);
+        }
+        else {
+            /** option: { FS: ",", RS: "\n" } */
+            csvData = XLSX.utils.sheet_to_csv(ws, option);
+        }
+        return csvData;
+    },
+    readAsBinary: function() {
+        const _this = this;
+        const mime = TYPES.file.mime;
+        _this.readExec = function(func) {
+            function onReadFile(data, path, fileInfo) {
+                const binary = getBinary(data);
+                _this.workbook = XLSX.read(binary, { type: TYPES.file.contentType.binary, cellDates: true, cellStyles: true });
+                func(_this, fileInfo);
+            };
+            new FileController()
+            .setListener()
+            .setReadType(TYPES.file.readType.arrayBuffer)
+            .allowedExtensions([mime.MS_EXCEL, mime.SP_SHEET])
+            .access(onReadFile);
+        };
+        _this.execType = _this.def.execTypes.read;
+        return this;
+    },
+    onload: function(func) {
+        if(typeIs(func).function) {
+            switch(this.execType) {
+                case this.def.execTypes.read: {
+                    this.readExec(func);
+                    break;
+                }
+            }
+        }
+        return null;
+    }
+};
+
+const BinaryUtil = function() {};
+BinaryUtil.prototype = {
+    encode: (function(i, tbl) {
+        for(i = 0, tbl = { 64: 61, 63: 47, 62: 43 }; i < 62; i++) {
+            tbl[i] = i < 26 ? i + 65 : (i < 52 ? i + 71 : i - 4);
+        }
+        return function(arr) {
+            let len, str, buf;
+            if (!arr || !arr.length) {
+                return "";
+            }
+            for (i = 0, len = arr.length, buf = [], str = ""; i < len; i += 3) {
+                str += String.fromCharCode(tbl[arr[i] >>> 2], tbl[(arr[i] & 3) << 4 | arr[i + 1] >>> 4], tbl[i + 1 < len ? (arr[i + 1] & 15) << 2 | arr[i + 2] >>> 6 : 64], tbl[i + 2 < len ? (arr[i + 2] & 63) : 64]);
+            }
+            return str;
+        };
+    }()),
+    decode: (function(i, tbl) {
+        for (i = 0, tbl = { 61: 64, 47: 63, 43: 62 }; i < 62; i++) {
+            tbl[i < 26 ? i + 65 : (i < 52 ? i + 71 : i - 4)] = i;
+        }
+        return function(str) {
+            let j, len, arr, buf;
+            if (!str || !str.length) {
+                return [];
+            }
+            for (i = 0, len = str.length, arr = [], buf = []; i < len; i += 4) {
+                for (j = 0; j < 4; j++) {
+                    buf[j] = tbl[str.charCodeAt(i + j) || 0];
+                }
+                arr.push(buf[0] << 2 | (buf[1] & 63) >>> 4, (buf[1] & 15) << 4 | (buf[2] & 63) >>> 2, (buf[2] & 3) << 6 | buf[3] & 63);
+            }
+            if (buf[3] === 64) {
+                arr.pop();
+                if (buf[2] === 64) {
+                    arr.pop();
+                }
+            }
+            return arr;
+        };
+    }()),
+    arrayBufferToBase64: function(arrayBuffer) {
+        return this.encode(new Uint8Array(arrayBuffer));
+    },
+    base64ToArrayBuffer: function(base64) {
+        const binary_string = window.atob(base64);
+        const len = binary_string.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+};
+
+const StringBuffer = function() {
+    this.buffer = new Array();
+};
+StringBuffer.prototype = {
+    append: function(str) {
+        this.buffer.push(str);
+        return this;
+    },
+    toString: function(sep) {
+        const data = this.buffer.join(!isVoid(sep) ? sep : SIGN.none);
+        return data;
+    },
+    toStringWithLine: function() {
+        const data = this.buffer.join(SIGN.crlf);
+        return data;
     }
 };

@@ -14,6 +14,7 @@ const SIGN = {
     sq: "'",
     dq: '"',
     ssh: "/",
+    rssh: "\\",
     crlf: "\r\n",
     dash: "-",
     ub: "_",
@@ -153,7 +154,10 @@ const ELEMENTS = {
         actionArea: "action-area",
         viewArea: "view-area",
         fullWidth: "full-width",
-        attachLabel: "attach-label"
+        attachLabel: "attach-label",
+        appContentsContainer: "app-contents-container",
+        commandArea: "command-area",
+        actionArea: "action-area"
     },
     icon: {
         database: "fas fa-database",
@@ -221,7 +225,11 @@ const TYPES = {
             CSV: "text/csv",
             OCTET_STREAM: "application/octet-stream",
             JSON: "application/json",
-            JAVASCRIPT: "application/javascript"
+            JAVASCRIPT: "application/javascript",
+            MS_EXCEL: "application/vnd.ms-excel",
+            SP_SHEET: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ZIP: "application/zip",
+            X_ZIP_COMPRESSED: "application/x-zip-compressed"
         },
         extension: {
             txt: ".txt",
@@ -232,7 +240,8 @@ const TYPES = {
             xlsx: ".xlsx",
             csv: ".csv",
             bat: ".bat",
-            log: ".log"
+            log: ".log",
+            sql: ".sql"
         },
         contentType: {
             string: "string",
@@ -242,7 +251,19 @@ const TYPES = {
             array: "array",
             arrayBuffer: "arrayBuffer",
             blob: "blob",
-            nodebuffer: "nodebuffer"
+            nodebuffer: "nodebuffer",
+            binary: "binary"
+        },
+        responseType: {
+            string: "string",
+            uint8array: "uint8array",
+            base64: "base64",
+            binarystring: "binarystring",
+            array: "array",
+            arrayBuffer: "arrayBuffer",
+            blob: "blob",
+            nodebuffer: "nodebuffer",
+            binary: "binary"
         },
         io: {
             mode: {
@@ -256,6 +277,27 @@ const TYPES = {
                 ascii: 0
             }
         },
+        stream: {
+            streamType: {
+                binary: 1,
+                text: 2
+            },
+            readEnum: {
+                all: -1,
+                line: -2
+            },
+            writeEnum: {
+                noneLinebreak: 0,
+                linebreak: 1
+            },
+            saveOption: {
+                createNotExist: 1,
+                overwrite: 2
+            },
+            encode: {
+                utf8: "utf-8"
+            }
+        }
     },
     path: {
         output: "output"
@@ -265,6 +307,11 @@ const TYPES = {
         msxml2: "MSXML2.XMLHTTP",
         fileSystemObject: "Scripting.FileSystemObject",
         fileStream: "ADODB.Stream"
+    },
+    oracle: {
+        throwErrorList: [
+            { id: "ORA-00904", message: "無効な識別子です" }
+        ]
     }
 };
 
@@ -328,6 +375,17 @@ const STRUCTURE = {
     },
     systemDatePathList: {
         key: "systemDatePathList",
+        type: new Object(),
+        data: function(name, path, order) {
+            return {
+                name: name,
+                path: path,
+                order: order
+            };
+        }
+    },
+    batchLogPathList: {
+        key: "batchLogPathList",
         type: new Object(),
         data: function(name, path, order) {
             return {

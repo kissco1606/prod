@@ -20,7 +20,19 @@ const CommonModule = function() {
                 folderGeneratorPath: "folder-generator-path",
                 copyFileCard: "copy-file-card",
                 copyFileSourcePath: "copy-file-source-path",
-                copyFileDestinationPath: "copy-file-destination-path"
+                copyFileDestinationPath: "copy-file-destination-path",
+                sheetConvertCard: "sheet-convert-card",
+                outputPathSheetConvert: "sheet-convert__output-path",
+                sheetNames: "sheet-names",
+                batchResultValidationCard: "batch-result-validation-card",
+                batchResultValidation: {
+                    targetPath: "batch-result-validation__target-path",
+                    resultBlock: "batch-result-validation__result-block"
+                },
+                binaryConvertCard: "binary-convert-card",
+                binaryConvert: {
+                    binary: "binary-convert__binary"
+                }
             },
             class: {
                 contentsContainer: "contents-container",
@@ -37,6 +49,7 @@ const CommonModule = function() {
             title: "Common Tools",
             fileTree: "File Tree",
             exec: "exec",
+            reset: "reset",
             clear: "clear",
             download: "download",
             path: "path",
@@ -62,7 +75,28 @@ const CommonModule = function() {
             mode: "mode",
             file: "file",
             folder: "folder",
-            overwrite: "overwrite"
+            overwrite: "overwrite",
+            generateFolder: "generate_folder",
+            option: "option",
+            sheetConvertTitle: "Sheet Convert",
+            sheetNamesLabel: "Sheet Names",
+            sheetConvert: {
+                sheetTypeLabel: "Sheet Type",
+                convertModeLabel: "Convert Mode",
+                default: "default",
+                master: "master",
+                txt: "txt",
+                csv: "csv"
+            },
+            outputPathLabel: "Output Path",
+            batchResultValidationTitle: "Batch Result Validation",
+            result: "result",
+            batchLogPathListTitle: "Batch Log Path List",
+            binaryConvertTitle: "Binary Convert",
+            result: "result",
+            binary: "binary",
+            saveTxt: "save txt",
+            saveZip: "save zip"
         },
         TYPES: {
             page: {
@@ -75,12 +109,48 @@ const CommonModule = function() {
                 clipboardLinker: {
                     init: "init",
                     set: "set"
+                },
+                sheetConvert: {
+                    convert: "convert"
                 }
             },
-            copyFile: {
-                mode: {
-                    file: "file",
-                    folder: "folder"
+            design: {
+                clipboardLinker: {
+                    separatorType: {
+                        lineBreak: "lineBreak",
+                        commaLineBreak: "commaLineBreak"
+                    }
+                },
+                copyFile: {
+                    mode: {
+                        file: "file",
+                        folder: "folder"
+                    },
+                    option: {
+                        overwrite: "overwrite",
+                        generateFolder: "generateFolder"
+                    }
+                },
+                sheetConvert: {
+                    sheetType: {
+                        default: "default",
+                        master: "master"
+                    },
+                    convertMode: {
+                        txt: "txt",
+                        csv: "csv"
+                    }
+                }
+            },
+            batchResultValidation: {
+                key: {
+                    resultBlock: "resultBlock"
+                }
+            },
+            binaryConvert: {
+                saveType: {
+                    txt: "txt",
+                    zip: "zip"
                 }
             }
         },
@@ -90,64 +160,135 @@ const CommonModule = function() {
             systemdate_modified_complete: "System date modified successfully",
             create_folder_complete: "Folder created successfully",
             each_source_destination: "Destination Path are different from Source Path",
-            copy_file_complete: "Files are copied successfully"
+            copy_file_complete: "Files are copied successfully",
+            convert_complete: "Converted successfully"
         }
     };
-    this.state = {
+    this.design = {
         clipboardLinker: {
-            define: {
-                separatorTypeRadio: {
-                    name: "clipboard-linker__separator-type-radiobox",
-                    type: {
-                        lineBreak: {
-                            label: "Line Break",
-                            id: "clipboard-linker__separator-type-lineBreak",
-                            value: SIGN.crlf
-                        },
-                        commaLineBreak: {
-                            label: "Comma + Line Break",
-                            id: "clipboard-linker__separator-type-commaLineBreak",
-                            value: concatString(SIGN.c, SIGN.crlf)
-                        }
+            separatorTypeRadio: {
+                name: "clipboard-linker__separator-type-radiobox",
+                type: {
+                    lineBreak: {
+                        label: "Line Break",
+                        id: "clipboard-linker__separator-type-lineBreak",
+                        value: SIGN.crlf,
+                        isChecked: true
+                    },
+                    commaLineBreak: {
+                        label: "Comma + Line Break",
+                        id: "clipboard-linker__separator-type-commaLineBreak",
+                        value: concatString(SIGN.c, SIGN.crlf),
+                        isChecked: false
+                    }
+                }
+            }
+        },
+        copyFile: {
+            modeRadio: {
+                name: "copy-file__mode-radiobox",
+                type: {
+                    file: {
+                        label: upperCase(this.Define.CAPTIONS.file, 0),
+                        id: "copy-file__mode-file",
+                        value: this.Define.TYPES.design.copyFile.mode.file,
+                        isChecked: true
+                    },
+                    folder: {
+                        label: upperCase(this.Define.CAPTIONS.folder, 0),
+                        id: "copy-file__mode-folder",
+                        value: this.Define.TYPES.design.copyFile.mode.folder,
+                        isChecked: false
                     }
                 }
             },
-            injector: { commandArea: new Array() }
-        },
-        copyFile: {
-            define: {
-                modeRadio: {
-                    name: "copy-file__mode-radiobox",
-                    type: {
-                        file: {
-                            label: upperCase(this.Define.CAPTIONS.file, 0),
-                            id: "copy-file__mode-file",
-                            value: this.Define.TYPES.copyFile.mode.file
-                        },
-                        folder: {
-                            label: upperCase(this.Define.CAPTIONS.folder, 0),
-                            id: "copy-file__mode-folder",
-                            value: this.Define.TYPES.copyFile.mode.folder
-                        }
+            optionCheck: {
+                name: "copy-file__option-checkbox",
+                type: {
+                    overwrite: {
+                        label: this.Define.CAPTIONS.overwrite,
+                        id: "copy-file__option-cb-overwrite",
+                        value: this.Define.TYPES.design.copyFile.option.overwrite,
+                        isChecked: true
+                    },
+                    generateFolder: {
+                        label: this.Define.CAPTIONS.generateFolder,
+                        id: "copy-file__option-cb-generateFolder",
+                        value: this.Define.TYPES.design.copyFile.option.generateFolder,
+                        isChecked: true
                     }
-                },
-                overwriteRadio: {
-                    name: "copy-file__overwrite-radiobox",
-                    type: {
-                        typeTrue: {
-                            label: "True",
-                            id: "copy-file__overwrite-true",
-                            value: true
-                        },
-                        typeFalse: {
-                            label: "False",
-                            id: "copy-file__overwrite-false",
-                            value: false
-                        }
+                }
+            }
+        },
+        sheetConvert: {
+            sheetType: {
+                name: "sheet-convert__sheetType-radiobox",
+                type: {
+                    default: {
+                        label: this.Define.CAPTIONS.sheetConvert.default,
+                        id: "sheet-convert__sheetType-default",
+                        value: this.Define.TYPES.design.sheetConvert.sheetType.default,
+                        isChecked: true
+                    },
+                    master: {
+                        label: this.Define.CAPTIONS.sheetConvert.master,
+                        id: "sheet-convert__sheetType-master",
+                        value: this.Define.TYPES.design.sheetConvert.sheetType.master,
+                        isChecked: false
+                    }
+                }
+            },
+            convertMode: {
+                name: "sheet-convert__convertMode-radiobox",
+                type: {
+                    txt: {
+                        label: this.Define.CAPTIONS.sheetConvert.txt,
+                        id: "sheet-convert__convertMode-txt",
+                        value: this.Define.TYPES.design.sheetConvert.convertMode.txt,
+                        isChecked: true
+                    },
+                    csv: {
+                        label: this.Define.CAPTIONS.sheetConvert.csv,
+                        id: "sheet-convert__convertMode-csv",
+                        value: this.Define.TYPES.design.sheetConvert.convertMode.csv,
+                        isChecked: false
                     }
                 }
             }
         }
+    };
+    this.event = {
+        clipboardLinker: {
+            element: {
+                separatorTypeRadio: concatString("input[name=", this.design.clipboardLinker.separatorTypeRadio.name, "]"),
+                separatorTypeRadioChecked: concatString("input[name=", this.design.clipboardLinker.separatorTypeRadio.name, "]:checked")
+            }
+        },
+        copyFile: {
+            element: {
+                modeRadio: concatString("input[name=", this.design.copyFile.modeRadio.name, "]"),
+                modeRadioChecked: concatString("input[name=", this.design.copyFile.modeRadio.name, "]:checked"),
+                option: concatString("input[name=", this.design.copyFile.optionCheck.name, "]"),
+                optionChecked: concatString("input[name=", this.design.copyFile.optionCheck.name, "]:checked")
+            }
+        },
+        sheetConvert: {
+            element: {
+                sheetTypeRadio: concatString("input[name=", this.design.sheetConvert.sheetType.name, "]"),
+                sheetTypeRadioChecked: concatString("input[name=", this.design.sheetConvert.sheetType.name, "]:checked"),
+                convertModeRadio: concatString("input[name=", this.design.sheetConvert.convertMode.name, "]"),
+                convertModeRadioChecked: concatString("input[name=", this.design.sheetConvert.convertMode.name, "]:checked")
+            }
+        }
+    };
+    this.state = {
+        clipboardLinker: {
+            injector: { commandArea: new Array() }
+        },
+        copyFile: new Object(),
+        sheetConvert: new Object(),
+        batchResultValidation: new Object(),
+        binaryConvert: new Object()
     };
 };
 CommonModule.prototype = {
@@ -234,6 +375,21 @@ CommonModule.prototype = {
                 id: seId.copyFileCard,
                 title: captions.copyFile,
                 contents: _this.buildCopyFile()
+            },
+            {
+                id: seId.sheetConvertCard,
+                title: captions.sheetConvertTitle,
+                contents: _this.buildSheetConvert()
+            },
+            {
+                id: seId.batchResultValidationCard,
+                title: captions.batchResultValidationTitle,
+                contents: _this.buildBatchResultValidation()
+            },
+            {
+                id: seId.binaryConvertCard,
+                title: captions.binaryConvertTitle,
+                contents: _this.buildBinaryConvert()
             }
         ];
         cardList.forEach(function(item) {
@@ -298,7 +454,7 @@ CommonModule.prototype = {
             const worker = new Worker(types.path.fileTreeWorker);
             worker.onmessage = function(e) {
                 const fileTreeData = e.data;
-                const fileName = concatString("FileTree_", fileTree.target, "_", getFileStamp(), TYPES.file.extension.csv);
+                const fileName = concatString("FileTree_", getFileStamp(fileTree.target), TYPES.file.extension.csv);
                 saveAsFile(fileTreeData, TYPES.file.mime.CSV, fileName);
                 loading.off();
             };
@@ -549,7 +705,6 @@ CommonModule.prototype = {
             }
         };
         const openSystemDatePathListEditor = function(editData) {
-            const _this = this;
             const isEditMode = !isVoid(editData);
             const info = isEditMode ? editData : itf.getInjectData(null, null);
             const subOption = { "width": "360px", "max-height": "500px" };
@@ -755,36 +910,19 @@ CommonModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const cldt = types.design.clipboardLinker;
         const clipboardLinkerState = _this.state.clipboardLinker;
         const stateDef = clipboardLinkerState.define;
+        const clipboardLinkerDesign = _this.design.clipboardLinker;
         const eb = new ElementBuilder();
         const injectorStack = new Array();
         const $container = jqNode("div", { class: seClass.contentsContainer });
         const $actionArea = jqNode("div", { class: seClass.actionArea });
         const $setButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.set));
         $container.append(eb.listAppend($actionArea, [$setButton]));
-        const radioItemList = [
-            {
-                label: stateDef.separatorTypeRadio.type.lineBreak.label,
-                attributes: {
-                    id: stateDef.separatorTypeRadio.type.lineBreak.id,
-                    name: stateDef.separatorTypeRadio.name,
-                    value: stateDef.separatorTypeRadio.type.lineBreak.value
-                },
-                isChecked: true,
-                optionClass: SIGN.none
-            },
-            {
-                label: stateDef.separatorTypeRadio.type.commaLineBreak.label,
-                attributes: {
-                    id: stateDef.separatorTypeRadio.type.commaLineBreak.id,
-                    name: stateDef.separatorTypeRadio.name,
-                    value: stateDef.separatorTypeRadio.type.commaLineBreak.value
-                },
-                isChecked: false,
-                optionClass: SIGN.none
-             }
-        ];
+        const dstr = clipboardLinkerDesign.separatorTypeRadio;
+        const radioItemList = [getItemListObject(dstr, cldt.separatorType.lineBreak), getItemListObject(dstr, cldt.separatorType.commaLineBreak)];
         const $separatorTypeCommandArea = jqNode("div", { class: seClass.commandArea });
         const $radioItem = eb.createRadio(radioItemList).getItem();
         const $separatorTypeLabel = jqNode("label").css("line-height", "2.5").text(captions.separatorType);
@@ -856,8 +994,9 @@ CommonModule.prototype = {
         const phaseType = types.phase.clipboardLinker;
         const captions = _this.Define.CAPTIONS;
         const clipboardLinkerState = _this.state.clipboardLinker;
-        const stateDef = clipboardLinkerState.define;
-        const separatorTypeElement = concatString("input[name=", stateDef.separatorTypeRadio.name, "]:checked");
+        const _event = _this.event;
+        const clipboardLinkerEvent = _event.clipboardLinker;
+        const separatorTypeElement = clipboardLinkerEvent.element.separatorTypeRadioChecked;
         const separatorType = $(separatorTypeElement).val();
         const $copyList = jqById(seId.clipboardLinkerCopyList);
         const copyListValue = $copyList.val();
@@ -994,8 +1133,10 @@ CommonModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const cfdt = types.design.copyFile;
         const copyFileState = _this.state.copyFile;
-        const stateDef = copyFileState.define;
+        const copyFileDesign = _this.design.copyFile;
         const eb = new ElementBuilder();
         const injectorStack = new Array();
         const $container = jqNode("div", { class: seClass.contentsContainer });
@@ -1003,63 +1144,23 @@ CommonModule.prototype = {
         const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
         const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
         $container.append(eb.listAppend($actionArea, [$execButton, $clearButton]));
-        const modeRadioItemList = [
-            {
-                label: stateDef.modeRadio.type.file.label,
-                attributes: {
-                    id: stateDef.modeRadio.type.file.id,
-                    name: stateDef.modeRadio.name,
-                    value: stateDef.modeRadio.type.file.value
-                },
-                isChecked: true,
-                optionClass: SIGN.none
-            },
-            {
-                label: stateDef.modeRadio.type.folder.label,
-                attributes: {
-                    id: stateDef.modeRadio.type.folder.id,
-                    name: stateDef.modeRadio.name,
-                    value: stateDef.modeRadio.type.folder.value
-                },
-                isChecked: false,
-                optionClass: SIGN.none
-             }
-        ];
-        const $modeCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $modeRadioItem = eb.createRadio(modeRadioItemList).getItem();
-        const $modeLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.mode, 0));
-        const $modeRadio = jqNode("div", { class: eClass.fullWidth }).append($modeRadioItem);
-        eb.listAppend($modeCommandArea, [$modeLabel, $modeRadio]);
-        const overwriteRadioItemList = [
-            {
-                label: stateDef.overwriteRadio.type.typeTrue.label,
-                attributes: {
-                    id: stateDef.overwriteRadio.type.typeTrue.id,
-                    name: stateDef.overwriteRadio.name,
-                    value: stateDef.overwriteRadio.type.typeTrue.value
-                },
-                isChecked: true,
-                optionClass: SIGN.none
-            },
-            {
-                label: stateDef.overwriteRadio.type.typeFalse.label,
-                attributes: {
-                    id: stateDef.overwriteRadio.type.typeFalse.id,
-                    name: stateDef.overwriteRadio.name,
-                    value: stateDef.overwriteRadio.type.typeFalse.value
-                },
-                isChecked: false,
-                optionClass: SIGN.none
-             }
-        ];
-        const $overwriteCommandArea = jqNode("div", { class: seClass.commandArea });
-        const $overwriteRadioItem = eb.createRadio(overwriteRadioItemList).getItem();
-        const $overwriteLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.overwrite, 0));
-        const $overwriteRadio = jqNode("div", { class: eClass.fullWidth }).append($overwriteRadioItem);
-        eb.listAppend($overwriteCommandArea, [$overwriteLabel, $overwriteRadio]);
-        eb.listAppend($container, [$modeCommandArea, $overwriteCommandArea]);
-        injectorStack.push($modeRadioItem);
-        injectorStack.push($overwriteRadioItem);
+        const dmr = copyFileDesign.modeRadio;
+        const dopt = copyFileDesign.optionCheck;
+        const modeRadioItemList = [getItemListObject(dmr, cfdt.mode.file), getItemListObject(dmr, cfdt.mode.folder)];
+        const $dmrCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $dmrItem = eb.createRadio(modeRadioItemList).getItem();
+        const $dmrLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.mode, 0));
+        const $dmrMain = jqNode("div", { class: eClass.fullWidth }).append($dmrItem);
+        eb.listAppend($dmrCommandArea, [$dmrLabel, $dmrMain]);
+        const optionCheckItemList = [getItemListObject(dopt, cfdt.option.overwrite), getItemListObject(dopt, cfdt.option.generateFolder)];
+        const $doptCommandArea = jqNode("div", { class: seClass.commandArea });
+        const $doptItem = eb.createCheckbox(optionCheckItemList).getItem();
+        const $doptLabel = jqNode("label").css("line-height", "2.5").text(upperCase(captions.option, 0));
+        const $doptMain = jqNode("div", { class: eClass.fullWidth }).append($doptItem);
+        eb.listAppend($doptCommandArea, [$doptLabel, $doptMain]);
+        eb.listAppend($container, [$dmrCommandArea, $doptCommandArea]);
+        injectorStack.push($dmrItem);
+        injectorStack.push($doptItem);
         const itemList = [
             {
                 label: captions.sourcePath,
@@ -1086,12 +1187,12 @@ CommonModule.prototype = {
         $clearButton.click(function() {
             injectorStack.forEach(function(ele, i) {
                 if(i === 0) {
-                    jqById(stateDef.modeRadio.type.file.id).prop("checked", true);
-                    jqById(stateDef.modeRadio.type.folder.id).prop("checked", false);
+                    jqById(dmr.type.file.id).prop("checked", true);
+                    jqById(dmr.type.folder.id).prop("checked", false);
                 }
                 else if(i === 1) {
-                    jqById(stateDef.overwriteRadio.type.typeTrue.id).prop("checked", true);
-                    jqById(stateDef.overwriteRadio.type.typeFalse.id).prop("checked", false);
+                    jqById(dopt.type.overwrite.id).prop("checked", true);
+                    jqById(dopt.type.generateFolder.id).prop("checked", true);
                 }
                 else {
                     ele.val(SIGN.none);
@@ -1105,16 +1206,23 @@ CommonModule.prototype = {
         const seId = _this.Define.ELEMENTS.id;
         const seClass = _this.Define.ELEMENTS.class;
         const types = _this.Define.TYPES;
+        const cfdt = types.design.copyFile;
         const captions = _this.Define.CAPTIONS;
         const messages = _this.Define.MESSAGES;
+        const _event = _this.event;
+        const copyFileEvent = _event.copyFile;
         const copyFileState = _this.state.copyFile;
-        const stateDef = copyFileState.define;
         const loading = new Loading();
         loading.on().then(function() {
-            const modeElement = concatString("input[name=", stateDef.modeRadio.name, "]:checked");
-            const overwriteElement = concatString("input[name=", stateDef.overwriteRadio.name, "]:checked");
+            const modeElement = copyFileEvent.element.modeRadioChecked;
+            const optionElement = copyFileEvent.element.optionChecked;
             const mode = $(modeElement).val();
-            const isOverwrite = $(overwriteElement).val();
+            const optionStack = new Array();
+            $(optionElement).each(function() {
+                optionStack.push($(this).val());
+            });
+            const isOverwrite = optionStack.indexOf(cfdt.option.overwrite) >= 0;
+            const isGenerateFolder = optionStack.indexOf(cfdt.option.generateFolder) >= 0;
             const $sourcePath = jqById(seId.copyFileSourcePath);
             const $destinationPath = jqById(seId.copyFileDestinationPath);
             const sourcePathValue = $sourcePath.val();
@@ -1147,20 +1255,682 @@ CommonModule.prototype = {
             }
             const fs = new FileSystem();
             switch(mode) {
-                case types.copyFile.mode.file: {
+                case cfdt.mode.file: {
                     sourcePath.forEach(function(sPath, i) {
-                        fs.copyFile(sPath, destinationPath[i], isOverwrite);
+                        const dPath = destinationPath[i];
+                        const dRootPath = getRootPath(dPath);
+                        if(isGenerateFolder) {
+                            new FileSystem(dRootPath).createFolder(false);
+                        }
+                        fs.copyFile(sPath, dPath, isOverwrite);
                     });
                     break;
                 }
-                case types.copyFile.mode.folder: {
+                case cfdt.mode.folder: {
                     sourcePath.forEach(function(sPath, i) {
-                        fs.copyFolder(sPath, destinationPath[i], isOverwrite);
+                        const dPath = destinationPath[i];
+                        if(isGenerateFolder) {
+                            new FileSystem(dPath).createFolder(false);
+                        }
+                        fs.copyFolder(sPath, dPath, isOverwrite);
                     });
                     break;
                 }
             }
             new Notification().complete().open(messages.copy_file_complete);
+            loading.off();
+        }).catch(function(e) {
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+        return null;
+    },
+    actionControllerSheetConvert: function(phase) {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.sheetConvert;
+        const sheetConvertState = _this.state.sheetConvert;
+        const injector = sheetConvertState.injector;
+        const $card = jqById(seId.sheetConvertCard);
+        const $cardContents = $card.find(concatString(".", eClass.cardContents));
+        const $contentsContainer = $card.find(concatString(".", eClass.appContentsContainer));
+        const $actionArea = $contentsContainer.children(concatString(".", eClass.actionArea));
+        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
+        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+        const eb = new ElementBuilder();
+        const propOption = eb.getPropOptionLayout();
+        let itemList = new Array();
+        switch(phase) {
+            case phaseType.convert: {
+                itemList = [$execButton, $resetButton];
+                new ElementBuilder(sheetConvertState.injector.dScStCommandArea).removeDisplayNone();
+                new ElementBuilder(sheetConvertState.injector.dScCmCommandArea).removeDisplayNone();
+                new ElementBuilder(sheetConvertState.injector.outputPathCommandArea).removeDisplayNone();
+                break;
+            }
+        }
+        $actionArea.empty();
+        itemList.forEach(function(item) {
+            $actionArea.append(item);
+        });
+        $execButton.click(function() {
+            _this.convertSheet();
+        });
+        $resetButton.click(function() {
+            _this.state.sheetConvert = new Object();
+            $cardContents.html(_this.buildSheetConvert());
+        });
+        return null;
+    },
+    buildSheetConvert: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const sheetConvertDesign = _this.design.sheetConvert;
+        const sheetConvertState = _this.state.sheetConvert;
+        const eb = new ElementBuilder();
+        sheetConvertState.injector = new Object();
+        const $container = jqNode("div", { class: eClass.appContentsContainer });
+        const $actionArea = jqNode("div", { class: eClass.actionArea });
+        const $readButton = jqNode("button", { class: eClass.buttonColorOrange }).text(upperCase(captions.read));
+        $container.append(eb.listAppend($actionArea, [$readButton]));
+        const tdSc = types.design.sheetConvert;
+        const dScSt = sheetConvertDesign.sheetType;
+        const dScCm = sheetConvertDesign.convertMode;
+        const sheetTypeRadioItemList = [getItemListObject(dScSt, tdSc.sheetType.default), getItemListObject(dScSt, tdSc.sheetType.master)];
+        const $dScStCommandArea = jqNode("div", { class: eClass.commandArea });
+        const $dScStItem = eb.createRadio(sheetTypeRadioItemList).getItem();
+        const $dScStLabel = jqNode("label").css("line-height", "2.5").text(captions.sheetConvert.sheetTypeLabel);
+        const $dScStMain = jqNode("div", { class: eClass.fullWidth }).append($dScStItem);
+        eb.listAppend($dScStCommandArea, [$dScStLabel, $dScStMain]);
+        const convertModeRadioItemList = [getItemListObject(dScCm, tdSc.convertMode.txt), getItemListObject(dScCm, tdSc.convertMode.csv)];
+        const $dScCmCommandArea = jqNode("div", { class: eClass.commandArea });
+        const $dScCmItem = eb.createRadio(convertModeRadioItemList).getItem();
+        const $dScCmLabel = jqNode("label").css("line-height", "2.5").text(captions.sheetConvert.convertModeLabel);
+        const $dScCmMain = jqNode("div", { class: eClass.fullWidth }).append($dScCmItem);
+        eb.listAppend($dScCmCommandArea, [$dScCmLabel, $dScCmMain]);
+        eb.listAppend($container, [$dScStCommandArea, $dScCmCommandArea]);
+        sheetConvertState.injector = createMultipleObject([["dScStCommandArea", $dScStCommandArea], ["dScCmCommandArea", $dScCmCommandArea]]);
+        sheetConvertState.injector.dScCmCommandArea = $dScCmCommandArea;
+        new ElementBuilder(sheetConvertState.injector.dScStCommandArea).setDisplayNone();
+        new ElementBuilder(sheetConvertState.injector.dScCmCommandArea).setDisplayNone();
+        const itemList = [
+            {
+                label: captions.outputPathLabel,
+                inputType: "input",
+                inputId: seId.outputPathSheetConvert
+            },
+            {
+                label: captions.sheetNamesLabel,
+                inputType: "textarea",
+                inputId: seId.sheetNames
+            }
+        ];
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: eClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            if(item.inputId === seId.outputPathSheetConvert) {
+                new ElementBuilder($commandArea).setDisplayNone();
+                sheetConvertState.injector.outputPathCommandArea = $commandArea;
+            }
+            eb.listAppend($commandArea, [$label, $input]);
+            $container.append($commandArea);
+            sheetConvertState.injector[item.inputId] = $input;
+        });
+        $readButton.click(function() {
+            _this.readSheet();
+        });
+        return $container;
+    },
+    readSheet: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const types = _this.Define.TYPES;
+        const phaseType = types.phase.sheetConvert;
+        const sheetConvertState = _this.state.sheetConvert;
+        const setExcelData = function(ow, fileInfo) {
+            const loading = new Loading();
+            loading.on().then(function() {
+                sheetConvertState.ow = ow;
+                sheetConvertState.fileName = fileInfo.name;
+                const $sheetNames = sheetConvertState.injector[seId.sheetNames];
+                $sheetNames.val(ow.getSheetNames().join(SIGN.nl));
+                _this.actionControllerSheetConvert(phaseType.convert);
+                loading.off();
+            }).catch(function(e) {
+                new Notification().error().open(e.message);
+                loading.off();
+            });
+        };
+        new ExcelUtil().readAsBinary().onload(setExcelData);
+        return null;
+    },
+    convertSheet: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const messages = _this.Define.MESSAGES;
+        const tdSc = types.design.sheetConvert;
+        const sheetConvertState = _this.state.sheetConvert;
+        const sheetConvertEvent = _this.event.sheetConvert;
+        const tfe = TYPES.file.extension;
+        const sb = new StringBuilder();
+        const loading = new Loading();
+        loading.on().then(function() {
+            const outputPath = _this.createInfoObject(jqById(seId.outputPathSheetConvert).val(), captions.outputPathLabel);
+            const sheetNames = _this.createInfoObject(jqById(seId.sheetNames).val(), captions.sheetNamesLabel);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const outputPathLayout = v.getLayout(v.initLayout(outputPath.value, outputPath.name), [vTypes.required]);
+            const sheetNamesLayout = v.getLayout(v.initLayout(sheetNames.value, sheetNames.name), [vTypes.requiredWithLineBreak, vTypes.notSpace]);
+            v.reset().appendList([outputPathLayout, sheetNamesLayout]);
+            const result = v.exec();
+            if(result.error) {
+                throw new Error(result.message);
+            }
+            const sheetType = $(sheetConvertEvent.element.sheetTypeRadioChecked).val();
+            const convertMode = $(sheetConvertEvent.element.convertModeRadioChecked).val();
+            const sheetList = getExistArray(sheetNames.value.split(SIGN.nl));
+            const dataObj = new Object();
+            const ow = sheetConvertState.ow;
+            const wb = ow.getWorkbook();
+            const sheetToDataObject = function() {
+                sheetList.forEach(function(sheetName) {
+                    dataObj[sheetName] = { name: new Array(), data: new Array() };
+                    const ws = getProperty(wb.Sheets, sheetName);
+                    const range = ow.getRange(ws);
+                    for(let i = range.r.s; i <= range.r.e; i++) {
+                        const dataStack = new Array();
+                        for(let j = range.c.s; j <= range.c.e; j++) {
+                            const cellRef = XLSX.utils.encode_cell({ c: j, r: i });
+                            const v = ow.getCellData(ws, cellRef);
+                            dataStack.push(v);
+                        }
+                        if(i === range.r.s) {
+                            dataObj[sheetName].name = dataStack;
+                        }
+                        else {
+                            dataObj[sheetName].data.push(dataStack);
+                        }
+                    }
+                    switch(sheetType) {
+                        case tdSc.sheetType.master: {
+                            dataObj[sheetName].data.shift();
+                            break;
+                        }
+                    }
+                });
+            };
+            const wbFileName = sheetConvertState.fileName.split(".");
+            wbFileName.pop();
+            switch(convertMode) {
+                case tdSc.convertMode.txt: {
+                    sheetToDataObject();
+                    const textData = JSON.stringify(dataObj);
+                    const fileName = concatString(getFileStamp(wbFileName.join(".")), tfe.txt);
+                    const filePath = concatString(outputPath.value, SIGN.rssh, fileName);
+                    const fs = new FileSystem(filePath);
+                    fs.createFile(false, true).write(textData);
+                    break;
+                }
+                case tdSc.convertMode.csv: {
+                    const cl = "${cellLine}";
+                    const crlfRegExp = new RegExp(SIGN.crlf, "g");
+                    const clRegExp = new RegExp(concatString(SIGN.rssh, cl), "g");
+                    sheetList.forEach(function(sheetName) {
+                        const ws = getProperty(wb.Sheets, sheetName);
+                        let csvData = ow.sheetToCsv(ws);
+                        csvData = getExistArray(csvData.replace(crlfRegExp, cl).split(SIGN.nl));
+                        switch(sheetType) {
+                            case tdSc.sheetType.default: {
+                                getIterator(1).forEach(function(item, i) {
+                                    csvData.shift();
+                                });
+                                break;
+                            }
+                            case tdSc.sheetType.master: {
+                                getIterator(2).forEach(function(item, i) {
+                                    csvData.shift();
+                                });
+                                break;
+                            }
+                        }
+                        csvData.forEach(function(record, i, selfRecord) {
+                            const rowList = record.split(SIGN.c);
+                            rowList.forEach(function(d, j, selfRowList) {
+                                const regExp = new RegExp('(^\")|(\"$)', "g");
+                                let cData = d.replace(regExp, SIGN.none);
+                                cData = sb.dq(cData);
+                                selfRowList[j] = cData;
+                            });
+                            selfRecord[i] = rowList.join(SIGN.c);
+                        });
+                        csvData = csvData.join(SIGN.crlf).replace(clRegExp, SIGN.crlf);
+                        const fileName = concatString(getFileStamp(sheetName), tfe.csv);
+                        const filePath = concatString(outputPath.value, SIGN.rssh, fileName);
+                        const fs = new FileSystem(filePath);
+                        fs.createFile(false, true).write(csvData);
+                    });
+                    break;
+                }
+            }
+            new Notification().complete().open(messages.convert_complete);
+            loading.off();
+        }).catch(function(e) {
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+        return null;
+    },
+    buildBatchResultValidation: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const brvt = types.batchResultValidation;
+        const state = _this.state.batchResultValidation;
+        state.injector = new Object();
+        const eb = new ElementBuilder();
+        const $container = jqNode("div", { class: eClass.appContentsContainer });
+        const $actionArea = jqNode("div", { class: eClass.actionArea });
+        const $loadButton = jqNode("button", { class: eClass.flatButton }).append(eb.getFontAwesomeIcon(eIcon.listAlt));
+        const $execButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.exec));
+        const $resetButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.reset));
+        $container.append(eb.listAppend($actionArea, [$loadButton, $execButton, $resetButton]));
+        const itemList = [
+            {
+                label: captions.targetPath,
+                inputType: "input",
+                inputId: seId.batchResultValidation.targetPath,
+                injectId: seId.path
+            },
+            {
+                label: upperCase(captions.result, 0),
+                inputType: "input",
+                inputId: seId.batchResultValidation.resultBlock,
+                injectId: null
+            }
+        ];
+        const injector = new Object();
+        const elementStack = new Array();
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: eClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            $commandArea.append($label).append($input);
+            $container.append($commandArea);
+            if(item.inputId === seId.batchResultValidation.resultBlock) {
+                new ElementBuilder($commandArea).setHidden();
+                new ElementBuilder($input).setReadonly();
+                state.injector[brvt.key.resultBlock] = $commandArea;
+            }
+            if(item.injectId) injector[item.injectId] = $input;
+            elementStack.push($input);
+        });
+        $loadButton.click(function() {
+            _this.openBatchLogPathTemplate(injector);
+        });
+        $execButton.click(function() { _this.validateBatchResult(); });
+        $resetButton.click(function() {
+            elementStack.forEach(function(item) { item.val(SIGN.none); });
+            new ElementBuilder(state.injector[brvt.key.resultBlock]).setHidden();
+        });
+        return $container;
+    },
+    openBatchLogPathTemplate: function(elementInjector) {
+        const store = new Store(storage);
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const messages = _this.Define.MESSAGES;
+        const title = captions.batchLogPathListTitle;
+        const sBatchLogPathList = STRUCTURE.batchLogPathList;
+        const eb = new ElementBuilder();
+        const itf = new Interface(sBatchLogPathList).setRoot(store.init());
+        const dialog = new Dialog();
+        const $container = jqNode("div", { id: eId.interfaceListContainer });
+        const buildContents = function() {
+            const dSL = store.init()[itf.getKey()];
+            const apply = function(info) {
+                Object.keys(elementInjector).forEach(function(key) {
+                    const data = info[key];
+                    if(key === seId.path) {
+                        const filePath = new FileSystem(data).toFilePath().getPath();
+                        elementInjector[key].val(filePath);
+                    }
+                    else {
+                        elementInjector[key].val(data);
+                    }
+                });
+                dialog.close();
+            };
+            const edit = function(info) {
+                openBatchLogPathListEditor(info);
+            };
+            const remove = function(info) {
+                const callback = function(warningClose) {
+                    store.connect([itf.getKey(), info.name]).delete().apply();
+                    buildContents();
+                    store.sync();
+                    warningClose();
+                };
+                new Notification().warning(callback).open(MESSAGES.warning_remove_record);
+            };
+            if(!isVoid(dSL)) {
+                const $ul = jqNode("ul");
+                getObjectOrderList(dSL).forEach(function(key) {
+                    const info = dSL[key];
+                    const $li = jqNode("li");
+                    $li.click(function(e) {
+                        e.stopPropagation();
+                        apply(info);
+                    });
+                    const $viewArea = jqNode("div", { class: eClass.viewArea });
+                    const $viewTable = jqNode("table");
+                    const $colgroup = jqNode("colgroup");
+                    const $viewHeader = jqNode("thead");
+                    const $viewBody = jqNode("tbody");
+                    const $nameRow = jqNode("tr");
+                    const $nameCell = jqNode("th", { colspan: "3" }).text(info.name);
+                    $nameRow.append($nameCell).appendTo($viewHeader);
+                    const colgroupSizeStack = [100, 10, null];
+                    colgroupSizeStack.forEach(function(size) {
+                        $col = jqNode("col");
+                        if(size) $col.attr({ width: size });
+                        $colgroup.append($col);
+                    });
+                    const infoObj = {
+                        0: { label: upperCase(captions.path, 0) }
+                    };
+                    [info.path].forEach(function(item, i) {
+                        const label = infoObj[i].label;
+                        const $infoRow = jqNode("tr");
+                        const $labelCell = jqNode("td").text(upperCase(label));
+                        const $middleCell = jqNode("td").text(SIGN.gc);
+                        if(i === 0) item = new FileSystem(item).toFilePath().getPath();
+                        const $valueCell = jqNode("td").text(item);
+                        eb.listAppend($infoRow, [$labelCell, $middleCell, $valueCell]);
+                        $viewBody.append($infoRow);
+                    });
+                    eb.listAppend($viewTable, [$colgroup, $viewHeader, $viewBody]);
+                    $viewArea.append($viewTable);
+                    const $actionArea = jqNode("div", { class: eClass.actionArea });
+                    const $editIcon = eb.getFontAwesomeIcon(eIcon.edit);
+                    const $removeIcon = eb.getFontAwesomeIcon(eIcon.trash);
+                    const $actionTable = jqNode("table");
+                    const $actionBody = jqNode("tbody");
+                    [$editIcon, $removeIcon].forEach(function(item, i) {
+                        const $row = jqNode("tr");
+                        const $cell = jqNode("td").append(item);
+                        $row.append($cell).appendTo($actionBody);
+                        $cell.click(function(e) {
+                            e.stopPropagation();
+                            switch(i) {
+                                case 0: {
+                                    edit(info);
+                                    break;
+                                }
+                                case 1: {
+                                    remove(info);
+                                    break;
+                                }
+                            }
+                        });
+                    });
+                    $actionTable.append($actionBody).appendTo($actionArea);
+                    eb.listAppend($li, [$viewArea, $actionArea]);
+                    $ul.append($li);
+                });
+                $container.empty().append($ul);
+            }
+            else {
+                $container.empty();
+            }
+        };
+        const openBatchLogPathListEditor = function(editData) {
+            const isEditMode = !isVoid(editData);
+            const info = isEditMode ? editData : itf.getInjectData(null, null);
+            const subOption = { "width": "360px", "max-height": "500px" };
+            const title = isEditMode ? upperCase(captions.edit, 0) : upperCase(captions.add, 0);
+            const eventInjector = new Object();
+            const buildSubContents = function() {
+                const $container = jqNode("div", { class: eClass.interfaceListAddContainer });
+                const $table = jqNode("table");
+                const path = info.path ? new FileSystem(info.path).toFilePath().getPath() : info.path;
+                const itemList = [
+                    { key: "name", label: upperCase(captions.name), value: info.name ? info.name : SIGN.none },
+                    { key: "path", label: upperCase(captions.path), value: info.path ? path : SIGN.none }
+                ];
+                itemList.forEach(function(item) {
+                    const $row = jqNode("tr");
+                    const $label = jqNode("label").text(item.label);
+                    const $input = jqNode("input", { class: eClass.applicationInput, value: item.value });
+                    const $labelCell = jqNode("td").append($label);
+                    const $inputCell = jqNode("td").append($input);
+                    eb.listAppend($row, [$labelCell, $inputCell]);
+                    $table.append($row);
+                    eventInjector[item.key] = $input;
+                });
+                $container.append($table);
+                return $container;
+            };
+            const callback = function(dialogClose) {
+                const name = _this.createInfoObject(eventInjector.name.val(), upperCase(captions.name));
+                const path = _this.createInfoObject(eventInjector.path.val(), upperCase(captions.path));
+                const v = new Validation();
+                const vTypes = v.getTypes();
+                const nameLayout = v.getLayout(v.initLayout(name.value, name.name), [vTypes.required, vTypes.notSpace]);
+                const pathLayout = v.getLayout(v.initLayout(path.value, path.name), [vTypes.required]);
+                v.reset().appendList([nameLayout, pathLayout]);
+                const result = v.exec();
+                if(result.error) {
+                    new Notification().error().open(result.message);
+                    return false;
+                }
+                const dSL = store.init()[itf.getKey()];
+                if(!isVoid(dSL) && !isVoid(dSL[name.value]) && !(isEditMode && info.name === name.value)) {
+                    new Notification().error().open(messages.already_exits_name);
+                    return false;
+                }
+                const getOrder = function() {
+                    if(isEditMode && !isVoid(dSL[info.name])) return dSL[info.name].order;
+                    return getObjectMaxOrder(dSL) + 1;
+                };
+                const jsonPath = new FileSystem(path.value).toJsonPath().getPath();
+                const injectData = itf.getInjectData(name.value, jsonPath, getOrder());
+                itf.inject(store, injectData, name.value);
+                if(isEditMode && info.name !== name.value) store.connect([itf.getKey(), info.name]).delete().apply();
+                store.connect([itf.getKey()]).set(sortObjectByOrder(store.init()[itf.getKey()])).apply();
+                buildContents();
+                store.sync();
+                dialogClose();
+            };
+            const okIcon = eb.getFontAwesomeIcon(eIcon.check);
+            const closeIcon = eb.getFontAwesomeIcon(eIcon.times);
+            new SubDialog().setContents(title, buildSubContents(), subOption).setUserButton(okIcon, closeIcon).open(callback);
+        };
+        const $addButton = jqNode("button").append(eb.getFontAwesomeIcon(eIcon.plus));
+        $addButton.click(function() { openBatchLogPathListEditor(); });
+        buildContents();
+        const option = { "width": "400px", "max-height": "530px" };
+        dialog.setContents(title, $container, option).setButton([$addButton]).disableOkButton().open();
+    },
+    validateBatchResult: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const messages = _this.Define.MESSAGES;
+        const types = _this.Define.TYPES;
+        const brvt = types.batchResultValidation;
+        const state = _this.state.batchResultValidation;
+        const loading = new Loading();
+        loading.on().then(function() {
+            const targetPath = _this.createInfoObject(jqById(seId.batchResultValidation.targetPath).val(), captions.targetPath);
+            const v = new Validation();
+            const vTypes = v.getTypes();
+            const targetPathLayout = v.getLayout(v.initLayout(targetPath.value, targetPath.name), [vTypes.required]);
+            v.reset().appendList([targetPathLayout]);
+            const result = v.exec();
+            if(result.error) {
+                throw new Error(result.message);
+            }
+            const data = new FileSystem(targetPath.value).read().getData();
+            const dataList = getExistArray(data.split(SIGN.crlf));
+            const resStatusLabel = "処理状態区分：";
+            const resStatusList = dataList[dataList.length - 1].split(resStatusLabel);
+            const resStatus = Number(resStatusList[resStatusList.length - 1]);
+            const resultStack = new Array();
+            const execBatchFileLineReg = new RegExp("SQL = INSERT INTO IT_BatchLog", "g");
+            const reverseDataList = dataList.reverse();
+            for(let i = 0; i < reverseDataList.length; i++) {
+                const item = reverseDataList[i];
+                if(execBatchFileLineReg.test(item)) {
+                    const tempList = item.split(", ");
+                    const bFuncId = tempList[tempList.length - 1];
+                    const funcId = bFuncId.replace(/\)/g, SIGN.none).replace(/\'/g, SIGN.none);
+                    if(!isVoid(funcId)) {
+                        resultStack.push(concatString("【", funcId, "】"));
+                    }
+                    break;
+                }
+            }
+            resultStack.push(concatString(resStatusLabel, resStatus));
+            const $resultBlock = jqById(seId.batchResultValidation.resultBlock);
+            $resultBlock.val(resultStack.join(SIGN.none));
+            new ElementBuilder(state.injector[brvt.key.resultBlock]).removeHidden();
+            loading.off();
+        }).catch(function(e) {
+            new Notification().error().open(e.message);
+            loading.off();
+        });
+        return null;
+    },
+    buildBinaryConvert: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const bct = types.binaryConvert;
+        const binaryConvertState = _this.state.binaryConvert;
+        const eb = new ElementBuilder();
+        binaryConvertState.injector = new Object();
+        const $container = jqNode("div", { class: eClass.appContentsContainer });
+        const $actionArea = jqNode("div", { class: eClass.actionArea });
+        const $readButton = jqNode("button", { class: eClass.buttonColorOrange }).text(upperCase(captions.read));
+        const $copyButton = jqNode("button", { class: eClass.buttonColorBalanced }).text(upperCase(captions.copy));
+        const $saveTxtButton = jqNode("button", { class: eClass.buttonColorBlueGrey }).text(upperCase(captions.saveTxt));
+        const $saveZipButton = jqNode("button", { class: eClass.buttonColorDark }).text(upperCase(captions.saveZip));
+        const $clearButton = jqNode("button", { class: eClass.buttonColorAssertive }).text(upperCase(captions.clear));
+        $container.append(eb.listAppend($actionArea, [$readButton, $copyButton, $saveTxtButton, $saveZipButton, $clearButton]));
+        const itemList = [
+            {
+                label: upperCase(captions.binary, 0),
+                inputType: "textarea",
+                inputId: seId.binaryConvert.binary
+            }
+        ];
+        const elementStack = new Array();
+        itemList.forEach(function(item) {
+            const $commandArea = jqNode("div", { class: eClass.commandArea });
+            const $label = jqNode("label").text(item.label);
+            const $input = jqNode(item.inputType, { id: item.inputId });
+            eb.listAppend($commandArea, [$label, $input]);
+            $container.append($commandArea);
+            binaryConvertState.injector[item.inputId] = $input;
+            elementStack.push($input);
+        });
+        $readButton.click(function() {
+            _this.readBinary();
+        });
+        $saveTxtButton.click(function() {
+            _this.saveBinary(bct.saveType.txt);
+        });
+        $saveZipButton.click(function() {
+            _this.saveBinary(bct.saveType.zip);
+        });
+        $copyButton.click(function() {
+            const $binary = binaryConvertState.injector[seId.binaryConvert.binary];
+            const data = $binary.val();
+            const result = copyToClipboard(data);
+            if(result.error) {
+                new Notification().error().open(result.message);
+            }
+        });
+        $clearButton.click(function() {
+            elementStack.forEach(function(item) { item.val(SIGN.none); });
+            binaryConvertState.data = null;
+        });
+        return $container;
+    },
+    readBinary: function() {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const binaryConvertState = _this.state.binaryConvert;
+        const mime = TYPES.file.mime;
+        function onReadFile(data, path, fileInfo) {
+            const loading = new Loading();
+            loading.on().then(function() {
+                const bu = new BinaryUtil();
+                const binary = bu.arrayBufferToBase64(data);
+                const $binary = binaryConvertState.injector[seId.binaryConvert.binary];
+                $binary.val(binary);
+                binaryConvertState.data = binary;
+                loading.off();
+            }).catch(function(e) {
+                new Notification().error().open(e.message);
+                loading.off();
+            });
+        };
+        new FileController()
+        .setListener()
+        .setReadType(TYPES.file.readType.arrayBuffer)
+        .allowedExtensions([mime.ZIP, mime.X_ZIP_COMPRESSED])
+        .access(onReadFile);
+        return null;
+    },
+    saveBinary: function(saveType) {
+        const _this = this;
+        const seId = _this.Define.ELEMENTS.id;
+        const captions = _this.Define.CAPTIONS;
+        const types = _this.Define.TYPES;
+        const bct = types.binaryConvert;
+        const binaryConvertState = _this.state.binaryConvert;
+        const loading = new Loading();
+        loading.on().then(function() {
+            if(isVoid(binaryConvertState.data)) {
+                const $binary = binaryConvertState.injector[seId.binaryConvert.binary];
+                if(!isVoid($binary.val())) {
+                    binaryConvertState.data = $binary.val();
+                }
+                else {
+                    throw new Error(MESSAGES.nothing_data);
+                }
+            }
+            let saveData, type, extension;
+            switch(saveType) {
+                case bct.saveType.txt: {
+                    type = TYPES.file.mime.TEXT_UTF8;
+                    extension = TYPES.file.extension.txt;
+                    saveData = binaryConvertState.data;
+                    break;
+                }
+                case bct.saveType.zip: {
+                    type = TYPES.file.mime.ZIP;
+                    extension = TYPES.file.extension.zip;
+                    saveData = new BinaryUtil().base64ToArrayBuffer(binaryConvertState.data);
+                    break;
+                }
+                default: {
+                    throw new Error(MESSAGES.nothing_data);
+                }
+            }
+            const fileName = concatString(getFileStamp(upperCase(captions.binary)), extension);
+            saveAsFile(saveData, type, fileName);
             loading.off();
         }).catch(function(e) {
             new Notification().error().open(e.message);
