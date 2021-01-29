@@ -28,29 +28,3 @@ function classes() {
     const size = classes.length;
     return size >= 1 ? classes.join(SIGN.ws) : "";
 };
-
-function fadeOut(element) {
-    return new Promise(function(resolve, reject) {
-        const $header = jqByTag("header");
-        if($header) {
-            $header.css({ opacity: 0 });
-        }
-        element.css({ opacity: 0 });
-        setTimeout(function() {
-            resolve();
-        }, eStyle.transitionDuration);
-    });
-};
-
-function fadeIn(element) {
-    return new Promise(function(resolve, reject) {
-        const $header = jqByTag("header");
-        if($header) {
-            $header.css({ opacity: 1 });
-        }
-        element.css({ opacity: 1 });
-        setTimeout(function() {
-            resolve();
-        }, eStyle.transitionDuration);
-    });
-};

@@ -65,6 +65,7 @@ html, body {
 	/* transition: transform 0.4s ease-in-out;
 	transform-origin: center top; */
 }
+
 #menu-contents > #plate > .pannel:hover {
 	padding: 40px;
 	/* transform: scale(1.07); */
