@@ -1,1 +1,0 @@
-const a = new ActiveXObject("ADODB.Connection");
